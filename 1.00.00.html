@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Surfer2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none; /* 避免拖动时误选，但输入框依然可编辑 */
+        }
+
+        body {
+            background: #0a0f1e;
+            font-family: 'Segoe UI', 'Fira Code', 'Courier New', system-ui, monospace;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+
+        /* 主容器 — 像一块冲浪板 */
+        .surfer-container {
+            width: 100%;
+            max-width: 1400px;
+            height: 90vh;
+            background: #0e1427;
+            border-radius: 32px;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            backdrop-filter: blur(2px);
+            border: 1px solid #2d3e5f;
+        }
+
+        /* 工具栏 — 冲浪控制台 */
+        .toolbar {
+            background: #111927;
+            padding: 12px 20px;
+            border-bottom: 1px solid #2a3a55;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 8px;
+            background: #0b101e;
+            padding: 4px 12px;
+            border-radius: 48px;
+        }
+
+        .nav-btn {
+            background: #1e2a3e;
+            border: none;
+            color: #b4d0ff;
+            font-size: 1.3rem;
+            font-weight: bold;
+            width: 36px;
+            height: 36px;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: 0.1s linear;
+            box-shadow: 0 1px 2px black;
+            font-family: monospace;
+        }
+
+        .nav-btn:active {
+            transform: scale(0.94);
+            background: #2c3e5e;
+        }
+
+        .url-bar {
+            flex: 1;
+            display: flex;
+            gap: 8px;
+            background: #0b101e;
+            padding: 4px 12px;
+            border-radius: 60px;
+            align-items: center;
+        }
+
+        .url-input {
+            flex: 1;
+            background: #010a1a;
+            border: 1px solid #2c5270;
+            padding: 10px 16px;
+            border-radius: 48px;
+            color: #c0e0ff;
+            font-size: 0.9rem;
+            font-family: 'Fira Code', monospace;
+            outline: none;
+            transition: 0.1s;
+        }
+
+        .url-input:focus {
+            border-color: #4c9eff;
+            box-shadow: 0 0 0 2px #1e4970;
+        }
+
+        .go-btn {
+            background: #1f6392;
+            border: none;
+            padding: 6px 20px;
+            border-radius: 40px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: 0.1s;
+            font-size: 0.8rem;
+        }
+
+        .go-btn:active {
+            background: #0f4a6e;
+            transform: scale(0.96);
+        }
+
+        .status {
+            font-size: 0.7rem;
+            background: #030a17aa;
+            padding: 4px 12px;
+            border-radius: 20px;
+            color: #87b9ff;
+            font-family: monospace;
+        }
+
+        /* iframe 冲浪区域 */
+        .wave-area {
+            flex: 1;
+            background: #ffffff;
+            position: relative;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+
+        .error-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0b1120e6;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 20px;
+            color: #ffbc6e;
+            font-family: monospace;
+            font-size: 1.2rem;
+            text-align: center;
+            padding: 2rem;
+            z-index: 10;
+            border-radius: 20px;
+        }
+
+        .error-overlay button {
+            background: #2c6e9e;
+            border: none;
+            padding: 8px 24px;
+            border-radius: 40px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* 小提示 */
+        .footer-tip {
+            background: #060c17;
+            font-size: 0.65rem;
+            text-align: center;
+            padding: 6px;
+            color: #5a7c9e;
+            border-top: 1px solid #1f2f44;
+        }
+    </style>
+</head>
+<body>
+<div class="surfer-container">
+    <div class="toolbar">
+        <div class="nav-buttons">
+            <button class="nav-btn" id="backBtn" title="后退">◀</button>
+            <button class="nav-btn" id="forwardBtn" title="前进">▶</button>
+            <button class="nav-btn" id="reloadBtn" title="刷新">⟳</button>
+        </div>
+        <div class="url-bar">
+            <input type="text" id="urlInput" class="url-input" placeholder="🌊 输入网址或搜索词 ..." value="https://www.bing.com">
+            <button id="goBtn" class="go-btn">冲浪 ➤</button>
+        </div>
+        <div class="status" id="statusMsg">⚡ 待命</div>
+    </div>
+
+    <div class="wave-area" id="waveArea">
+        <iframe id="surfFrame" src="https://www.bing.com" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-top-navigation allow-downloads allow-pointer-lock"></iframe>
+        <div id="errorOverlay" class="error-overlay hidden">
+            <span>🌊 巨浪警告 🌊</span>
+            <span id="errorMsg">无法加载该地址</span>
+            <button id="retryBtn">重新冲浪</button>
+        </div>
+    </div>
+    <div class="footer-tip">
+        🏄 独立Surfer · 支持普通网页 / 轻量级冲浪 | 部分网站因安全策略无法嵌入 | 可输入网址或直接搜索
+    </div>
+</div>
+
+<script>
+    // Surfer 核心 — 独立网页冲浪器 (基于JCom风格改造)
+    (function(){
+        const frame = document.getElementById('surfFrame');
+        const urlInput = document.getElementById('urlInput');
+        const goBtn = document.getElementById('goBtn');
+        const backBtn = document.getElementById('backBtn');
+        const forwardBtn = document.getElementById('forwardBtn');
+        const reloadBtn = document.getElementById('reloadBtn');
+        const statusSpan = document.getElementById('statusMsg');
+        const errorOverlay = document.getElementById('errorOverlay');
+        const errorMsgSpan = document.getElementById('errorMsg');
+        const retryBtn = document.getElementById('retryBtn');
+
+        let pendingUrl = '';
+        let loadTimeout = null;
+
+        // 设置状态栏
+        function setStatus(text, isError = false) {
+            statusSpan.innerHTML = isError ? `⚠️ ${text}` : `🏄 ${text}`;
+            statusSpan.style.color = isError ? '#ff9f6e' : '#87b9ff';
+        }
+
+        // 隐藏错误面板
+        function hideError() {
+            errorOverlay.classList.add('hidden');
+        }
+
+        // 显示错误信息
+        function showError(msg) {
+            errorMsgSpan.innerText = msg || '连接超时或被拒绝。该网站可能不允许嵌入。';
+            errorOverlay.classList.remove('hidden');
+            setStatus(`加载失败: ${msg}`, true);
+        }
+
+        // 清理超时计时器
+        function clearLoadTimer() {
+            if(loadTimeout) {
+                clearTimeout(loadTimeout);
+                loadTimeout = null;
+            }
+        }
+
+        // 加载URL的主要逻辑
+        function loadUrl(url) {
+            if(!url || url.trim() === '') return;
+            let targetUrl = url.trim();
+            
+            // 简易搜索 / 如果输入的不是http开头，尝试搜索
+            if(!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+                // 如果是类似 "github" 的词，默认转成搜索引擎查询
+                if(!targetUrl.includes('.') && !targetUrl.includes('/')) {
+                    targetUrl = `https://www.bing.com/search?q=${encodeURIComponent(targetUrl)}`;
+                } else {
+                    targetUrl = `https://${targetUrl}`;
+                }
+            }
+            
+            pendingUrl = targetUrl;
+            setStatus(`启程 → ${targetUrl.substring(0, 60)}`);
+            hideError();
+            clearLoadTimer();
+
+            // 设置超时检测 (10秒)
+            loadTimeout = setTimeout(() => {
+                if(pendingUrl === targetUrl) {
+                    showError('加载超时 (10s)，可能被目标网站阻止嵌入。');
+                    setStatus('冲浪超时', true);
+                }
+            }, 10000);
+
+            // 开始加载页面
+            try {
+                frame.src = targetUrl;
+            } catch(e) {
+                clearLoadTimer();
+                showError(`不支持的协议或错误: ${e.message}`);
+            }
+        }
+
+        // 当iframe加载成功时触发
+        function onIframeLoad() {
+            clearLoadTimer();
+            if(pendingUrl) {
+                setStatus(`📍 当前: ${pendingUrl.substring(0, 70)}`);
+                pendingUrl = '';
+            } else {
+                try {
+                    let currentUrl = frame.contentWindow?.location?.href;
+                    if(currentUrl && currentUrl !== 'about:blank') {
+                        setStatus(`🌊 冲浪中: ${currentUrl.substring(0, 70)}`);
+                        urlInput.value = currentUrl;
+                    } else {
+                        setStatus('页面加载完成');
+                    }
+                } catch(e) {
+                    // 跨域限制，不会影响功能
+                    setStatus('页面已加载 (跨域限制无法读取URL)');
+                }
+            }
+            hideError();
+        }
+
+        function onIframeError() {
+            clearLoadTimer();
+            if(pendingUrl) {
+                showError(`无法访问 ${pendingUrl} (可能被禁止嵌入或网络错误)`);
+                pendingUrl = '';
+            } else {
+                showError('页面加载失败，请检查网址是否有效');
+            }
+        }
+
+        // 绑定事件
+        frame.addEventListener('load', onIframeLoad);
+        frame.addEventListener('error', onIframeError);
+
+        // 导航按钮
+        goBtn.addEventListener('click', () => {
+            loadUrl(urlInput.value);
+        });
+
+        backBtn.addEventListener('click', () => {
+            try {
+                if(frame.contentWindow) frame.contentWindow.history.back();
+                setStatus("后退一步");
+            } catch(e) {
+                setStatus("无法后退（跨域限制）", true);
+            }
+        });
+
+        forwardBtn.addEventListener('click', () => {
+            try {
+                if(frame.contentWindow) frame.contentWindow.history.forward();
+                setStatus("前进一步");
+            } catch(e) {
+                setStatus("无法前进（跨域限制）", true);
+            }
+        });
+
+        reloadBtn.addEventListener('click', () => {
+            try {
+                if(frame.contentWindow) frame.contentWindow.location.reload();
+                setStatus("重新冲浪 ↩️");
+            } catch(e) {
+                // 跨域时使用src刷新
+                let src = frame.src;
+                frame.src = src;
+                setStatus("强制刷新");
+            }
+        });
+
+        retryBtn.addEventListener('click', () => {
+            if(pendingUrl) loadUrl(pendingUrl);
+            else if(frame.src && frame.src !== 'about:blank') loadUrl(frame.src);
+            else loadUrl(urlInput.value);
+        });
+
+        // 回车搜索
+        urlInput.addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') {
+                loadUrl(urlInput.value);
+            }
+        });
+
+        // 初始默认打开Bing (首页友好)
+        loadUrl('https://www.bing.com');
+        
+        // 小彩蛋: 控制台输出Surfer启航
+        console.log("%c🌊 Surfer 网页冲浪器已启航 | 独立内核 | 自由冲浪", "color: #4c9eff; font-size: 16px; font-weight: bold;");
+    })();
+</script>
+</body>
+</html>
