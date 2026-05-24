@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Surfer2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0f1e;
+            font-family: 'Segoe UI', 'Fira Code', 'Courier New', system-ui, monospace;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+
+        .surfer-container {
+            width: 100%;
+            max-width: 1400px;
+            height: 90vh;
+            background: #0e1427;
+            border-radius: 32px;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #2d3e5f;
+        }
+
+        .toolbar {
+            background: #111927;
+            padding: 12px 20px;
+            border-bottom: 1px solid #2a3a55;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 8px;
+            background: #0b101e;
+            padding: 4px 12px;
+            border-radius: 48px;
+        }
+
+        .nav-btn {
+            background: #1e2a3e;
+            border: none;
+            color: #b4d0ff;
+            font-size: 1.3rem;
+            font-weight: bold;
+            width: 36px;
+            height: 36px;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: 0.1s linear;
+            box-shadow: 0 1px 2px black;
+            font-family: monospace;
+        }
+
+        .nav-btn:active {
+            transform: scale(0.94);
+            background: #2c3e5e;
+        }
+
+        .url-bar {
+            flex: 1;
+            display: flex;
+            gap: 8px;
+            background: #0b101e;
+            padding: 4px 12px;
+            border-radius: 60px;
+            align-items: center;
+        }
+
+        .url-input {
+            flex: 1;
+            background: #010a1a;
+            border: 1px solid #2c5270;
+            padding: 10px 16px;
+            border-radius: 48px;
+            color: #c0e0ff;
+            font-size: 0.9rem;
+            font-family: 'Fira Code', monospace;
+            outline: none;
+        }
+
+        .url-input:focus {
+            border-color: #4c9eff;
+            box-shadow: 0 0 0 2px #1e4970;
+        }
+
+        .go-btn {
+            background: #1f6392;
+            border: none;
+            padding: 6px 20px;
+            border-radius: 40px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+        }
+
+        .go-btn:active {
+            background: #0f4a6e;
+            transform: scale(0.96);
+        }
+
+        .status {
+            font-size: 0.7rem;
+            background: #030a17aa;
+            padding: 4px 12px;
+            border-radius: 20px;
+            color: #87b9ff;
+            font-family: monospace;
+        }
+
+        /* UA切换下拉框 */
+        .ua-selector {
+            background: #0b101e;
+            border: 1px solid #2c5270;
+            padding: 6px 12px;
+            border-radius: 30px;
+            color: #c0e0ff;
+            font-size: 0.7rem;
+            font-family: monospace;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .ua-selector option {
+            background: #111927;
+        }
+
+        .wave-area {
+            flex: 1;
+            background: #ffffff;
+            position: relative;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+
+        .error-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0b1120e6;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 20px;
+            color: #ffbc6e;
+            font-family: monospace;
+            font-size: 1rem;
+            text-align: center;
+            padding: 2rem;
+            z-index: 10;
+            border-radius: 20px;
+        }
+
+        .error-overlay button {
+            background: #2c6e9e;
+            border: none;
+            padding: 8px 24px;
+            border-radius: 40px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .security-badge {
+            background: #1e3a2e;
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.65rem;
+            color: #6fbf6f;
+            font-family: monospace;
+        }
+
+        .footer-tip {
+            background: #060c17;
+            font-size: 0.65rem;
+            text-align: center;
+            padding: 6px;
+            color: #5a7c9e;
+            border-top: 1px solid #1f2f44;
+        }
+
+        @media (max-width: 680px) {
+            .toolbar { flex-direction: column; align-items: stretch; }
+            .url-bar { width: 100%; }
+            .nav-buttons { justify-content: center; }
+            .ua-selector { align-self: center; }
+        }
+    </style>
+</head>
+<body>
+<div class="surfer-container">
+    <div class="toolbar">
+        <div class="nav-buttons">
+            <button class="nav-btn" id="backBtn" title="后退">◀</button>
+            <button class="nav-btn" id="forwardBtn" title="前进">▶</button>
+            <button class="nav-btn" id="reloadBtn" title="刷新">⟳</button>
+        </div>
+        <div class="url-bar">
+            <input type="text" id="urlInput" class="url-input" placeholder="🌊 输入网址或搜索词 ..." value="https://www.bing.com">
+            <button id="goBtn" class="go-btn">冲浪 ➤</button>
+        </div>
+        <select id="uaSelect" class="ua-selector" title="切换设备模式">
+            <option value="pc">💻 电脑版 (Windows/Mac)</option>
+            <option value="mobile">📱 手机版 (Android/iOS)</option>
+        </select>
+        <div class="status" id="statusMsg">⚡ 待命</div>
+        <div class="security-badge" id="securityBadge">🔒 安全模式</div>
+    </div>
+
+    <div class="wave-area" id="waveArea">
+        <iframe id="surfFrame" src="https://www.bing.com" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-top-navigation allow-downloads allow-pointer-lock allow-popups-to-escape-sandbox"></iframe>
+        <div id="errorOverlay" class="error-overlay hidden">
+            <span>🌊 巨浪警告 🌊</span>
+            <span id="errorMsg">无法加载该地址</span>
+            <button id="retryBtn">重新冲浪</button>
+        </div>
+    </div>
+    <div class="footer-tip">
+        🏄 Surfer2 | 支持PC/手机双模式 | 部分网站可能因安全策略无法嵌入 | ⚠️ 不建议在不可信网站输入密码
+    </div>
+</div>
+
+<script>
+    (function(){
+        const frame = document.getElementById('surfFrame');
+        const urlInput = document.getElementById('urlInput');
+        const goBtn = document.getElementById('goBtn');
+        const backBtn = document.getElementById('backBtn');
+        const forwardBtn = document.getElementById('forwardBtn');
+        const reloadBtn = document.getElementById('reloadBtn');
+        const statusSpan = document.getElementById('statusMsg');
+        const errorOverlay = document.getElementById('errorOverlay');
+        const errorMsgSpan = document.getElementById('errorMsg');
+        const retryBtn = document.getElementById('retryBtn');
+        const uaSelect = document.getElementById('uaSelect');
+        const securityBadge = document.getElementById('securityBadge');
+
+        let pendingUrl = '';
+        let loadTimeout = null;
+        let currentUA = 'pc';
+
+        // ========== 1. 解决外部链接跳转问题 ==========
+        // 拦截iframe内所有链接，强制在iframe内打开，防止跳转系统浏览器
+        function hijackLinksInIframe() {
+            try {
+                const doc = frame.contentWindow.document;
+                const allLinks = doc.querySelectorAll('a');
+                allLinks.forEach(link => {
+                    // 强制在当前iframe内打开
+                    link.setAttribute('target', '_self');
+                    // 移除可能导致新窗口的属性
+                    link.removeAttribute('rel');
+                    // 拦截click事件
+                    const oldClick = link.onclick;
+                    link.onclick = function(e) {
+                        e.preventDefault();
+                        const href = link.getAttribute('href');
+                        if(href && !href.startsWith('javascript:')) {
+                            loadUrl(href);
+                        }
+                        return false;
+                    };
+                });
+            } catch(e) {
+                // 跨域限制时无法修改，这是正常的浏览器安全策略
+                console.log('跨域限制，无法重写链接');
+            }
+        }
+
+        // ========== 2. UA切换（手机版/电脑版） ==========
+        // 根据选择的UA模式，修改请求头（通过重新加载+自定义user-agent）
+        // 注意：iframe的user-agent无法直接修改，需要通过父级代理或使用带有UA参数的中间页
+        // 这里采用更可靠的方案：根据UA模式，将网址重定向到对应的移动版/桌面版域名，或添加UA参数
+        function getUrlWithUA(url, mode) {
+            if(!url) return url;
+            let newUrl = url;
+            // 针对常见网站进行移动端/桌面端域名切换
+            if(mode === 'mobile') {
+                // 将常见桌面域名替换为移动域名
+                newUrl = newUrl.replace(/www\./g, 'm.');
+                newUrl = newUrl.replace(/\.com/g, '.com/m');
+                if(newUrl.includes('bing.com') && !newUrl.includes('www.bing.com')) {
+                    newUrl = newUrl.replace('m.bing.com', 'www.bing.com');
+                }
+            } else {
+                // 电脑版：将移动域名还原
+                newUrl = newUrl.replace(/^https?:\/\/m\./, 'https://www.');
+                newUrl = newUrl.replace(/\/m$/, '');
+            }
+            return newUrl;
+        }
+
+        // 监听UA切换
+        uaSelect.addEventListener('change', (e) => {
+            currentUA = e.target.value;
+            const currentSrc = frame.src;
+            if(currentSrc && currentSrc !== 'about:blank') {
+                const newUrl = getUrlWithUA(currentSrc, currentUA);
+                if(newUrl !== currentSrc) {
+                    loadUrl(newUrl);
+                } else {
+                    frame.src = currentSrc;
+                }
+            }
+            statusSpan.innerHTML = `📱 已切换至${currentUA === 'pc' ? '电脑版' : '手机版'}`;
+        });
+
+        // ========== 3. 安全增强 ==========
+        // 显示安全提示，提醒用户不要在不可信网站输入敏感信息
+        function showSecurityWarning(url) {
+            try {
+                const hostname = new URL(url).hostname;
+                const trustedSites = ['bing.com', 'github.com', 'baidu.com', 'google.com', 'microsoft.com', 'wikipedia.org'];
+                const isTrusted = trustedSites.some(site => hostname.includes(site));
+                if(isTrusted) {
+                    securityBadge.innerHTML = '🔒 可信站点';
+                    securityBadge.style.background = '#1e3a2e';
+                    securityBadge.style.color = '#6fbf6f';
+                } else {
+                    securityBadge.innerHTML = '⚠️ 注意：不建议在此网站输入密码';
+                    securityBadge.style.background = '#5a3e1b';
+                    securityBadge.style.color = '#ffbc6e';
+                }
+            } catch(e) {
+                securityBadge.innerHTML = '🔒 谨慎浏览';
+            }
+        }
+
+        // 注入安全脚本，警告用户不要随意输入密码（每次加载后执行）
+        function injectSecurityScript() {
+            try {
+                const doc = frame.contentWindow.document;
+                // 检测是否有密码输入框，并弹出悬浮提示
+                const observer = new MutationObserver(() => {
+                    const passwordInputs = doc.querySelectorAll('input[type="password"]');
+                    if(passwordInputs.length > 0) {
+                        const warningDiv = doc.createElement('div');
+                        warningDiv.innerText = '⚠️ Surfer2提示：请确认网站真实性后再输入密码，谨防钓鱼！';
+                        warningDiv.style.position = 'fixed';
+                        warningDiv.style.bottom = '10px';
+                        warningDiv.style.right = '10px';
+                        warningDiv.style.background = '#ff4757';
+                        warningDiv.style.color = 'white';
+                        warningDiv.style.padding = '8px 16px';
+                        warningDiv.style.borderRadius = '20px';
+                        warningDiv.style.fontSize = '12px';
+                        warningDiv.style.zIndex = '9999';
+                        warningDiv.style.fontFamily = 'monospace';
+                        setTimeout(() => warningDiv.remove(), 5000);
+                        if(!doc.body.querySelector('#surfer2-security-tip')) {
+                            warningDiv.id = 'surfer2-security-tip';
+                            doc.body.appendChild(warningDiv);
+                        }
+                        observer.disconnect();
+                    }
+                });
+                observer.observe(doc.body, { childList: true, subtree: true });
+            } catch(e) {
+                // 跨域限制时无法注入，静默失败
+            }
+        }
+
+        // ========== 核心加载逻辑 ==========
+        function setStatus(text, isError = false) {
+            statusSpan.innerHTML = isError ? `⚠️ ${text}` : `🏄 ${text}`;
+            statusSpan.style.color = isError ? '#ff9f6e' : '#87b9ff';
+        }
+
+        function hideError() {
+            errorOverlay.classList.add('hidden');
+        }
+
+        function showError(msg) {
+            errorMsgSpan.innerText = msg || '连接超时或被拒绝。该网站可能不允许嵌入。';
+            errorOverlay.classList.remove('hidden');
+            setStatus(`加载失败: ${msg}`, true);
+        }
+
+        function clearLoadTimer() {
+            if(loadTimeout) {
+                clearTimeout(loadTimeout);
+                loadTimeout = null;
+            }
+        }
+
+        function loadUrl(url) {
+            if(!url || url.trim() === '') return;
+            let targetUrl = url.trim();
+            
+            // 搜索处理
+            if(!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+                if(!targetUrl.includes('.') && !targetUrl.includes('/')) {
+                    targetUrl = `https://www.bing.com/search?q=${encodeURIComponent(targetUrl)}`;
+                } else {
+                    targetUrl = `https://${targetUrl}`;
+                }
+            }
+            
+            // 应用UA模式进行网址重写
+            targetUrl = getUrlWithUA(targetUrl, currentUA);
+            
+            pendingUrl = targetUrl;
+            setStatus(`启程 → ${targetUrl.substring(0, 60)}`);
+            hideError();
+            clearLoadTimer();
+
+            // 显示安全警告
+            showSecurityWarning(targetUrl);
+
+            // 超时检测
+            loadTimeout = setTimeout(() => {
+                if(pendingUrl === targetUrl) {
+                    showError('加载超时 (10s)，可能被目标网站阻止嵌入。');
+                    setStatus('冲浪超时', true);
+                }
+            }, 10000);
+
+            try {
+                frame.src = targetUrl;
+            } catch(e) {
+                clearLoadTimer();
+                showError(`不支持的协议或错误: ${e.message}`);
+            }
+        }
+
+        function onIframeLoad() {
+            clearLoadTimer();
+            if(pendingUrl) {
+                setStatus(`📍 当前: ${pendingUrl.substring(0, 70)}`);
+                pendingUrl = '';
+            } else {
+                try {
+                    let currentUrl = frame.contentWindow?.location?.href;
+                    if(currentUrl && currentUrl !== 'about:blank') {
+                        setStatus(`🌊 冲浪中: ${currentUrl.substring(0, 70)}`);
+                        urlInput.value = currentUrl;
+                        showSecurityWarning(currentUrl);
+                    } else {
+                        setStatus('页面加载完成');
+                    }
+                } catch(e) {
+                    setStatus('页面已加载 (跨域限制无法读取URL)');
+                }
+            }
+            hideError();
+            
+            // 加载完成后劫持链接（解决跳转问题）
+            setTimeout(() => {
+                hijackLinksInIframe();
+                injectSecurityScript();
+            }, 500);
+        }
+
+        function onIframeError() {
+            clearLoadTimer();
+            if(pendingUrl) {
+                showError(`无法访问 ${pendingUrl} (可能被禁止嵌入或网络错误)`);
+                pendingUrl = '';
+            } else {
+                showError('页面加载失败，请检查网址是否有效');
+            }
+        }
+
+        frame.addEventListener('load', onIframeLoad);
+        frame.addEventListener('error', onIframeError);
+
+        // 按钮事件
+        goBtn.addEventListener('click', () => { loadUrl(urlInput.value); });
+        backBtn.addEventListener('click', () => {
+            try { if(frame.contentWindow) frame.contentWindow.history.back(); setStatus("后退一步"); } 
+            catch(e) { setStatus("无法后退（跨域限制）", true); }
+        });
+        forwardBtn.addEventListener('click', () => {
+            try { if(frame.contentWindow) frame.contentWindow.history.forward(); setStatus("前进一步"); } 
+            catch(e) { setStatus("无法前进（跨域限制）", true); }
+        });
+        reloadBtn.addEventListener('click', () => {
+            try { if(frame.contentWindow) frame.contentWindow.location.reload(); setStatus("重新冲浪 ↩️"); } 
+            catch(e) { frame.src = frame.src; setStatus("强制刷新"); }
+        });
+        retryBtn.addEventListener('click', () => {
+            if(pendingUrl) loadUrl(pendingUrl);
+            else if(frame.src && frame.src !== 'about:blank') loadUrl(frame.src);
+            else loadUrl(urlInput.value);
+        });
+        urlInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') loadUrl(urlInput.value); });
+
+        // 初始加载
+        loadUrl('https://www.bing.com');
+        
+        console.log("%c🏄 Surfer2 | 安全增强版 | 支持PC/手机双模式", "color: #4c9eff; font-size: 14px;");
+    })();
+</script>
+</body>
+</html>
