@@ -14,3 +14,7 @@ Now I am trying to make the connection by Surfer2 safe,but I'm still npt sure ab
 - \-
 
 ## 1.10.00
+
+- Roughly corrected the issue of some websites automatically calling the system browser redirect
+- Enhanced connection security as much as possible
+- Implemented UA switching
