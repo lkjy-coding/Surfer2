@@ -4,3 +4,13 @@ Surfer2 is an upgraded version of Surfer, but it can really go online, search on
 ## Important tips
 
 Now I am trying to make the connection by Surfer2 safe,but I'm still npt sure about it.So **I don't suggest you to enter something important on it**.
+
+---
+
+# Updates
+
+## 1.00.00
+
+- \-
+
+## 1.10.00
