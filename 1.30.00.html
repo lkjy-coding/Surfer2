@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Surfer2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0f1e;
+            --bg-secondary: #0e1427;
+            --bg-toolbar: #111927;
+            --border-color: #2d3e5f;
+            --text-primary: #c0e0ff;
+            --text-secondary: #87b9ff;
+            --input-bg: #010a1a;
+            --input-border: #2c5270;
+            --btn-bg: #1e2a3e;
+            --btn-active: #2c3e5e;
+            --go-btn-bg: #1f6392;
+            --go-btn-active: #0f4a6e;
+            --status-bg: #030a17aa;
+            --footer-bg: #060c17;
+            --security-trusted: #1e3a2e;
+            --security-warning: #5a3e1b;
+            --error-overlay: #0b1120e6;
+            --progress-bg: #2d3e5f;
+            --progress-fill: #4c9eff;
+        }
+
+        body.light {
+            --bg-primary: #eef2f5;
+            --bg-secondary: #ffffff;
+            --bg-toolbar: #f0f4f9;
+            --border-color: #cbd5e1;
+            --text-primary: #1e2a3a;
+            --text-secondary: #4a627a;
+            --input-bg: #ffffff;
+            --input-border: #cbd5e1;
+            --btn-bg: #e2e8f0;
+            --btn-active: #cbd5e1;
+            --go-btn-bg: #2c6e9e;
+            --go-btn-active: #1e5a7a;
+            --status-bg: #eef2ffaa;
+            --footer-bg: #f8fafc;
+            --security-trusted: #d1fae5;
+            --security-warning: #fed7aa;
+            --error-overlay: #ffffffcc;
+            --progress-bg: #e2e8f0;
+            --progress-fill: #2c6e9e;
+        }
+
+        body {
+            background: var(--bg-primary);
+            font-family: 'Segoe UI', system-ui, monospace;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            transition: background 0.2s;
+        }
+
+        .surfer-container {
+            width: 100%;
+            max-width: 1400px;
+            height: 90vh;
+            background: var(--bg-secondary);
+            border-radius: 32px;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .toolbar {
+            background: var(--bg-toolbar);
+            padding: 8px 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 6px;
+            background: var(--bg-secondary);
+            padding: 4px 10px;
+            border-radius: 48px;
+        }
+
+        .nav-btn {
+            background: var(--btn-bg);
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            width: 32px;
+            height: 32px;
+            border-radius: 40px;
+            cursor: pointer;
+        }
+
+        .url-bar {
+            flex: 1;
+            display: flex;
+            gap: 6px;
+            background: var(--bg-secondary);
+            padding: 4px 12px;
+            border-radius: 60px;
+            align-items: center;
+        }
+
+        .url-input {
+            flex: 1;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            padding: 8px 14px;
+            border-radius: 48px;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            outline: none;
+        }
+
+        .go-btn, .quick-btn {
+            background: var(--go-btn-bg);
+            border: none;
+            padding: 5px 14px;
+            border-radius: 40px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+
+        .status {
+            font-size: 0.65rem;
+            background: var(--status-bg);
+            padding: 3px 10px;
+            border-radius: 20px;
+            color: var(--text-secondary);
+        }
+
+        .ua-selector, .theme-toggle, .settings-btn {
+            background: var(--bg-secondary);
+            border: 1px solid var(--input-border);
+            padding: 5px 10px;
+            border-radius: 30px;
+            color: var(--text-primary);
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+
+        /* 加载进度条 */
+        .progress-bar-container {
+            background: var(--progress-bg);
+            height: 3px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background: var(--progress-fill);
+            transition: width 0.15s;
+        }
+
+        /* 状态条（加载步骤） */
+        .loading-status-bar {
+            background: var(--bg-toolbar);
+            padding: 4px 16px;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: monospace;
+        }
+
+        .loading-step {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .step {
+            opacity: 0.5;
+        }
+
+        .step.active {
+            opacity: 1;
+            color: var(--progress-fill);
+            font-weight: bold;
+        }
+
+        .wave-area {
+            flex: 1;
+            background: #ffffff;
+            position: relative;
+            overflow: auto;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* 快捷面板（黑白名单/收藏夹） */
+        .quick-panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 8px 12px;
+            margin: 0 12px 8px 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            font-size: 0.7rem;
+        }
+
+        .quick-panel button {
+            background: var(--btn-bg);
+            border: none;
+            padding: 4px 10px;
+            border-radius: 20px;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .settings-panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.2s;
+        }
+
+        .settings-panel.show {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .settings-content {
+            background: var(--bg-secondary);
+            border-radius: 32px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .settings-group {
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .settings-group input, .settings-group textarea {
+            width: 100%;
+            padding: 8px;
+            margin-top: 4px;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 12px;
+            color: var(--text-primary);
+        }
+
+        .speed-test-result {
+            background: var(--btn-bg);
+            padding: 8px;
+            border-radius: 12px;
+            margin-top: 8px;
+            font-size: 0.75rem;
+        }
+
+        .bookmark-item, .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px;
+            margin: 4px 0;
+            background: var(--btn-bg);
+            border-radius: 12px;
+        }
+
+        .error-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--error-overlay);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 10;
+            border-radius: 20px;
+        }
+
+        .hidden { display: none; }
+        .security-badge { border-radius: 20px; padding: 3px 10px; font-size: 0.65rem; }
+        .footer-tip { background: var(--footer-bg); font-size: 0.6rem; text-align: center; padding: 5px; }
+
+        @media (max-width: 680px) {
+            .toolbar { flex-direction: column; align-items: stretch; }
+            .url-bar { width: 100%; }
+            .quick-panel { flex-direction: column; align-items: stretch; }
+        }
+    </style>
+</head>
+<body>
+<div class="surfer-container">
+    <div class="toolbar">
+        <div class="nav-buttons">
+            <button class="nav-btn" id="backBtn">◀</button>
+            <button class="nav-btn" id="forwardBtn">▶</button>
+            <button class="nav-btn" id="reloadBtn">⟳</button>
+        </div>
+        <div class="url-bar">
+            <input type="text" id="urlInput" class="url-input" placeholder="🌊 输入网址或搜索词" value="https://www.bing.com">
+            <button id="goBtn" class="go-btn">冲浪</button>
+        </div>
+        <select id="uaSelect" class="ua-selector"><option value="pc">💻 电脑版</option><option value="mobile">📱 手机版</option></select>
+        <button id="themeToggle" class="theme-toggle">🌙</button>
+        <button id="settingsBtn" class="settings-btn">⚙️</button>
+        <div class="status" id="statusMsg">⚡</div>
+        <div class="security-badge" id="securityBadge">🔒</div>
+    </div>
+
+    <!-- 加载进度条 -->
+    <div class="progress-bar-container"><div class="progress-fill" id="progressFill"></div></div>
+    
+    <!-- 加载状态条 -->
+    <div class="loading-status-bar" id="loadingStatusBar">
+        <div class="loading-step" id="loadingSteps">
+            <span class="step" data-step="dns">🌐 DNS</span>
+            <span class="step" data-step="connect">🔗 连接</span>
+            <span class="step" data-step="ssl">🔒 SSL</span>
+            <span class="step" data-step="response">📡 响应</span>
+            <span class="step" data-step="dom">📄 渲染</span>
+        </div>
+        <span id="loadDetail">就绪</span>
+    </div>
+
+    <!-- 快捷操作栏 -->
+    <div class="quick-panel">
+        <span>⚡ 快捷：</span>
+        <button id="quickBlacklistBtn">🚫 黑名单</button>
+        <button id="quickWhitelistBtn">✅ 白名单</button>
+        <button id="quickBookmarkBtn">🔖 收藏当前页</button>
+        <span id="quickStatus"></span>
+    </div>
+
+    <div class="wave-area">
+        <iframe id="surfFrame" src="https://www.bing.com" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-top-navigation allow-downloads allow-pointer-lock"></iframe>
+        <div id="errorOverlay" class="error-overlay hidden"><span>🌊 加载失败</span><span id="errorMsg"></span><button id="retryBtn">重试</button></div>
+    </div>
+    <div class="footer-tip">🏄 Surfer2 | 完整安全防护 | 支持黑白名单/收藏夹 | 网络测速 | IP检测</div>
+</div>
+
+<!-- 设置面板 -->
+<div id="settingsPanel" class="settings-panel">
+    <div class="settings-content">
+        <h3>⚙️ Surfer2 设置</h3>
+        <div class="settings-group"><label><input type="checkbox" id="autoReloadToggle"> 失败自动刷新</label><label><input type="checkbox" id="blockBlacklistToggle"> 启用黑名单拦截</label></div>
+        <div class="settings-group"><strong>📋 白名单</strong><textarea id="whitelistInput" rows="2" placeholder="每行一个域名"></textarea></div>
+        <div class="settings-group"><strong>🚫 黑名单</strong><textarea id="blacklistInput" rows="2" placeholder="每行一个域名"></textarea></div>
+        <div class="settings-group"><strong>🔖 收藏夹</strong><div id="bookmarksList"></div><div style="display:flex;gap:6px;margin-top:8px"><input type="text" id="newBookmarkName" placeholder="名称"><input type="text" id="newBookmarkUrl" placeholder="网址"><button id="addBookmarkBtn" class="go-btn">+</button></div></div>
+        <div class="settings-group"><strong>🌐 网络测速 & IP检测</strong><div><button id="speedTestBtn" class="go-btn">开始测速</button> <button id="ipDetectBtn" class="go-btn">IP检测</button> <button id="revokeAuthBtn" class="go-btn" style="background:#7f8c8d">取消授权</button></div><div id="speedResult" class="speed-test-result"></div></div>
+        <div class="settings-group"><strong>📊 错误码参考</strong><div style="font-size:0.7rem">-7 TIMED_OUT &nbsp; -101 CONNECTION_RESET<br>-103 ABORTED &nbsp; -105 NAME_NOT_RESOLVED<br>-118 TIMED_OUT &nbsp; -130 PROXY_FAIL<br>-200 NETWORK_CHANGED &nbsp; -300 BLOCKED</div></div>
+        <button id="closeSettings" class="close-settings">关闭</button>
+    </div>
+</div>
+
+<script>
+    (function(){
+        const frame = document.getElementById('surfFrame');
+        const urlInput = document.getElementById('urlInput');
+        const goBtn = document.getElementById('goBtn');
+        const backBtn = document.getElementById('backBtn');
+        const forwardBtn = document.getElementById('forwardBtn');
+        const reloadBtn = document.getElementById('reloadBtn');
+        const statusSpan = document.getElementById('statusMsg');
+        const errorOverlay = document.getElementById('errorOverlay');
+        const errorMsgSpan = document.getElementById('errorMsg');
+        const retryBtn = document.getElementById('retryBtn');
+        const uaSelect = document.getElementById('uaSelect');
+        const securityBadge = document.getElementById('securityBadge');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsPanel = document.getElementById('settingsPanel');
+        const closeSettings = document.getElementById('closeSettings');
+        const themeToggle = document.getElementById('themeToggle');
+        const autoReloadToggle = document.getElementById('autoReloadToggle');
+        const blockBlacklistToggle = document.getElementById('blockBlacklistToggle');
+        const whitelistInput = document.getElementById('whitelistInput');
+        const blacklistInput = document.getElementById('blacklistInput');
+        const bookmarksList = document.getElementById('bookmarksList');
+        const newBookmarkName = document.getElementById('newBookmarkName');
+        const newBookmarkUrl = document.getElementById('newBookmarkUrl');
+        const addBookmarkBtn = document.getElementById('addBookmarkBtn');
+        const quickBlacklistBtn = document.getElementById('quickBlacklistBtn');
+        const quickWhitelistBtn = document.getElementById('quickWhitelistBtn');
+        const quickBookmarkBtn = document.getElementById('quickBookmarkBtn');
+        const speedTestBtn = document.getElementById('speedTestBtn');
+        const ipDetectBtn = document.getElementById('ipDetectBtn');
+        const revokeAuthBtn = document.getElementById('revokeAuthBtn');
+        const speedResult = document.getElementById('speedResult');
+        const progressFill = document.getElementById('progressFill');
+        const loadDetail = document.getElementById('loadDetail');
+        const steps = document.querySelectorAll('.step');
+
+        let pendingUrl = '', loadTimeout = null, loadStart = 0;
+        let currentUA = localStorage.getItem('surfer2_ua') || 'pc';
+        let autoReload = localStorage.getItem('surfer2_autoReload') !== 'false';
+        let blockBlacklist = localStorage.getItem('surfer2_blockBlacklist') === 'true';
+        let whitelist = JSON.parse(localStorage.getItem('surfer2_whitelist') || '[]');
+        let blacklist = JSON.parse(localStorage.getItem('surfer2_blacklist') || '[]');
+        let bookmarks = JSON.parse(localStorage.getItem('surfer2_bookmarks') || '[]');
+        let theme = localStorage.getItem('surfer2_theme') || 'dark';
+        let authGranted = localStorage.getItem('surfer2_authGranted') === 'true';
+
+        uaSelect.value = currentUA;
+        autoReloadToggle.checked = autoReload;
+        blockBlacklistToggle.checked = blockBlacklist;
+
+        function saveSettings() {
+            localStorage.setItem('surfer2_ua', currentUA);
+            localStorage.setItem('surfer2_autoReload', autoReload);
+            localStorage.setItem('surfer2_blockBlacklist', blockBlacklist);
+            localStorage.setItem('surfer2_whitelist', JSON.stringify(whitelist));
+            localStorage.setItem('surfer2_blacklist', JSON.stringify(blacklist));
+            localStorage.setItem('surfer2_bookmarks', JSON.stringify(bookmarks));
+            localStorage.setItem('surfer2_theme', theme);
+            localStorage.setItem('surfer2_authGranted', authGranted);
+            whitelistInput.value = whitelist.join('\n');
+            blacklistInput.value = blacklist.join('\n');
+            renderBookmarks();
+        }
+
+        function renderBookmarks() {
+            bookmarksList.innerHTML = '';
+            bookmarks.forEach((bm, idx) => {
+                const div = document.createElement('div'); div.className = 'bookmark-item';
+                div.innerHTML = `<span><strong>${bm.name}</strong><br><small>${bm.url.substring(0,40)}</small></span><button data-idx="${idx}">删</button>`;
+                div.querySelector('button').onclick = () => { bookmarks.splice(idx,1); saveSettings(); };
+                div.ondblclick = () => loadUrl(bm.url);
+                bookmarksList.appendChild(div);
+            });
+        }
+
+        function checkBlacklist(url) {
+            if(!blockBlacklist) return true;
+            try {
+                let host = new URL(url).hostname;
+                if(whitelist.some(w => host.includes(w))) return true;
+                if(blacklist.some(b => host.includes(b))) return false;
+            } catch(e){}
+            return true;
+        }
+
+        function normalizeUrl(input){
+            let url = input.trim();
+            if(!url) return '';
+            if(!url.startsWith('http://') && !url.startsWith('https://')){
+                if(!url.includes('.') && !url.includes('/')) return `https://www.bing.com/search?q=${encodeURIComponent(url)}`;
+                return `https://${url}`;
+            }
+            return url;
+        }
+
+        function setLoadingStep(step, detail){
+            steps.forEach(s=>s.classList.remove('active'));
+            document.querySelector(`[data-step="${step}"]`)?.classList.add('active');
+            if(detail) loadDetail.innerText = detail;
+        }
+
+        function updateProgress(percent){ progressFill.style.width = `${percent}%`; }
+
+        function setStatus(text, isError){ statusSpan.innerHTML = isError ? `⚠️ ${text}` : `🏄 ${text}`; }
+        function hideError(){ errorOverlay.classList.add('hidden'); }
+        function showError(msg){
+            errorMsgSpan.innerText = msg;
+            errorOverlay.classList.remove('hidden');
+            setStatus(msg, true);
+            updateProgress(0);
+            if(autoReload && pendingUrl) setTimeout(()=>loadUrl(pendingUrl),5000);
+        }
+        function clearTimer(){ if(loadTimeout) clearTimeout(loadTimeout); loadTimeout=null; }
+
+        function loadUrl(url){
+            if(!url) return;
+            let raw = url;
+            let targetUrl = normalizeUrl(raw);
+            if(!checkBlacklist(targetUrl)){ showError('黑名单拦截'); return; }
+            pendingUrl = targetUrl; loadStart = Date.now();
+            setStatus(`载入...`,false);
+            hideError(); clearTimer(); updateProgress(10);
+            setLoadingStep('dns','解析中');
+            loadTimeout = setTimeout(()=>{ if(pendingUrl===targetUrl) showError('超时 -7'); },12000);
+            try{ frame.src = targetUrl; } catch(e){ showError(e.message); }
+        }
+
+        function simulateProgress(){
+            let elapsed = Date.now() - loadStart;
+            let prog = Math.min(95, 10 + (elapsed/200)*40);
+            updateProgress(prog);
+            if(elapsed<800) setLoadingStep('dns','查询');
+            else if(elapsed<1800) setLoadingStep('connect','建立连接');
+            else if(elapsed<3000) setLoadingStep('ssl','安全握手');
+            else setLoadingStep('response','等待响应');
+        }
+        let progInterval;
+        function startProgressSim(){ if(progInterval) clearInterval(progInterval); progInterval = setInterval(()=>{ if(pendingUrl) simulateProgress(); },200); }
+        function stopProgressSim(){ if(progInterval) clearInterval(progInterval); updateProgress(100); setLoadingStep('dom','完成'); loadDetail.innerText = '加载完毕'; setTimeout(()=>updateProgress(0),800); }
+
+        function onLoad(){
+            clearTimer(); stopProgressSim();
+            let finalUrl = frame.src;
+            if(pendingUrl) setStatus(`📍 ${finalUrl.substring(0,60)}`,false);
+            else setStatus('完成',false);
+            pendingUrl = ''; hideError();
+            try{ urlInput.value = finalUrl; }catch(e){}
+        }
+        function onError(){ clearTimer(); stopProgressSim(); showError(`无法访问 ${pendingUrl||frame.src}`); pendingUrl=''; }
+
+        frame.addEventListener('load', onLoad);
+        frame.addEventListener('error', onError);
+        goBtn.onclick = ()=>{ loadUrl(urlInput.value); startProgressSim(); };
+        backBtn.onclick = ()=>{ try{ frame.contentWindow.history.back(); setStatus('后退'); startProgressSim(); }catch(e){ setStatus('跨域限制',true); } };
+        forwardBtn.onclick = ()=>{ try{ frame.contentWindow.history.forward(); startProgressSim(); }catch(e){ setStatus('跨域限制',true); } };
+        reloadBtn.onclick = ()=>{ try{ frame.contentWindow.location.reload(); startProgressSim(); }catch(e){ loadUrl(frame.src); } };
+        retryBtn.onclick = ()=>{ loadUrl(pendingUrl||frame.src||urlInput.value); startProgressSim(); };
+        urlInput.onkeypress = (e)=> { if(e.key==='Enter'){ loadUrl(urlInput.value); startProgressSim(); } };
+        uaSelect.onchange = (e)=>{ currentUA=e.target.value; saveSettings(); if(frame.src && frame.src!=='about:blank') loadUrl(frame.src); };
+
+        quickBlacklistBtn.onclick = ()=>{ settingsPanel.classList.add('show'); document.getElementById('blacklistInput').focus(); };
+        quickWhitelistBtn.onclick = ()=>{ settingsPanel.classList.add('show'); document.getElementById('whitelistInput').focus(); };
+        quickBookmarkBtn.onclick = ()=>{
+            let curUrl = frame.src;
+            if(curUrl && curUrl!=='about:blank'){
+                let name = prompt('收藏名称:', new URL(curUrl).hostname);
+                if(name){ bookmarks.push({name, url:curUrl}); saveSettings(); document.getElementById('quickStatus').innerText='已收藏'; setTimeout(()=>document.getElementById('quickStatus').innerText='',1500); }
+            } else alert('无可收藏页面');
+        };
+
+        // 网络测速
+        async function speedTest(){
+            if(!authGranted && !confirm('是否授权进行网络测速？授权信息将存入本地')) return;
+            authGranted=true; saveSettings();
+            speedResult.innerHTML = '测速中...';
+            let start = Date.now();
+            try{
+                let img = new Image();
+                img.src = `https://www.bing.com/favicon.ico?t=${start}`;
+                await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; setTimeout(()=>rej('timeout'),5000); });
+                let latency = Date.now()-start;
+                speedResult.innerHTML = `✅ 延迟: ${latency}ms | 网络正常`;
+            } catch(e){ speedResult.innerHTML = `⚠️ 测速失败: ${e}`; }
+        }
+        async function detectIP(){
+            if(!authGranted && !confirm('是否授权IP检测？信息仅本地保存')) return;
+            authGranted=true; saveSettings();
+            speedResult.innerHTML = '获取IP中...';
+            try{
+                let res = await fetch('https://api.ipify.org?format=json');
+                let data = await res.json();
+                speedResult.innerHTML = `🌍 当前公网IP: ${data.ip}`;
+            } catch(e){ speedResult.innerHTML = `⚠️ IP获取失败: ${e}`; }
+        }
+        function revokeAuth(){ authGranted=false; saveSettings(); speedResult.innerHTML='已取消授权，停止检测'; }
+
+        speedTestBtn.onclick = speedTest;
+        ipDetectBtn.onclick = detectIP;
+        revokeAuthBtn.onclick = revokeAuth;
+
+        settingsBtn.onclick = ()=>settingsPanel.classList.add('show');
+        closeSettings.onclick = ()=>{
+            autoReload = autoReloadToggle.checked;
+            blockBlacklist = blockBlacklistToggle.checked;
+            whitelist = whitelistInput.value.split('\n').filter(l=>l.trim());
+            blacklist = blacklistInput.value.split('\n').filter(l=>l.trim());
+            saveSettings();
+            settingsPanel.classList.remove('show');
+        };
+        addBookmarkBtn.onclick = ()=>{
+            let name = newBookmarkName.value.trim();
+            let url = newBookmarkUrl.value.trim();
+            if(name && url){ bookmarks.push({name,url}); saveSettings(); newBookmarkName.value=''; newBookmarkUrl.value=''; }
+        };
+        function setThemeMode(mode){
+            theme=mode;
+            if(mode==='light') document.body.classList.add('light');
+            else document.body.classList.remove('light');
+            themeToggle.innerHTML = mode==='light'?'☀️':'🌙';
+            saveSettings();
+        }
+        themeToggle.onclick = ()=>setThemeMode(theme==='light'?'dark':'light');
+        setThemeMode(theme);
+        whitelistInput.value = whitelist.join('\n');
+        blacklistInput.value = blacklist.join('\n');
+        renderBookmarks();
+        loadUrl('https://www.bing.com');
+    })();
+</script>
+</body>
+</html>
