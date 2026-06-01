@@ -1,4 +1,5 @@
 # Surfer2
+
 Surfer2 is an upgraded version of Surfer, but it can really go online, search online, and even support watching videos online. Compared to Surfer, Surfer2 has a wider range of territories. So, make the most of Surfer2!
 
 ## Important tips
@@ -225,3 +226,68 @@ Now I am trying to make the connection by Surfer2 safe,but I'm still not sure ab
 
 - Acrylic effect may have reduced performance on very low‑end devices (can be turned off).
 - Hide window button is for privacy/quick hide – does not lock or password‑protect the window.
+
+## 2.20.01
+
+## 🐞 Bug Fixes
+
+### 1. Fixed `surfer:chess` Board Position
+- **Issue:** Chess board was displayed at the bottom of the page instead of the center.
+- **Fix:** Added a flex wrapper (`.chess-wrapper`) to properly center the chess board vertically and horizontally.
+
+### 2. Fixed Background Image Rotation/Shift in Landscape Mode
+- **Issue:** When using a landscape background image on a mobile device, re-entering Surfer2 caused the background to rotate or shift abnormally.
+- **Fix:** Separated the background into an independent fixed layer (`<div class="bg-layer">`). The background now stays perfectly centered and covered regardless of device orientation or viewport size.
+
+### 3. Fixed Background Image Not Updating After Switching
+- **Issue:** After setting a new background image and saving settings, the new image did not take effect – the old image remained.
+- **Fix:** Refactored the style persistence logic. Background images are now saved and loaded independently. The new image is applied immediately when "Apply Style" or "Save All Settings" is clicked.
+
+### 4. Refined Acrylic (Frosted Glass) Effect
+- **Issue:** Acrylic effect previously applied only to the toolbar and container background, which was inconsistent with the intended design.
+- **Fix:** Acrylic mode now creates a **separate overlay layer** that sits between the background image and the main container. When enabled:
+  - The background layer remains fully visible underneath
+  - An acrylic blur layer covers the entire screen
+  - The Surfer2 container becomes semi-transparent with backdrop blur
+  - Result: A true **frosted glass effect** over the entire window, matching the visual design of modern operating systems
+
+---
+
+## ✨ New Features
+
+### None in this release (pure bugfix and polish)
+
+---
+
+## 🛠️ Technical Improvements
+
+- **Separated background layer** – independent from main container, preventing orientation and scaling issues
+- **Acrylic layer isolation** – blur effect now applies globally rather than per-element
+- **Style persistence refactored** – background image, container color, font, border color, and acrylic mode are all saved and restored correctly without conflicts
+- **Chess layout now properly centered** using flexbox
+
+---
+
+## 🧠 How to Test the Fixes
+
+| Fix | How to Verify |
+|-----|----------------|
+| Chess board position | Open `surfer:chess` → Board should be vertically and horizontally centered |
+| Background rotation | Set a landscape background → rotate device → background stays fixed and properly covered |
+| Background switch | Set background A → save → set background B → save → background B appears immediately |
+| Acrylic effect | Enable Acrylic in settings → entire window should have frosted glass effect, background visible underneath |
+
+---
+
+## 📦 Upgrade Notes
+
+- All previous settings (background, colors, fonts, acrylic mode) are **fully compatible** – no data loss
+- The new acrylic effect requires `backdrop-filter` support (modern browsers only)
+- Background layer now uses `position: fixed` – this may affect extremely old browsers, but all modern browsers work perfectly
+
+---
+
+## 🐞 Known Limitations
+
+- Acrylic effect may cause slight performance overhead on very low-end devices (can be disabled in settings)
+- Background images uploaded as Base64 are stored in `localStorage` – very large images may hit storage limits (typically 5-10MB)
