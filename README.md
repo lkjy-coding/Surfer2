@@ -674,3 +674,77 @@ Supports **four modes** with automatic detection:
 - **Unit conversion** covers only basic units (distance, mass). More units can be added in future updates.
 - **Currency rates** depend on exchangerate-api (free tier – may have rate limits).
 - **Speech synthesis** requires user interaction (browser autoplay policy) – the button click triggers it.
+
+## 3.10.00
+
+### 🐞 Critical Fixes
+
+#### 1. `surfer:embassy` Full‑screen Display Issue
+- **Problem:** The embassy information page (ChineseEmbassyV5) was cut off — only the first few lines were visible.
+- **Root cause:** The iframe did not inherit the correct height from its flex parent container.
+- **Solution:** The internal page now uses `display: flex; flex-direction: column; height: 100%` and the iframe is set to `flex: 1; height: 100%`.  
+  **Result:** The embassy page now fills the entire viewing area perfectly.
+
+#### 2. `surfer:count` – From Command Line to Full Graphical Interface
+- **Before:** Single input field + one line of text result → felt like a terminal / CMD.
+- **After:** A **tab‑based graphical calculator** with four dedicated panels:
+
+| Tab | Function | Interactive Elements |
+|-----|----------|----------------------|
+| 🧮 Math | Expression evaluation | Input field, calculate button, speech output |
+| 💱 Currency | Live exchange rates | Currency selectors, amount input, API call |
+| 📏 Unit conversion | Length & mass conversion | Dropdowns + quick‑action button grid |
+| 📈 Function plot | Mathematical graph drawing | Expression input, live plot, voice description |
+
+- **Added features:**
+  - Quick‑convert buttons: `km ↔ mile`, `kg ↔ lb`
+  - **Speech synthesis** (🔊 button) – reads the result aloud
+  - Plotting uses `function-plot.js` – supports `sin(x)`, `x^2`, `sqrt(x)`, `x*sin(x)`, etc.
+
+---
+
+### ✨ Improvement
+
+#### 3. Smooth Theme Transition (No “Flashbang”)
+- **Problem:** Instant light/dark mode switching caused a sudden brightness change (eye strain / “flashbang” effect).
+- **Solution:** Added CSS `transition` rules to all themed elements:
+  - `body`, `.surfer-container`, `.internal-page`, `.settings-group`, `.calc-tab`, `.page-card`, etc.
+  - Transition duration: `0.25s – 0.35s` with easing.
+- **Result:** Theme changes are now smooth, gradual, and comfortable for the eyes.
+
+---
+
+### 🛠️ Technical Notes
+
+- **Embassy iframe** – no external dependencies, works entirely inside Surfer2.
+- **Calculator** – all four modes are fully functional without page reload.
+- **Theme transition** – affects background, text, cards, borders, and backdrop‑filter layers.
+- **Speech synthesis** – requires user interaction (button click) due to browser autoplay policies.
+
+---
+
+## 🧠 How to Use
+
+| Feature | Action |
+|---------|--------|
+| Open embassy page | Type `surfer:embassy` → full‑screen iframe |
+| Use calculator | Type `surfer:count` → switch tabs |
+| Plot a function | Type `surfer:count` → go to **📈 函数绘图** tab → enter `sin(x)` → click “绘制图像” |
+| Listen to result | Click the **🔊 朗读** button after any calculation |
+| Smooth theme switch | Go to `surfer:settings` → toggle light/dark mode → watch the gentle transition |
+
+---
+
+## 📦 Upgrade Notes
+
+- All previous internal domains (`settings`, `note`, `chess`, `easyabroad`, `translate`, `pages`, `chajian`) remain fully functional.
+- The embassy page now displays correctly on all screen sizes.
+- The calculator no longer feels like a terminal – it is a proper graphical tool.
+
+---
+
+## 🐞 Known Limitations
+
+- **Exchange rate API** is free‑tier – occasional rate limits may occur.
+- **Function plotting** requires an internet connection (library loads from CDN).
+- **Speech synthesis** voice quality depends on the user’s operating system and browser.
