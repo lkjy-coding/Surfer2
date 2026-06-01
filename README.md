@@ -509,3 +509,75 @@ Now I am trying to make the connection by Surfer2 safe,but I'm still not sure ab
 - Maps require internet connection to load tiles.
 - IR transmitter plugin depends on system hardware – most devices will show “not supported”. This is expected.
 - `surfer:pages` does not automatically refresh if a new internal domain is added in future updates (static list for now).
+
+## 2.50.00
+
+### 🐞 Bug Fixes
+
+#### 1. Fixed `surfer:weather` HTML Code Leak
+- **Issue:** Weather page displayed raw HTML tags (e.g., `<!DOCTYPE html>`) instead of clean weather data.
+- **Cause:** The wttr.in API occasionally returns HTML-formatted content when the response is not pure text.
+- **Fix:** Added response sanitization – all `<` and `>` characters are now stripped from the weather output. Only plain text temperature and conditions are displayed.
+
+#### 2. Fixed Acrylic Effect Scope
+- **Issue:** Acrylic (frosted glass) effect previously applied to the entire page, including the background image layer, causing the background to become blurry.
+- **Cause:** The acrylic blur was applied to the whole body overlay.
+- **Fix:** Acrylic effect now ONLY applies to the `.surfer-container` (the browser window area). The background image remains completely sharp and unaffected by blur. The acrylic layer sits between the background and the container.
+
+#### 3. Fixed EasyAbroad Text Color in Dark Mode
+- **Issue:** After previous updates, EasyAbroad page titles and text turned black on dark background, making them completely unreadable.
+- **Cause:** EasyAbroad components did not inherit Surfer2’s global text color styles.
+- **Fix:** Added explicit `!important` color rules for `.easyabroad-container` and all its child elements. Text now displays properly as `#e2e8f0` in dark mode and `#1e293b` in light mode.
+
+---
+
+### ✨ New Features
+
+#### 1. Maps and Weather Integrated into Plugin Center
+- `surfer:maps` and `surfer:weather` are no longer standalone internal domains.
+- They are now **tabs inside `surfer:chajian`** (Plugin Center).
+- For backward compatibility, typing `surfer:maps` or `surfer:weather` automatically redirects to `surfer:chajian` with a status message.
+- Plugin center now features three tabs:
+  - 🗺️ **Online Map** (OpenStreetMap embed)
+  - 🌤️ **Weather Forecast** (wttr.in powered)
+  - 📡 **Infrared Transmitter** (hardware-dependent)
+
+#### 2. Plugin Center Tab Interface
+- Clean tab switching UI inside `surfer:chajian`.
+- Each plugin has its own dedicated pane.
+- Future plugins can be easily added as additional tabs.
+
+---
+
+### 🛠️ Technical Improvements
+
+- **Weather API sanitization** – Removes HTML tags from wttr.in responses, preventing broken layout.
+- **Acrylic layer separation** – Blur effect isolated to browser container, preserving background image clarity.
+- **EasyAbroad color inheritance** – Forced CSS rules ensure text readability regardless of system theme.
+- **Redirect handling** – Old internal domains (`maps`, `weather`) now gracefully redirect to plugin center with user feedback.
+
+---
+
+## 🧠 How to Use
+
+| Feature | Action |
+|---------|--------|
+| Open maps | Type `surfer:chajian` → click "🗺️ 在线地图" tab |
+| Check weather | Type `surfer:chajian` → click "🌤️ 天气预报" tab → enter city name |
+| Old shortcuts | `surfer:maps` or `surfer:weather` redirect to plugin center automatically |
+| Test IR transmitter | Go to `surfer:chajian` → "📡 红外线发射" tab → click test button |
+
+---
+
+## 📦 Upgrade Notes
+
+- `surfer:maps` and `surfer:weather` still work as shortcuts (redirect). Users who bookmarked them will not experience broken links.
+- Acrylic effect now behaves as intended – background images remain sharp.
+- EasyAbroad is fully readable in both light and dark modes.
+
+---
+
+## 🐞 Known Limitations
+
+- Weather API may still return odd characters for some cities – sanitization handles most cases.
+- IR transmitter requires actual hardware support (Android with ConsumerIr). Most desktop PCs will show "not supported" – this is expected.
