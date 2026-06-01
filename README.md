@@ -4,6 +4,12 @@ Surfer2 is an upgraded version of Surfer, but it can really go online, search on
 
 ## Important tips
 
+# Warning
+
+Currently known in version 3.00.00, in `surfer:settings`: When switching **between dark/light colors** in settings', the switch is too direct and **may be visually unfriendly**, **especially when switching to light mode**. In 3.10.00, this issue was fixed. **Currently, it is strongly recommended that you immediately stop using version 3.00.00.**
+
+## The tips
+
 Now I am trying to make the connection by Surfer2 safe,but I'm still not sure about it.So **I don't suggest you to enter something important on it**.
 
 ---
