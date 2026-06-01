@@ -43,6 +43,71 @@ Now I am trying to make the connection by Surfer2 safe,but I'm still not sure ab
 - Removed faulty `/m` hard redirect for UA switching
 - Fixed page display issues with better viewport adaptation
 
+## 1.30.00
+
+### 🚀 New Features
+
+#### 1. Internal Domain Foundation
+- Laid the groundwork for internal `surfer:*` domains.
+- Added routing logic to distinguish between external websites and built-in pages.
+
+#### 2. Enhanced URL Normalization
+- Improved address bar input handling.
+- Automatically adds `https://` prefix when missing.
+- Converts simple search terms to Bing search queries.
+
+#### 3. Basic Local Storage for Settings
+- Settings (auto-reload, whitelist, blacklist) now persist across sessions.
+- Bookmarks and notebook data structure prepared (UI coming in later versions).
+
+---
+
+### ⚙️ Enhanced
+
+- **Iframe Sandbox Security**: Refined sandbox permissions to block unwanted popups and redirects while keeping core functionality intact.
+- **Error Handling**: Better timeout detection and user-friendly error messages for common network issues (-7, -101, -103).
+
+---
+
+### 🐛 Fixed
+
+- Fixed an issue where some websites would still open links in the system browser despite previous fixes.
+- Corrected URL bar display after internal navigation (history stack now updates properly).
+- Resolved a bug where the reload button would not work correctly on certain pages.
+
+---
+
+### 🛠️ Technical Improvements
+
+- Refactored navigation logic (`navigateTo`, `goBack`, `goForward`) to support both external and internal URLs.
+- Improved iframe load event handling to reduce false "timeout" errors on slow connections.
+- Code restructuring to prepare for internal page system (`surfer:settings`, `surfer:note`, `surfer:chess`).
+
+---
+
+## 🧠 How to Use
+
+| Feature | Action |
+|---------|--------|
+| Normal browsing | Type any URL or search term in the address bar |
+| Reload | Click ⟳ button |
+| History navigation | Use ◀ (back) and ▶ (forward) buttons |
+
+---
+
+## 📦 Upgrade Notes
+
+- This version is a **foundational update** – no visible internal pages yet, but the system is ready for them.
+- All settings from 1.20.00 are automatically migrated.
+- External browsing behavior should be identical to 1.20.00, but with improved stability.
+
+---
+
+## 🐞 Known Limitations
+
+- Internal domains (`surfer:*`) are not yet user-accessible (UI coming in 2.00.00).
+- Background customization not yet available (introduced in 2.10.00).
+
 ## 2.00.00
 
 ## Big Update!
