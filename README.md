@@ -581,3 +581,90 @@ Now I am trying to make the connection by Surfer2 safe,but I'm still not sure ab
 
 - Weather API may still return odd characters for some cities – sanitization handles most cases.
 - IR transmitter requires actual hardware support (Android with ConsumerIr). Most desktop PCs will show "not supported" – this is expected.
+
+## 3.00.00
+
+### 🚀 New Features
+
+#### 1. New Internal Domain: `surfer:embassy`
+- Direct shortcut to **ChineseEmbassyV5** (the China embassy information website).
+- Opens the page inside Surfer2’s iframe for seamless integration.
+- Access by typing `surfer:embassy` in the address bar.
+
+#### 2. `surfer:note` – Markdown & LaTeX Support
+- Full **Markdown** rendering using `marked.js`.
+- **LaTeX math formulas** rendered with `KaTeX` (both inline `$...$` and block `$$...$$`).
+- Split view: edit Markdown on the left, preview rendered HTML on the right.
+- Features:
+  - 💾 **Save** – stores note content to `localStorage` automatically.
+  - 📄 **Export HTML** – downloads the rendered note as a standalone HTML file.
+- Perfect for technical notes, documentation, or math-heavy writing.
+
+#### 3. `surfer:translate` – Dedicated Translation Page
+- Extended language support: **14 languages** including:
+  - Chinese, English, Japanese, Korean, French, German, Spanish, Russian, Italian, Portuguese, Arabic, and more.
+- Clean two-column layout with source/target language selection.
+- Powered by MyMemory translation API (free tier).
+- Separated from EasyAbroad for focused translation tasks.
+
+#### 4. `surfer:count` – All-in-One Calculator
+Supports **four modes** with automatic detection:
+
+| Mode | Example | Description |
+|------|---------|-------------|
+| **Math Expression** | `2+3*4`, `sqrt(16)`, `2^10` | Standard arithmetic and math functions using JavaScript eval |
+| **Currency Exchange** | `100 USD to EUR` | Real-time汇率 conversion via exchangerate-api |
+| **Unit Conversion** | `10 km to mile`, `5 kg to lb` | Supports km, mile, m, cm, mm, kg, g, lb |
+| **Function Plotter** | `plot sin(x)`, `plot x^2` | Graphs mathematical functions using function-plot.js |
+
+**Audio Feedback** – Click the 🔊 button to have the result read aloud using Web Speech API.
+
+---
+
+### ✨ Enhancements
+
+#### EasyAbroad Translation Language Range Expanded
+- Added **8 more languages** to EasyAbroad’s translation module:
+  - Korean (한국어), French, German, Spanish, Russian, Italian, Portuguese, Arabic.
+- Now supports 12 languages total.
+
+---
+
+### 🔧 Technical Improvements
+
+- **Markdown rendering** – sanitized HTML output, safe for display.
+- **LaTeX rendering** – graceful error handling for invalid formulas.
+- **Function plotting** – uses `function-plot` library, supports any JavaScript math expression.
+- **Speech synthesis** – built‑in browser support, no external API required.
+- **Unit conversion** – basic but practical for everyday use (distance, mass).
+
+---
+
+## 🧠 How to Use New Features
+
+| Feature | Action |
+|---------|--------|
+| Open embassy info | Type `surfer:embassy` |
+| Write notes with math | Type `surfer:note` → write Markdown + `$$E=mc^2$$` |
+| Translate text | Type `surfer:translate` → select languages → enter text |
+| Calculate anything | Type `surfer:count` → enter expression, currency, unit, or `plot sin(x)` |
+| Hear result | Click 🔊 button after calculation |
+
+---
+
+## 📦 Upgrade Notes
+
+- All previous settings and internal domains are **fully compatible**.
+- `surfer:note` replaces the old simple textarea with a full Markdown editor (old notes are automatically migrated from `localStorage`).
+- `surfer:translate` is separate from `surfer:easyabroad` – both remain available.
+- The calculator’s `plot` function requires an internet connection to load the plotting library.
+
+---
+
+## 🐞 Known Limitations
+
+- **Math eval** uses `eval()` – only trusted expressions should be evaluated. This is safe inside the local environment.
+- **Plotting** works only for single-variable functions (`y = f(x)`).
+- **Unit conversion** covers only basic units (distance, mass). More units can be added in future updates.
+- **Currency rates** depend on exchangerate-api (free tier – may have rate limits).
+- **Speech synthesis** requires user interaction (browser autoplay policy) – the button click triggers it.
