@@ -356,3 +356,69 @@ Now I am trying to make the connection by Surfer2 safe,but I'm still not sure ab
 
 - Acrylic effect may cause slight performance overhead on very low-end devices (can be disabled in settings)
 - Background images uploaded as Base64 are stored in `localStorage` – very large images may hit storage limits (typically 5-10MB)
+
+## 2.30.00
+
+### 🚀 New Features
+
+#### 1. New Internal Domain: `surfer:easyabroad`
+- Integrated **EasyAbroad Second Edition** (without emoji in title) into Surfer2.
+- Provides all-in-one travel assistant features:
+  - 📍 Auto IP location detection (country, local time, timezone)
+  - 💱 Real‑time currency exchange rate conversion
+  - 🌍 Smart translation (auto detect source language, supports ZH/EN/JA)
+  - 🌐 Quick navigation to international websites (YouTube, X, Google, Wikipedia)
+- Fully self‑contained, no external dependencies.
+
+#### 2. New Internal Domain: `surfer:chajian`
+- Added **plugin entry point** for future extensions.
+- Currently displays a placeholder page indicating the plugin system is under development.
+- Designed to support:
+  - Ad filtering
+  - Script extensions
+  - Theme marketplace
+  - Third‑party plugin loading
+
+#### 3. Initial Page Set to `about:blank`
+- Surfer2 now launches with a **blank page** instead of loading any external website by default.
+- Improves startup performance and privacy.
+
+#### 4. Version Info Moved to Bottom of Settings Page
+- The Surfer2 version number and available internal domains are now displayed at the **bottom** of `surfer:settings` page.
+- Removed version number from the settings page title for a cleaner look.
+
+---
+
+### 🛠️ Technical Improvements
+
+- **EasyAbroad integration** uses the same IP detection, exchange rate API, and translation API as the standalone version.
+- All EasyAbroad functions are fully functional inside Surfer2 without any additional network requests beyond the original APIs.
+- Internal routing logic extended to support `easyabroad` and `chajian` domains.
+- The plugin page serves as a stable foundation for future plugin ecosystem.
+
+---
+
+## 🧠 How to Use New Features
+
+| Feature | Action |
+|---------|--------|
+| Open EasyAbroad | Type `surfer:easyabroad` in address bar |
+| Open plugin center | Type `surfer:chajian` in address bar |
+| Start with blank page | Launch Surfer2 → automatically loads `about:blank` |
+| Check version info | Go to `surfer:settings` → scroll to bottom |
+
+---
+
+## 📦 Upgrade Notes
+
+- All previous settings (whitelist, blacklist, auto‑reload, custom styles, acrylic mode) are **fully compatible** – no data loss.
+- EasyAbroad runs entirely inside Surfer2 – no need to open a separate page or tab.
+- The plugin system is **not yet functional** – only the entry point is ready. Actual plugins will be added in future versions (2.40.00+).
+
+---
+
+## 🐞 Known Limitations
+
+- EasyAbroad’s exchange rate and translation APIs rely on external free services – occasional rate limits or downtime may occur.
+- Plugin system is currently a placeholder; no actual plugins are available yet.
+- `about:blank` may not be recorded in history for some edge cases (normal browsing unaffected).
