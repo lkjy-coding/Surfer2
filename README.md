@@ -154,3 +154,74 @@ Now I am trying to make the connection by Surfer2 safe,but I'm still npt sure ab
 
 - Background images uploaded as Base64 may increase storage usage slightly  
 - Chess AI is intentionally simple (not unbeatable) – suitable for casual play
+
+## 2.20.00
+
+## 🐞 Bug Fixes
+
+### 1. Fixed `surfer:note` Not Working Properly
+- **Issue:** Notebook page failed to load and the address bar domain did not update.
+- **Fix:** Corrected internal routing logic — the address bar now correctly shows `surfer:note` when the notebook page is active. Note content now saves and loads reliably.
+
+### 2. Fixed Background Reset Issue in `surfer:settings`
+- **Issue:** After setting a custom background image or color, changing other settings (e.g., font, container color) would reset the background to default.
+- **Fix:** Style values are now saved independently and applied correctly without overwriting each other. Background, font, container background, border color, and acrylic mode are stored and restored separately.
+
+---
+
+## ✨ New Features
+
+### 1. Removed Boss Key Popup Hints
+- All floating text hints related to the Boss Key have been **completely removed**.
+- Only the **B button** remains on the toolbar (visual button). Pressing either the button or the `B` key instantly jumps to `surfer:settings`.
+
+### 2. Built-in Color Picker (Color Wheel)
+- Replaced plain text color inputs with **native HTML color wheels** (`<input type="color">`) in the settings page.
+- Better user experience for selecting background colors, container backgrounds, and border colors.
+
+### 3. Acrylic (Frosted Glass) Style
+- Added a **toggle switch** in settings to enable/disable **acrylic / frosted glass effect**.
+- When enabled, the main window uses `backdrop-filter: blur()` and semi-transparent backgrounds for a modern translucent look.
+
+### 4. One-Click Hide Window
+- Added a **🙈 Hide** button on the toolbar.
+- Clicking it instantly hides the entire Surfer2 window (opacity + visibility hidden).
+- A temporary **👁️ Show Window** button appears to restore the window.
+- Perfect for quickly hiding the browser when needed (privacy / quick escape).
+
+---
+
+## 🛠️ Technical Improvements
+
+- Internal page routing now correctly updates the **address bar domain** for all three internal pages (`surfer:settings`, `surfer:note`, `surfer:chess`).
+- Style persistence logic was **refactored** to prevent background resets.
+- Acrylic mode can be enabled/disabled independently from other style settings.
+- Hide/restore functionality is handled with smooth UI feedback.
+
+---
+
+## 🧠 How to Use New Features
+
+| Feature | Action |
+|---------|--------|
+| Fix note page | Type `surfer:note` in address bar → works correctly now |
+| Fix background reset | Go to `surfer:settings` → change background, font, colors → they will all persist together |
+| Boss Key | Click **B** button on toolbar or press keyboard **B** (no extra popups) |
+| Color wheel | In settings, click any color picker (background, container, border) |
+| Acrylic mode | Go to settings → check **亚克力磨砂效果** → click *Apply Style* |
+| Hide window | Click **🙈 Hide** button on toolbar → a *Show Window* button appears to restore |
+
+---
+
+## 📦 Upgrade Notes
+
+- All previous settings (whitelist, blacklist, auto‑reload, custom styles) are **fully migrated**.
+- Acrylic mode is **disabled by default** – enable it manually in settings.
+- The hide window feature does not close or reload the page – it only hides the visual container.
+
+---
+
+## 🐞 Known Limitations
+
+- Acrylic effect may have reduced performance on very low‑end devices (can be turned off).
+- Hide window button is for privacy/quick hide – does not lock or password‑protect the window.
