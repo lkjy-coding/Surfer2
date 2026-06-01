@@ -422,3 +422,90 @@ Now I am trying to make the connection by Surfer2 safe,but I'm still not sure ab
 - EasyAbroad’s exchange rate and translation APIs rely on external free services – occasional rate limits or downtime may occur.
 - Plugin system is currently a placeholder; no actual plugins are available yet.
 - `about:blank` may not be recorded in history for some edge cases (normal browsing unaffected).
+
+## 2.40.00
+
+### 🚀 New Features
+
+#### 1. New Internal Domain: `surfer:maps`
+- Integrated **online map** using OpenStreetMap.
+- Fully interactive map with drag, zoom, and pan support.
+- Perfect for location lookup and route planning directly inside Surfer2.
+
+#### 2. New Internal Domain: `surfer:weather`
+- Real‑time weather lookup for any city worldwide.
+- Powered by **wttr.in** – enter city name (e.g., Beijing, London, New York) to get current temperature and conditions.
+- Clean card‑style display that adapts to light/dark mode.
+
+#### 3. New Internal Domain: `surfer:pages`
+- **One‑stop dashboard** for all Surfer2 internal domains.
+- Displays a grid of cards for every available `surfer:*` domain.
+- Click any card to instantly navigate to that internal page.
+- Includes: settings, note, chess, easyabroad, maps, weather, chajian.
+
+#### 4. Light/Dark Mode Toggle Restored
+- Re‑added **one‑click light/dark mode switch** in `surfer:settings`.
+- Works independently from background images and acrylic effect.
+- Settings are saved to `localStorage` and persist across sessions.
+- All internal pages (including EasyAbroad, maps, weather, pages) adapt correctly to the selected mode.
+
+#### 5. Version Information as Dedicated Setting Item
+- Moved version display from tiny bottom text to **a standalone settings group** in `surfer:settings`.
+- Clearly shows:
+  - Current Surfer2 version (`2.40.00`)
+  - List of all available internal domains
+
+#### 6. EasyAbroad Style Adaptation
+- Fixed color contrast issues in EasyAbroad page:
+  - Text and background colors now properly adapt to **light/dark mode**.
+  - Cards, borders, and text contrast are consistent with Surfer2’s global theme.
+  - No more hard‑to‑read text regardless of background settings.
+
+#### 7. Plugin: Infrared Transmitter (in `surfer:chajian`)
+- Added **Infrared Transmitter plugin** to the plugin center.
+- When hardware supports infrared (ConsumerIr API on Android), the plugin attempts to send an IR signal.
+- Displays appropriate feedback:
+  - ✅ “IR test sent” if hardware supports it
+  - ⚠️ “Device does not support IR” if not available
+- Future plugins (ad filter, script extensions, theme store) will be added here.
+
+---
+
+### 🛠️ Technical Improvements
+
+- **Theme consistency** – All internal pages now respect light/dark mode and custom styles.
+- **Map integration** uses OpenStreetMap embed – no API key required.
+- **Weather API** uses free `wttr.in` service – no registration needed.
+- **IR plugin** checks for `navigator` capabilities and reports hardware support status.
+- **Page navigation grid** is fully responsive – works on desktop and mobile.
+
+---
+
+## 🧠 How to Use New Features
+
+| Feature | Action |
+|---------|--------|
+| Open online map | Type `surfer:maps` in address bar |
+| Check weather | Type `surfer:weather` → enter city name → click “查询天气” |
+| View all internal domains | Type `surfer:pages` → click any card |
+| Switch light/dark mode | Go to `surfer:settings` → check/uncheck “浅色模式” |
+| Check version info | Go to `surfer:settings` → scroll to “版本信息” section |
+| Test IR transmitter | Go to `surfer:chajian` → click “测试发射红外线” |
+
+---
+
+## 📦 Upgrade Notes
+
+- All previous settings (whitelist, blacklist, auto‑reload, custom styles, acrylic mode, light mode) are **fully compatible** – no data loss.
+- EasyAbroad now inherits Surfer2’s theme – no separate style adjustments needed.
+- Maps and weather work offline after initial load (cached resources).
+- IR transmitter requires **actual hardware** – most desktop PCs will not support it; Android devices with IR blasters (Xiaomi, Huawei, Samsung) may support it.
+
+---
+
+## 🐞 Known Limitations
+
+- Weather API may be rate‑limited under heavy use (free service).
+- Maps require internet connection to load tiles.
+- IR transmitter plugin depends on system hardware – most devices will show “not supported”. This is expected.
+- `surfer:pages` does not automatically refresh if a new internal domain is added in future updates (static list for now).
