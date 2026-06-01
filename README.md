@@ -748,3 +748,81 @@ Supports **four modes** with automatic detection:
 - **Exchange rate API** is free‑tier – occasional rate limits may occur.
 - **Function plotting** requires an internet connection (library loads from CDN).
 - **Speech synthesis** voice quality depends on the user’s operating system and browser.
+
+## 3.20.00
+
+### 🚀 New Features
+
+#### 1. Calculator Rebuilt as Pure GUI (Button‑Based Interface)
+- **Complete replacement** of the old command‑line style input with a **full graphical calculator**.
+- **Buttons include:**
+  - Digits `0–9` and decimal point `.`
+  - Basic operators: `+`, `-`, `×`, `÷`
+  - Clear (`AC`) and backspace (`⌫`)
+  - Scientific functions: `√`, `x²`, `sin`, `cos`, `tan`, `π`
+  - Equals (`=`) to evaluate expression
+  - 🔊 **Speech output** – reads the result aloud
+  - 📈 **Plot function** – draws the graph of the current expression
+- All buttons have visual feedback (scale‑down on press).
+
+#### 2. Expression Engine
+- Supports:
+  - Basic arithmetic (`2+3*4`)
+  - Parentheses (`(2+3)*4`)
+  - Scientific functions: `sin`, `cos`, `tan` (input in radians)
+  - Constants: `π` (pi)
+  - Power notation: `x²` (converted to `^2` internally)
+  - Square root: `√(expression)`
+- Invalid expressions show clear error messages without crashing.
+
+---
+
+### 🐞 Bug Fixes
+
+#### 3. Fixed `surfer:pages` Text Visibility in Light Mode
+- **Problem:** In light mode, the text on navigation cards (`surfer:pages`) was almost invisible (same color as background).
+- **Root cause:** The `.page-card` color was not explicitly set for light mode; it inherited a dark color.
+- **Fix:** Added explicit light‑mode styles:
+  ```css
+  body.light-mode .page-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      color: #1e293b;
+  }
+  ```
+
+Now cards are clearly readable in both themes.
+
+### 🛠️ Technical Improvements
+
+- Calculator GUI is built with pure HTML/CSS/JS – no external dependencies for the button layout.
+- Expression evaluation uses a controlled `eval` context, safe for local use.
+- Plotting functionality relies on the CDN‑hosted `function-plot` library.
+- Speech synthesis uses the Web Speech API and requires a user click (browser autoplay policy).
+
+### 🧠 How to Use New Features
+
+| Feature | Action |
+|---------|--------|
+| Open graphical calculator | Type `surfer:count` in the address bar |
+| Input numbers / operators | Click the on‑screen buttons |
+| Clear current expression | Click `AC` |
+| Delete last character | Click `⌫` |
+| Calculate result | Click `=` |
+| Hear the result aloud | Click the 🔊 button |
+| Plot the current expression | Click the 📈 button |
+| Open page navigation | Type `surfer:pages` – cards are now clearly readable |
+| Toggle light/dark mode | Go to `surfer:settings` – checkbox state is now correct |
+
+### 📦 Upgrade Notes
+
+- All existing internal domains (`settings`, `note`, `chess`, `easyabroad`, `embassy`, `translate`, `pages`, `chajian`) continue to work without changes.
+- The old text‑based calculator is completely removed. No migration is needed.
+- Existing `localStorage` settings (theme, acrylic, font, background) are untouched.
+
+### 🐞 Known Limitations
+
+- Plotting requires an internet connection (the `function-plot` library is loaded from a CDN).
+- Scientific functions (`sin`, `cos`, `tan`) expect **radians**, not degrees. Use `sin(pi/2)` to calculate `sin(90°)`.
+- Speech synthesis quality and voice depend on the user’s operating system and browser.
+- Plotting may fail for very complex expressions or functions with discontinuities (for example, `tan(x)` near its asymptotes).
