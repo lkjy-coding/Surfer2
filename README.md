@@ -3,7 +3,7 @@ Surfer2 is an upgraded version of Surfer, but it can really go online, search on
 
 ## Important tips
 
-Now I am trying to make the connection by Surfer2 safe,but I'm still npt sure about it.So **I don't suggest you to enter something important on it**.
+Now I am trying to make the connection by Surfer2 safe,but I'm still not sure about it.So **I don't suggest you to enter something important on it**.
 
 ---
 
@@ -42,7 +42,7 @@ Now I am trying to make the connection by Surfer2 safe,but I'm still npt sure ab
 - Removed faulty `/m` hard redirect for UA switching
 - Fixed page display issues with better viewport adaptation
 
-# 2.00.00
+## 2.00.00
 
 ## Big Update!
 
