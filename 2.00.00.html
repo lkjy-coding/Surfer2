@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Surfer2 · 专业冲浪器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0f1e;
+            font-family: 'Segoe UI', system-ui, monospace;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+
+        .surfer-container {
+            width: 100%;
+            max-width: 1400px;
+            height: 90vh;
+            background: #0e1427;
+            border-radius: 32px;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #2d3e5f;
+        }
+
+        .toolbar {
+            background: #111927;
+            padding: 8px 16px;
+            border-bottom: 1px solid #2a3a55;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 6px;
+            background: #0b101e;
+            padding: 4px 10px;
+            border-radius: 48px;
+        }
+
+        .nav-btn {
+            background: #1e2a3e;
+            border: none;
+            color: #b4d0ff;
+            font-size: 1.2rem;
+            width: 32px;
+            height: 32px;
+            border-radius: 40px;
+            cursor: pointer;
+        }
+
+        .url-bar {
+            flex: 1;
+            display: flex;
+            gap: 6px;
+            background: #0b101e;
+            padding: 4px 12px;
+            border-radius: 60px;
+            align-items: center;
+        }
+
+        .url-input {
+            flex: 1;
+            background: #010a1a;
+            border: 1px solid #2c5270;
+            padding: 8px 14px;
+            border-radius: 48px;
+            color: #c0e0ff;
+            font-size: 0.85rem;
+            outline: none;
+        }
+
+        .go-btn, .quick-btn {
+            background: #1f6392;
+            border: none;
+            padding: 5px 14px;
+            border-radius: 40px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+
+        .status {
+            font-size: 0.65rem;
+            background: #030a17aa;
+            padding: 3px 10px;
+            border-radius: 20px;
+            color: #87b9ff;
+        }
+
+        .wave-area {
+            flex: 1;
+            background: #ffffff;
+            position: relative;
+            overflow: auto;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+
+        .internal-page {
+            width: 100%;
+            height: 100%;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 20px;
+            overflow-y: auto;
+            font-family: system-ui, monospace;
+        }
+
+        .settings-group {
+            margin-bottom: 20px;
+            padding: 12px;
+            background: #1e293b;
+            border-radius: 16px;
+        }
+
+        .settings-group input, .settings-group textarea {
+            width: 100%;
+            padding: 8px;
+            margin-top: 6px;
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 12px;
+            color: #f1f5f9;
+        }
+
+        .chess-board {
+            display: grid;
+            grid-template-columns: repeat(3, 80px);
+            gap: 8px;
+            justify-content: center;
+            margin: 30px auto;
+        }
+
+        .chess-cell {
+            width: 80px;
+            height: 80px;
+            background: #2d3748;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.1s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .chess-cell:hover {
+            background: #4a5568;
+        }
+
+        .note-textarea {
+            width: 100%;
+            height: 70%;
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 16px;
+            padding: 16px;
+            color: #f1f5f9;
+            font-size: 1rem;
+            font-family: monospace;
+            resize: none;
+        }
+
+        .internal-header {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #3b82f6;
+            display: inline-block;
+            padding-bottom: 4px;
+        }
+
+        button {
+            background: #3b82f6;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 24px;
+            color: white;
+            cursor: pointer;
+            margin: 4px;
+        }
+
+        .boss-key-hint {
+            position: fixed;
+            bottom: 10px;
+            right: 16px;
+            background: #000000aa;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            color: #aaa;
+            pointer-events: none;
+            z-index: 200;
+        }
+    </style>
+</head>
+<body>
+<div class="surfer-container">
+    <div class="toolbar">
+        <div class="nav-buttons">
+            <button class="nav-btn" id="backBtn">◀</button>
+            <button class="nav-btn" id="forwardBtn">▶</button>
+            <button class="nav-btn" id="reloadBtn">⟳</button>
+        </div>
+        <div class="url-bar">
+            <input type="text" id="urlInput" class="url-input" placeholder="🌊 输入网址 / surfer:settings / surfer:note / surfer:chess" value="surfer:settings">
+            <button id="goBtn" class="go-btn">冲浪</button>
+        </div>
+        <div class="status" id="statusMsg">⚡ 内部域名就绪</div>
+    </div>
+
+    <div class="wave-area" id="waveArea">
+        <iframe id="surfFrame" src="about:blank" style="display:none;"></iframe>
+        <div id="internalContainer" style="width:100%;height:100%;overflow:auto;"></div>
+    </div>
+    <div class="boss-key-hint">🕹️ 老板键: 按 B 键 → 快速切换到 surfer:settings</div>
+</div>
+
+<script>
+    (function(){
+        // DOM 元素
+        const frame = document.getElementById('surfFrame');
+        const internalContainer = document.getElementById('internalContainer');
+        const urlInput = document.getElementById('urlInput');
+        const goBtn = document.getElementById('goBtn');
+        const backBtn = document.getElementById('backBtn');
+        const forwardBtn = document.getElementById('forwardBtn');
+        const reloadBtn = document.getElementById('reloadBtn');
+        const statusSpan = document.getElementById('statusMsg');
+
+        // 历史记录栈 (简单模拟)
+        let historyStack = [];
+        let historyIndex = -1;
+
+        // 内部页面渲染器
+        function renderInternalPage(pageId) {
+            frame.style.display = 'none';
+            internalContainer.style.display = 'block';
+            internalContainer.innerHTML = '';
+
+            if (pageId === 'settings') {
+                internalContainer.innerHTML = renderSettingsPage();
+                attachSettingsEvents();
+            } else if (pageId === 'note') {
+                internalContainer.innerHTML = renderNotePage();
+                attachNoteEvents();
+            } else if (pageId === 'chess') {
+                internalContainer.innerHTML = renderChessPage();
+                attachChessEvents();
+            } else {
+                // 未知内部域名，fallback
+                internalContainer.innerHTML = `<div class="internal-page"><h2>❓ 未知内部域名</h2><p>支持: surfer:settings , surfer:note , surfer:chess</p></div>`;
+            }
+            statusSpan.innerText = `📄 内部页面: ${pageId}`;
+        }
+
+        // 加载外部网页
+        function loadExternalUrl(url) {
+            frame.style.display = 'block';
+            internalContainer.style.display = 'none';
+            frame.src = url;
+            statusSpan.innerText = `🌐 加载: ${url.substring(0, 60)}`;
+        }
+
+        // 核心导航
+        function navigateTo(url) {
+            let target = url.trim();
+            if (!target) return;
+            // 处理内部域名
+            if (target.startsWith('surfer:')) {
+                const page = target.replace('surfer:', '').split('?')[0];
+                if (['settings', 'note', 'chess'].includes(page)) {
+                    renderInternalPage(page);
+                    // 记录历史
+                    historyStack = historyStack.slice(0, historyIndex + 1);
+                    historyStack.push(target);
+                    historyIndex++;
+                    urlInput.value = target;
+                    return;
+                } else {
+                    renderInternalPage('unknown');
+                    return;
+                }
+            }
+            // 普通网址标准化
+            if (!target.startsWith('http://') && !target.startsWith('https://')) {
+                if (target.includes('.') && !target.includes(' ')) {
+                    target = 'https://' + target;
+                } else {
+                    target = 'https://www.bing.com/search?q=' + encodeURIComponent(target);
+                }
+            }
+            loadExternalUrl(target);
+            // 记录历史
+            historyStack = historyStack.slice(0, historyIndex + 1);
+            historyStack.push(target);
+            historyIndex++;
+            urlInput.value = target;
+        }
+
+        // 设置页面 HTML
+        function renderSettingsPage() {
+            // 读取本地存储
+            const whitelist = JSON.parse(localStorage.getItem('surfer2_whitelist') || '[]');
+            const blacklist = JSON.parse(localStorage.getItem('surfer2_blacklist') || '[]');
+            const autoReload = localStorage.getItem('surfer2_autoReload') !== 'false';
+            return `
+                <div class="internal-page">
+                    <h2 class="internal-header">⚙️ Surfer2 设置中心</h2>
+                    <div class="settings-group">
+                        <label><input type="checkbox" id="autoReloadToggle" ${autoReload ? 'checked' : ''}> 连接失败后自动刷新</label>
+                    </div>
+                    <div class="settings-group">
+                        <strong>📋 白名单 (每行一个域名)</strong>
+                        <textarea id="whitelistInput" rows="3" placeholder="github.com&#10;google.com">${whitelist.join('\n')}</textarea>
+                    </div>
+                    <div class="settings-group">
+                        <strong>🚫 黑名单 (每行一个域名)</strong>
+                        <textarea id="blacklistInput" rows="3" placeholder="example.com">${blacklist.join('\n')}</textarea>
+                    </div>
+                    <div class="settings-group">
+                        <strong>📊 错误码参考</strong>
+                        <div style="font-size:0.75rem; margin-top:6px;">-7 TIMED_OUT &nbsp; -101 CONNECTION_RESET<br>-103 ABORTED &nbsp; -105 NAME_NOT_RESOLVED<br>-118 TIMED_OUT &nbsp; -130 PROXY_FAIL<br>-200 NETWORK_CHANGED &nbsp; -300 BLOCKED</div>
+                    </div>
+                    <button id="saveSettingsBtn">💾 保存设置</button>
+                    <p style="margin-top:12px; font-size:0.7rem;">✅ 设置自动保存至本地</p>
+                </div>
+            `;
+        }
+        function attachSettingsEvents() {
+            const saveBtn = document.getElementById('saveSettingsBtn');
+            if (saveBtn) {
+                saveBtn.onclick = () => {
+                    const autoReload = document.getElementById('autoReloadToggle').checked;
+                    const whitelist = document.getElementById('whitelistInput').value.split('\n').filter(l => l.trim());
+                    const blacklist = document.getElementById('blacklistInput').value.split('\n').filter(l => l.trim());
+                    localStorage.setItem('surfer2_autoReload', autoReload);
+                    localStorage.setItem('surfer2_whitelist', JSON.stringify(whitelist));
+                    localStorage.setItem('surfer2_blacklist', JSON.stringify(blacklist));
+                    statusSpan.innerText = '⚙️ 设置已保存';
+                    setTimeout(() => statusSpan.innerText = '📄 内部页面: settings', 1500);
+                };
+            }
+        }
+
+        // 笔记本页面
+        function renderNotePage() {
+            const savedNote = localStorage.getItem('surfer2_note') || '';
+            return `
+                <div class="internal-page">
+                    <h2 class="internal-header">📝 surfer:note · 本地笔记本</h2>
+                    <textarea id="noteContent" class="note-textarea" placeholder="写点东西... 自动保存到本地">${escapeHtml(savedNote)}</textarea>
+                    <div style="margin-top:12px;">
+                        <button id="clearNoteBtn">🗑️ 清空笔记</button>
+                        <span style="margin-left:12px; font-size:0.7rem;">💾 实时自动保存</span>
+                    </div>
+                </div>
+            `;
+        }
+        function attachNoteEvents() {
+            const textarea = document.getElementById('noteContent');
+            if (!textarea) return;
+            const saveNote = () => {
+                localStorage.setItem('surfer2_note', textarea.value);
+                statusSpan.innerText = '📝 笔记已保存';
+                setTimeout(() => statusSpan.innerText = '📄 内部页面: note', 800);
+            };
+            textarea.addEventListener('input', () => {
+                localStorage.setItem('surfer2_note', textarea.value);
+            });
+            const clearBtn = document.getElementById('clearNoteBtn');
+            if (clearBtn) {
+                clearBtn.onclick = () => {
+                    textarea.value = '';
+                    localStorage.setItem('surfer2_note', '');
+                    statusSpan.innerText = '🗑️ 笔记已清空';
+                };
+            }
+        }
+
+        // 井字棋 (人机)
+        let chessBoard = ['', '', '', '', '', '', '', '', ''];
+        let gameActive = true;
+        let currentPlayer = 'X'; // X 是玩家, O 是机器人
+        function renderChessPage() {
+            return `
+                <div class="internal-page">
+                    <h2 class="internal-header">⭕ surfer:chess · 井字棋 (vs 机器人)</h2>
+                    <div id="chessBoardContainer" class="chess-board"></div>
+                    <div style="text-align:center; margin-top:16px;">
+                        <button id="resetChessBtn">🔄 新对局</button>
+                        <span id="chessStatus" style="margin-left:16px;">👤 你的回合 (X)</span>
+                    </div>
+                    <p style="margin-top:20px; font-size:0.7rem;">🤖 机器人后手 (O) | 点击格子落子</p>
+                </div>
+            `;
+        }
+        function attachChessEvents() {
+            const container = document.getElementById('chessBoardContainer');
+            const statusSpanChess = document.getElementById('chessStatus');
+            if (!container) return;
+
+            function updateBoardUI() {
+                container.innerHTML = '';
+                for (let i = 0; i < 9; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'chess-cell';
+                    cell.innerText = chessBoard[i];
+                    cell.dataset.index = i;
+                    if (!gameActive || chessBoard[i] !== '' || currentPlayer !== 'X') {
+                        cell.style.cursor = 'not-allowed';
+                        cell.style.opacity = '0.6';
+                    } else {
+                        cell.style.cursor = 'pointer';
+                        cell.style.opacity = '1';
+                    }
+                    cell.onclick = () => playerMove(i);
+                    container.appendChild(cell);
+                }
+                if (statusSpanChess) {
+                    if (!gameActive) return;
+                    statusSpanChess.innerText = currentPlayer === 'X' ? '👤 你的回合 (X)' : '🤖 机器人思考中...';
+                }
+            }
+
+            function checkWinner(board) {
+                const lines = [
+                    [0,1,2],[3,4,5],[6,7,8],
+                    [0,3,6],[1,4,7],[2,5,8],
+                    [0,4,8],[2,4,6]
+                ];
+                for (let line of lines) {
+                    const [a,b,c] = line;
+                    if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                        return board[a];
+                    }
+                }
+                if (board.every(cell => cell !== '')) return 'tie';
+                return null;
+            }
+
+            function endGame(winner) {
+                gameActive = false;
+                if (winner === 'X') {
+                    if (statusSpanChess) statusSpanChess.innerText = '🎉 你赢了！点击新对局';
+                } else if (winner === 'O') {
+                    if (statusSpanChess) statusSpanChess.innerText = '🤖 机器人赢了... 再来一局';
+                } else if (winner === 'tie') {
+                    if (statusSpanChess) statusSpanChess.innerText = '🤝 平局！';
+                }
+                updateBoardUI();
+            }
+
+            function robotMove() {
+                if (!gameActive) return;
+                if (currentPlayer !== 'O') return;
+                // 简单AI: 优先占中间/角/随机
+                let empty = chessBoard.reduce((arr, cell, idx) => { if (cell === '') arr.push(idx); return arr; }, []);
+                if (empty.length === 0) return;
+                let move = null;
+                // 1. 优先选中心
+                if (chessBoard[4] === '') move = 4;
+                else {
+                    // 随机挑选一个空位
+                    const corners = [0,2,6,8];
+                    const availableCorners = corners.filter(i => chessBoard[i] === '');
+                    if (availableCorners.length > 0 && Math.random() < 0.6) {
+                        move = availableCorners[Math.floor(Math.random() * availableCorners.length)];
+                    } else {
+                        move = empty[Math.floor(Math.random() * empty.length)];
+                    }
+                }
+                if (move !== null) {
+                    chessBoard[move] = 'O';
+                    const winner = checkWinner(chessBoard);
+                    if (winner) {
+                        gameActive = false;
+                        endGame(winner);
+                        currentPlayer = null;
+                        updateBoardUI();
+                        return;
+                    }
+                    currentPlayer = 'X';
+                    updateBoardUI();
+                    const newWinner = checkWinner(chessBoard);
+                    if (newWinner) endGame(newWinner);
+                }
+                updateBoardUI();
+            }
+
+            function playerMove(index) {
+                if (!gameActive) return;
+                if (currentPlayer !== 'X') return;
+                if (chessBoard[index] !== '') return;
+                chessBoard[index] = 'X';
+                const winner = checkWinner(chessBoard);
+                if (winner) {
+                    gameActive = false;
+                    endGame(winner);
+                    updateBoardUI();
+                    return;
+                }
+                currentPlayer = 'O';
+                updateBoardUI();
+                setTimeout(() => robotMove(), 120);
+            }
+
+            function resetGame() {
+                chessBoard = ['', '', '', '', '', '', '', '', ''];
+                gameActive = true;
+                currentPlayer = 'X';
+                if (statusSpanChess) statusSpanChess.innerText = '👤 你的回合 (X)';
+                updateBoardUI();
+            }
+
+            window.resetChess = resetGame;
+            const resetBtn = document.getElementById('resetChessBtn');
+            if (resetBtn) resetBtn.onclick = resetGame;
+            resetGame();
+        }
+
+        // 辅助函数
+        function escapeHtml(str) {
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        // 导航按钮
+        function goBack() {
+            if (historyIndex > 0) {
+                historyIndex--;
+                const prev = historyStack[historyIndex];
+                urlInput.value = prev;
+                if (prev.startsWith('surfer:')) {
+                    const page = prev.replace('surfer:', '');
+                    renderInternalPage(page);
+                } else {
+                    loadExternalUrl(prev);
+                }
+            } else {
+                statusSpan.innerText = '⚠️ 没有更早的历史';
+            }
+        }
+        function goForward() {
+            if (historyIndex < historyStack.length - 1) {
+                historyIndex++;
+                const next = historyStack[historyIndex];
+                urlInput.value = next;
+                if (next.startsWith('surfer:')) {
+                    const page = next.replace('surfer:', '');
+                    renderInternalPage(page);
+                } else {
+                    loadExternalUrl(next);
+                }
+            } else {
+                statusSpan.innerText = '⚠️ 没有更新的历史';
+            }
+        }
+        function reloadCurrent() {
+            const current = urlInput.value.trim();
+            if (current.startsWith('surfer:')) {
+                const page = current.replace('surfer:', '');
+                renderInternalPage(page);
+            } else {
+                if (frame.src && frame.src !== 'about:blank') {
+                    frame.src = frame.src;
+                } else {
+                    loadExternalUrl(current);
+                }
+            }
+        }
+
+        // 老板键: 按 B 立即切换到 surfer:settings
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'b' || e.key === 'B') {
+                e.preventDefault();
+                const settingsUrl = 'surfer:settings';
+                urlInput.value = settingsUrl;
+                navigateTo(settingsUrl);
+                statusSpan.innerText = '🕹️ 老板键已触发 → 设置页面';
+                setTimeout(() => {
+                    if (statusSpan.innerText.includes('老板键')) statusSpan.innerText = '📄 内部页面: settings';
+                }, 1500);
+            }
+        });
+
+        // 事件绑定
+        goBtn.onclick = () => navigateTo(urlInput.value);
+        backBtn.onclick = goBack;
+        forwardBtn.onclick = goForward;
+        reloadBtn.onclick = reloadCurrent;
+        urlInput.onkeypress = (e) => { if (e.key === 'Enter') navigateTo(urlInput.value); };
+
+        // 初始默认加载 settings 页面
+        navigateTo('surfer:settings');
+    })();
+</script>
+</body>
+  </html>
