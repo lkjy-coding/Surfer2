@@ -87,3 +87,70 @@ Now I am trying to make the connection by Surfer2 safe,but I'm still npt sure ab
 - Notes and settings are stored locally using `localStorage`.  
 - The chess AI is a simple rule‑based bot (easy mode).  
 - Boss key does not close the window – it only navigates to the settings page for privacy.
+
+## 2.10.00
+
+## ✨ New Features
+
+### 1. Settings Page (`surfer:settings`) – Full Customization
+- **Custom window appearance**  
+  - Change background color, container background, and border color  
+  - Upload a local image as background (automatically converted to Base64)  
+  - Enter an image URL as remote background  
+- **Custom font support**  
+  - Four options: **Follow System**, **Segoe UI**, **Monospace (UTF-8)**, **Universal Chinese Font (Noto Sans CJK SC)**  
+- All style preferences are saved automatically to `localStorage`
+
+### 2. Notebook Page (`surfer:note`)
+- Real‑time local note‑taking  
+- Auto‑save on every keystroke  
+- One‑click clear button
+
+### 3. Chess Page (`surfer:chess`) – Rule Demo Added
+- **Rule demonstration game**  
+  - One‑click demo shows a typical opening (center vs. corner)  
+  - Helps new players understand the basic rules  
+- Play against a simple AI (easy mode)  
+- Reset game at any time
+
+### 4. Boss Key – Visual Button
+- **On‑screen B button** (same as pressing keyboard `B`)  
+- Removed the old floating text hint in the bottom‑right corner  
+- Pressing either the button or the `B` key instantly jumps to `surfer:settings`
+
+---
+
+## 🛠️ Technical Improvements
+
+- All internal pages now respect **global font & background settings**  
+- Background images can be uploaded **without external hosting** (Base64)  
+- Chess AI uses a simple but stable rule‑based logic  
+- Better event handling for dynamic style switching
+
+---
+
+## 🧠 How to Use the New Features
+
+| Feature | Action |
+|---------|--------|
+| Open settings | Type `surfer:settings` in the address bar, or press **B** |
+| Open notebook | Type `surfer:note` |
+| Play chess | Type `surfer:chess` |
+| Rule demo (chess) | Click **🎬 规则演示局** button inside the chess page |
+| Boss key | Click the **B** button on the toolbar or press keyboard **B** |
+| Custom background | Go to settings → upload image or pick color → click *Apply Style* |
+
+---
+
+## 📦 Upgrade Notes
+
+- All previous settings (whitelist, blacklist, auto‑reload) are **fully compatible**  
+- Custom styles are stored in `localStorage` and will **persist after restart**  
+- No external dependencies added – still a single HTML file
+
+---
+
+## 🐞 Known Limitations
+
+- Background images uploaded as Base64 may increase storage usage slightly  
+- Chess AI is intentionally simple (not unbeatable) – suitable for casual play
