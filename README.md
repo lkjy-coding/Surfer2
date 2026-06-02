@@ -826,3 +826,136 @@ Now cards are clearly readable in both themes.
 - Scientific functions (`sin`, `cos`, `tan`) expect **radians**, not degrees. Use `sin(pi/2)` to calculate `sin(90°)`.
 - Speech synthesis quality and voice depend on the user’s operating system and browser.
 - Plotting may fail for very complex expressions or functions with discontinuities (for example, `tan(x)` near its asymptotes).
+
+
+## 3.21.00
+
+### 🐞 Bug Fixes
+
+#### 1. `surfer:chess` – Chess Board Background Now Follows Theme
+- **Problem:** The chess board cells kept a dark background even when light mode was enabled.
+- **Root cause:** The `.chess-cell` style was not overridden for `body.light-mode`.
+- **Fix:** Added explicit light‑mode styles for `.chess-cell`:
+  - Dark mode: `background: #2d3748`
+  - Light mode: `background: #e2e8f0`
+- **Result:** Chess board now correctly adapts to both themes without visual glitches.
+
+#### 2. `surfer:translate` – Input Fields Now Follow Theme
+- **Problem:** The source/target textareas and result boxes remained dark in light mode.
+- **Root cause:** Missing `body.light-mode` overrides for `.translate-textarea` and `.translate-result`.
+- **Fix:** Added light‑mode styles:
+  - `.translate-textarea` in light mode: `background: #ffffff; border-color: #cbd5e1; color: #1e293b`
+  - `.translate-result` in light mode: `background: #f1f5f9`
+- **Result:** All translation input/output areas now match the selected theme.
+
+#### 3. `surfer:easyabroad` – Layout Completely Refactored
+- **Problem:** The EasyAbroad page had broken, misaligned cards and inconsistent spacing.
+- **Root cause:** The layout used a simple flex-wrap without proper grid structure.
+- **Fix:** Replaced the old layout with a **CSS Grid** system:
+  ```
+  .easyabroad-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+  }
+  ```
+- **Additional improvements:**
+  - Unified card padding and borders
+  - Fixed header alignment with consistent margins
+  - Added proper border‑bottom separators for info rows
+  - Ensured all cards (location, currency, translation) have the same height consistency
+  - Navigation links now use a clean wrap‑grid inside the last card
+- **Result:** EasyAbroad is now clean, responsive, and visually aligned on both desktop and mobile.
+
+---
+
+### 🧠 How to Test the Fixes
+
+| Fix | Verification |
+|-----|--------------|
+| Chess board theme | Open `surfer:chess` → toggle light/dark mode → cells should change color |
+| Translate background | Open `surfer:translate` → toggle light/dark mode → textareas and result box should switch between dark/light backgrounds |
+| EasyAbroad layout | Open `surfer:easyabroad` → cards should form a clean grid (no overlapping, no misalignment) |
+
+---
+
+### 📦 Upgrade Notes
+
+- All previous settings (theme, acrylic, background, etc.) remain unchanged.
+- The chess board and translate page now fully respect the active color scheme without breaking existing gameplay or translation functionality.
+- EasyAbroad’s layout change does not affect any backend APIs – it only reorganizes the visual presentation.
+
+---
+
+### 🐞 Known Limitations
+
+- The chess board cells do not animate during theme switching (the change is instant, but this is acceptable for a board game).
+- EasyAbroad’s grid layout may stack into a single column on very narrow screens (< 360px) – this is intentional for readability.
+
+## 4.00.00
+
+### 🐞 Bug Fixes
+
+#### 1. `surfer:chajian` – Restored Tab Mode, Removed Large Empty Space
+- **Problem:** The infrared plugin page had a large blank area above the content, seriously affecting the visual experience.
+- **Root cause:** The previous layout used a single‑pane design without proper tab structure, leaving unused space.
+- **Fix:** Restored the tab‑based layout:
+  - Two tabs: 🗺️ 在线地图 and 📡 红外线发射
+  - Each tab contains only its own compact content
+  - No extra padding or empty containers
+- **Result:** The plugin center is now clean, compact, and visually balanced.
+
+#### 2. `surfer:easyabroad` – Light Mode Text Visibility Fixed
+- **Problem:** In light mode, the EasyAbroad title, subtitle, and section headings became completely invisible (black text on dark‑looking background).
+- **Root cause:** The text colors were not explicitly defined for `body.light-mode`; they inherited dark mode colors.
+- **Fix:** Added light‑mode specific styles:
+  - `.easyabroad-header h1` uses a light‑mode gradient (`#1f6392` to `#6b21a5`)
+  - `.easyabroad-header p` uses `#4a627a` for readability
+  - All card text now uses `color: inherit` to properly follow the theme
+- **Result:** All text in EasyAbroad is now fully readable in both light and dark modes.
+
+---
+
+### 🚀 New Features
+
+#### 3. New Homepage: `surfer:homepage`
+- **Purpose:** Provide a clean starting point for browsing and accessing Surfer2 resources.
+- **Features:**
+  - **Search box** with engine selector:
+    - Google
+    - Bing
+    - Baidu
+    - DuckDuckGo
+    - GitHub repository search
+  - **GitHub repository link** – direct access to the Surfer2 source code
+  - Centered layout with gradient title and subtitle
+- **Default start page:** Surfer2 now opens `surfer:homepage` by default instead of `about:blank`.
+
+---
+
+### 🧠 How to Use
+
+| Feature | Action |
+|---------|--------|
+| Open homepage | Type `surfer:homepage` in the address bar (default on launch) |
+| Search the web | Enter query → select engine → click search button |
+| Search GitHub | Select "GitHub 仓库搜索" → enter repository name or keyword |
+| Visit Surfer2 GitHub | Click the GitHub link at the bottom of the homepage |
+| Use plugin center | Type `surfer:chajian` → tabs now work correctly without extra blank space |
+| Check EasyAbroad in light mode | Switch to light mode in settings → all text is now clearly visible |
+
+---
+
+### 📦 Upgrade Notes
+
+- **Default start page changed** – Surfer2 now launches to `surfer:homepage` instead of `about:blank`. If you prefer the old behavior, you can manually navigate to `about:blank`.
+- All previous settings (theme, acrylic, font, background) remain unchanged.
+- The plugin center and EasyAbroad fixes do not affect any backend functionality.
+
+---
+
+### 🐞 Known Limitations
+
+- The homepage search engine selector does not save preferences across sessions (defaults to Google each time).
+- EasyAbroad’s light mode gradient may appear slightly different depending on the user’s system theme, but remains readable.
+- The plugin center tabs do not remember the last active tab after page reload (always defaults to "在线地图").
