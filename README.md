@@ -1107,3 +1107,92 @@ Now cards are clearly readable in both themes.
 - Local language detection may misidentify very short texts (e.g., a single character might be ambiguous). In such cases, the system falls back to English (`en`) as the default.
 - Simplified-Traditional conversion is character‑based, not semantic. Some context‑dependent conversions (e.g., `头发` → `頭髮`, `发财` → `發財`) may not be handled perfectly, but common cases work correctly.
 - The pure search `-surfer` syntax works for Google, Bing, Baidu, and DuckDuckGo, but may not be supported by all search engines.
+
+## 4.30.00
+
+### 🐞 Bug Fixes
+
+#### 1. Completely Fixed `surfer:easyabroad` Light Mode Background Issue
+- **Problem:** Even after previous fixes, the EasyAbroad page background remained pure black in light mode.
+- **Root cause:** CSS specificity was insufficient; other global styles with higher priority were overriding the `.easyabroad-card` background.
+- **Fix:** Applied `!important` to force the background color:
+  - Dark mode: `background: #1e293b !important`
+  - Light mode: `background: #ffffff !important; border: 1px solid #e2e8f0`
+- **Result:** EasyAbroad now correctly displays white background in light mode and dark background in dark mode, with all text fully readable.
+
+---
+
+### 🚀 New Features
+
+#### 2. `surfer:settings` – Clickable "Internal Domains" Link
+- The text **"内部域名全功能"** (All Internal Domains) in the version info section is now clickable.
+- Clicking it instantly navigates to `surfer:pages`.
+- Added `.clickable-link` CSS class with underline, blue color, and hover effect for better UX.
+
+#### 3. New Internal Domain: `surfer:report` – GitHub Issue Feedback
+- **Purpose:** Allow users to report bugs or suggest features directly.
+- **Two options:**
+  - **📱 In‑App Feedback:** Opens GitHub Issues page inside Surfer2's iframe (requires GitHub login within the embedded page).
+  - **🌐 External Browser:** Opens `https://github.com/lkjy-coding/Surfer2/issues` in the system's default browser (no login issues).
+- Both options are clearly presented with large buttons in a centered layout.
+
+#### 4. `surfer:chess` – Expanded Game Collection
+- **New game modes added:**
+
+| Game | Board Size | Description |
+|------|------------|-------------|
+| 3x3 Tic‑Tac‑Toe | 3×3 | Original classic mode |
+| 5x5 Tic‑Tac‑Toe | 5×5 | Larger board, requires 3 in a row to win |
+| 18x18 Go | 18×18 | Simplified Go rules, 5 in a row to win |
+| 25x25 Go | 25×25 | Ultra‑large board for extended play |
+
+- **Win condition detection:** Automatically checks for 3/5 consecutive stones horizontally, vertically, and diagonally.
+- **AI opponent:** Random move AI (easy mode) suitable for all board sizes.
+- **Responsive cell sizing:** Cells automatically scale based on board size.
+
+#### 5. New Internal Domain: `surfer:pin` – Shortcut Manager
+- **Purpose:** Allow users to save and organize frequently used websites / internal domains.
+- **Features:**
+  - Add shortcuts with custom **name** and **URL** (supports both external `https://` and internal `surfer:*` URLs).
+  - Shortcuts displayed as a grid of cards.
+  - Click a shortcut to navigate immediately.
+  - Delete button on each shortcut.
+  - Data persistently stored in `localStorage`.
+- **Interface:** Clean two‑section layout (add form + shortcut list).
+
+#### 6. P Key as `surfer:pin` Shortcut
+- Added **📌 P** button next to the existing B button on the toolbar.
+- Pressing the `P` key (or `p`) on the keyboard instantly jumps to `surfer:pin`.
+- Pressing the `B` key (or `b`) remains mapped to `surfer:settings`.
+
+---
+
+### 🧠 How to Use
+
+| Feature | Action |
+|---------|--------|
+| Fix EasyAbroad light mode | Toggle light/dark mode in settings → EasyAbroad should now switch correctly |
+| Click internal domains link | Go to `surfer:settings` → click “内部域名全功能” → jumps to `surfer:pages` |
+| Report an issue | Type `surfer:report` → choose in‑app or external browser → submit feedback on GitHub |
+| Play 5x5 Tic‑Tac‑Toe | Open `surfer:chess` → click “5x5 井字棋” |
+| Play 18x18 Go | Open `surfer:chess` → click “18x18 围棋” |
+| Add a shortcut | Type `surfer:pin` → enter name and URL → click “➕ 添加快捷方式” |
+| Access shortcuts | Press `P` key or click 📌 button → click any shortcut to navigate |
+
+---
+
+### 📦 Upgrade Notes
+
+- All previous settings (theme, acrylic, font, background, shortcuts) are **fully compatible**.
+- The `surfer:chess` page now replaces the old Tic‑Tac‑Toe implementation with the new game selector. Save data from the old version is not migrated (no saved game states existed previously).
+- The `surfer:pin` shortcuts are stored separately from `surfer:pages` – they do not interfere.
+- The feedback page uses GitHub's official Issues URL; no additional authentication is required.
+
+---
+
+### 🐞 Known Limitations
+
+- The 18×18 and 25×25 Go modes use a simplified 5‑in‑a‑row win condition (not full traditional Go rules with capture and territory scoring).
+- The AI opponent is **random** (not intelligent) – suitable for casual play but not challenging for advanced players.
+- The in‑app feedback option may require users to log into GitHub within the iframe (due to GitHub's authentication). The external browser option is recommended for first‑time issue reporters.
+- Shortcut deletion is permanent – no confirmation dialog (can be added in future updates).
