@@ -1028,3 +1028,82 @@ Now cards are clearly readable in both themes.
 - The Simplified‑Traditional conversion uses a rule‑based character mapping (not semantic) – rare characters may not convert perfectly.
 - Exchange rates are fetched from a free API – occasional rate limits may occur (usually resolves after a few seconds).
 - The translation API may return the same text as input when the target language is very similar to the source language (e.g., English to English).
+
+## 4.20.00
+
+### 🐞 Bug Fixes
+
+#### 1. Fixed Simplified ↔ Traditional Chinese Translation Not Working
+- **Problem:** When translating from Simplified Chinese to Traditional Chinese, the text remained unchanged (no conversion happened).
+- **Root cause:** The conversion functions `convertSimpleToTraditional` and `convertTraditionalToSimple` were either not called correctly or the character mapping table was incomplete.
+- **Fix:**
+  - Expanded the character mapping table (`s2tMap` and `t2sMap`) to cover hundreds of common Chinese characters
+  - Corrected the branching logic for `zh` ↔ `zh_tw` translation
+  - Added fallback handling to ensure conversion always returns a result
+- **Result:** Simplified to Traditional and Traditional to Simplified translations now work correctly.
+
+#### 2. Fixed "Auto Detect" Language API Error
+- **Problem:** When selecting "自动检测" (Auto Detect) as the source language, the API returned the error: `'AUTO' IS AN INVALID SOURCE LANGUAGE`.
+- **Root cause:** The MyMemory translation API does not accept `auto` as a valid source language code. It requires a specific language code (e.g., `en`, `zh`, `ja`).
+- **Fix:**
+  - Implemented a **local language detection function** `detectLanguage(text)` that analyzes the input text based on Unicode character ranges:
+    - Traditional Chinese detection: uses characteristic characters like `們`, `會`, `個`, `後`, `關`, `開`, `體`, `學`, `國`, `門`
+    - Simplified Chinese detection: uses the CJK Unified Ideographs range `[\u4e00-\u9fa5]`
+    - Japanese detection: Hiragana/Katakana range `[ぁ-んァ-ン]`
+    - Korean detection: Hangul range `[가-힣]`
+    - English detection: alphabetic characters
+  - When `auto` is selected, the system first detects the language locally, then uses the detected language code (e.g., `zh`, `en`, `ja`) when calling the API.
+  - The API is **never** called with `auto` as the source language parameter.
+- **Result:** Auto-detection now works reliably without API errors.
+
+---
+
+### 🚀 New Features
+
+#### 3. "Pure Search" Option in Homepage
+- **Added a checkbox:** `✨ 纯净搜索 (自动添加 -surfer 过滤干扰内容)`
+- **How it works:** When checked, the search query automatically has ` -surfer` appended before being sent to the search engine.
+- **Search engine syntax used:**
+  - Google / Bing / DuckDuckGo: the minus sign `-` excludes results containing the specified word
+  - Baidu: also supports `-` for exclusion
+- **Purpose:** Filters out search results related to "surfer" (e.g., surfboards, surfing sports, other unrelated content), making the search results more relevant to the Surfer2 browser tool.
+- **Example:**
+  - Normal search: `how to browse safely` → searches for the exact phrase
+  - Pure search: `how to browse safely -surfer` → excludes any results containing "surfer"
+- **Result:** Users can get cleaner, more targeted search results when looking for browser-related information.
+
+---
+
+### 🛠️ Technical Improvements
+
+- **Simplified-Traditional conversion table** expanded to cover more characters:
+  - Common conversions: `们→們`, `会→會`, `个→個`, `后→後`, `关→關`, `开→開`, `进→進`, `过→過`, `对→對`, `时→時`, `说→說`, `电→電`, `为→為`, `发→發`, `爱→愛`, `体→體`, `学→學`, `国→國`, `门→門`, `问→問`, `龙→龍`, plus many more.
+- **Local language detection** uses efficient regex patterns and runs instantly (no network delay).
+- **Pure search** integrates seamlessly with all existing search engines (Google, Bing, Baidu, DuckDuckGo, GitHub).
+
+---
+
+### 🧠 How to Use
+
+| Feature | Action |
+|---------|--------|
+| Simplified → Traditional translation | Open `surfer:translate` → select `中文(简体)` as source and `中文(繁体)` as target → enter text → click 翻译 |
+| Traditional → Simplified translation | Select `中文(繁体)` as source and `中文(简体)` as target |
+| Auto language detection | Select `自动检测` as source language → the system automatically identifies the language before translation |
+| Pure search | On the homepage (`surfer:homepage`), check the **纯净搜索** checkbox → enter a search query → the search URL will automatically include ` -surfer` |
+
+---
+
+### 📦 Upgrade Notes
+
+- All previous settings (theme, acrylic, font, background, translation preferences) remain unchanged.
+- The `surfer:translate` page now uses local language detection – no API key required for language identification.
+- The pure search feature is **optional** (checkbox unchecked by default) – users can enable it only when needed.
+
+---
+
+### 🐞 Known Limitations
+
+- Local language detection may misidentify very short texts (e.g., a single character might be ambiguous). In such cases, the system falls back to English (`en`) as the default.
+- Simplified-Traditional conversion is character‑based, not semantic. Some context‑dependent conversions (e.g., `头发` → `頭髮`, `发财` → `發財`) may not be handled perfectly, but common cases work correctly.
+- The pure search `-surfer` syntax works for Google, Bing, Baidu, and DuckDuckGo, but may not be supported by all search engines.
