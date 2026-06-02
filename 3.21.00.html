@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Surfer2 · 3.21.00 专业冲浪器</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/function-plot@1.22.9/dist/function-plot.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: system-ui, 'Segoe UI', monospace;
+            background: #0a0f1e;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            transition: background-color 0.35s ease, color 0.25s ease;
+            margin: 0;
+            position: relative;
+            overflow: hidden;
+        }
+        body.light-mode { background: #e2e8f0; }
+
+        .bg-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; background-size: cover; background-position: center; background-repeat: no-repeat; transition: opacity 0.3s ease; }
+        .acrylic-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; transition: opacity 0.35s ease; opacity: 0; background: rgba(14, 20, 39, 0.6); backdrop-filter: blur(20px) saturate(180%); }
+        body.acrylic-active .acrylic-layer { opacity: 1; }
+
+        .surfer-container {
+            width: 100%; max-width: 1400px; height: 90vh; background: #0e1427; border-radius: 32px;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.5); display: flex; flex-direction: column;
+            overflow: hidden; border: 1px solid #2d3e5f; transition: background-color 0.35s ease, border-color 0.3s ease, backdrop-filter 0.3s ease;
+            position: relative; z-index: 1;
+        }
+        body.light-mode .surfer-container { background: #ffffff; border-color: #cbd5e1; }
+        body.acrylic-active .surfer-container { background: rgba(14, 20, 39, 0.65); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.25); }
+
+        .toolbar {
+            background: #111927cc; backdrop-filter: blur(8px); padding: 8px 16px;
+            border-bottom: 1px solid #2a3a55; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+        }
+        body.light-mode .toolbar { background: #f1f5f9; border-bottom-color: #e2e8f0; }
+        .nav-buttons { display: flex; gap: 6px; background: #0b101e99; padding: 4px 10px; border-radius: 48px; }
+        body.light-mode .nav-buttons { background: #e2e8f0; }
+        .nav-btn { background: #1e2a3e; border: none; color: #b4d0ff; font-size: 1.2rem; width: 32px; height: 32px; border-radius: 40px; cursor: pointer; }
+        body.light-mode .nav-btn { background: #cbd5e1; color: #1e293b; }
+        .url-bar { flex: 1; display: flex; gap: 6px; background: #0b101e99; padding: 4px 12px; border-radius: 60px; align-items: center; }
+        body.light-mode .url-bar { background: #e2e8f0; }
+        .url-input { flex: 1; background: #010a1a; border: 1px solid #2c5270; padding: 8px 14px; border-radius: 48px; color: #c0e0ff; font-size: 0.85rem; outline: none; }
+        body.light-mode .url-input { background: #ffffff; border-color: #cbd5e1; color: #1e293b; }
+        .go-btn { background: #1f6392; border: none; padding: 5px 14px; border-radius: 40px; color: white; cursor: pointer; font-size: 0.75rem; }
+        .status { font-size: 0.65rem; background: #030a17aa; padding: 3px 10px; border-radius: 20px; color: #87b9ff; }
+        body.light-mode .status { background: #e2e8f0; color: #475569; }
+        .boss-btn, .hide-window-btn { background: #4a5568; border: none; padding: 4px 14px; border-radius: 32px; color: white; cursor: pointer; font-size: 0.8rem; }
+        .boss-btn { background: #9e4a2c; }
+        .wave-area { flex: 1; position: relative; overflow: auto; }
+        iframe { width: 100%; height: 100%; border: none; background: white; display: block; }
+        .internal-page { width: 100%; min-height: 100%; background: #0f172a; color: #e2e8f0; padding: 20px; overflow-y: auto; }
+        body.light-mode .internal-page { background: #f8fafc; color: #1e293b; }
+        .settings-group { margin-bottom: 20px; padding: 12px; background: #1e293b; border-radius: 16px; }
+        body.light-mode .settings-group { background: #ffffff; border: 1px solid #e2e8f0; }
+        .color-wheel { width: 100%; height: 40px; margin-top: 8px; cursor: pointer; border-radius: 12px; border: 1px solid #475569; }
+        .version-info-item { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+
+        /* 计算器 GUI */
+        .calc-gui { background: #1e293b; border-radius: 24px; padding: 20px; margin-top: 16px; }
+        body.light-mode .calc-gui { background: #ffffff; border: 1px solid #e2e8f0; }
+        .calc-display { background: #0f172a; border-radius: 20px; padding: 20px; margin-bottom: 20px; font-family: monospace; font-size: 1.8rem; text-align: right; word-break: break-all; min-height: 80px; }
+        body.light-mode .calc-display { background: #f1f5f9; }
+        .calc-gui-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .calc-gui-btn { flex: 1; padding: 16px 8px; font-size: 1.2rem; font-weight: bold; border: none; border-radius: 20px; cursor: pointer; background: #2d3748; color: #e2e8f0; transition: 0.05s linear; }
+        .calc-gui-btn:active { transform: scale(0.96); }
+        body.light-mode .calc-gui-btn { background: #e2e8f0; color: #1e293b; }
+        .calc-gui-btn.operator { background: #3b82f6; color: white; }
+        .calc-gui-btn.equals { background: #22c55e; color: white; }
+        .calc-gui-btn.clear { background: #ef4444; color: white; }
+        .calc-gui-btn.func { background: #8b5cf6; color: white; }
+        .plot-container { width: 100%; height: 300px; margin-top: 16px; background: #0f172a; border-radius: 16px; }
+
+        /* 笔记本 */
+        .note-editor { display: flex; flex-direction: column; gap: 16px; }
+        .note-toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
+        .note-split { display: flex; gap: 16px; min-height: 500px; flex-wrap: wrap; }
+        .note-input-area, .note-preview-area { flex: 1; min-width: 250px; display: flex; flex-direction: column; }
+        .note-textarea { width: 100%; height: 400px; background: #0f172a; border: 1px solid #475569; border-radius: 16px; padding: 16px; color: #f1f5f9; font-family: monospace; resize: vertical; }
+        body.light-mode .note-textarea { background: #ffffff; border-color: #cbd5e1; color: #1e293b; }
+        .note-preview { background: #0f172a; border: 1px solid #475569; border-radius: 16px; padding: 16px; min-height: 400px; overflow-y: auto; }
+        body.light-mode .note-preview { background: #ffffff; }
+
+        /* 翻译页面 - 修复背景跟随 */
+        .translate-container { max-width: 800px; margin: 0 auto; }
+        .translate-box { background: #1e293b; border-radius: 24px; padding: 20px; margin-bottom: 20px; }
+        body.light-mode .translate-box { background: #ffffff; border: 1px solid #e2e8f0; }
+        .translate-textarea { width: 100%; height: 150px; padding: 12px; border-radius: 16px; background: #0f172a; border: 1px solid #475569; color: inherit; resize: vertical; }
+        body.light-mode .translate-textarea { background: #ffffff; border-color: #cbd5e1; color: #1e293b; }
+        .translate-result { background: #0f172a; border-radius: 16px; padding: 12px; margin-top: 12px; min-height: 100px; }
+        body.light-mode .translate-result { background: #f1f5f9; }
+
+        /* 井字棋 - 修复棋子背景框跟随深浅色 */
+        .chess-board {
+            display: grid;
+            grid-template-columns: repeat(3, 80px);
+            gap: 8px;
+            justify-content: center;
+            margin: 20px auto;
+        }
+        .chess-cell {
+            width: 80px;
+            height: 80px;
+            background: #2d3748;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        body.light-mode .chess-cell {
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+
+        /* EasyAbroad 排版修复 */
+        .easyabroad-container {
+            padding: 16px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .easyabroad-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .easyabroad-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .easyabroad-card {
+            background: #1e293b;
+            border-radius: 24px;
+            padding: 20px;
+        }
+        body.light-mode .easyabroad-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+        }
+        .easyabroad-card h3 {
+            margin-bottom: 16px;
+            border-left: 4px solid #3b82f6;
+            padding-left: 12px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #334155;
+        }
+        body.light-mode .info-row {
+            border-bottom-color: #e2e8f0;
+        }
+        .rate-result {
+            background: #0f172a;
+            border-radius: 16px;
+            padding: 12px;
+            margin-top: 12px;
+            text-align: center;
+        }
+        body.light-mode .rate-result {
+            background: #f1f5f9;
+        }
+        .easyabroad-card select, .easyabroad-card input, .easyabroad-card textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 8px 0;
+            border-radius: 40px;
+            background: #0f172a;
+            border: 1px solid #475569;
+            color: inherit;
+        }
+        body.light-mode .easyabroad-card select,
+        body.light-mode .easyabroad-card input,
+        body.light-mode .easyabroad-card textarea {
+            background: #ffffff;
+            border-color: #cbd5e1;
+        }
+        .link-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .nav-link {
+            background: #0f172a;
+            padding: 6px 16px;
+            border-radius: 40px;
+            text-decoration: none;
+            color: #87b9ff;
+            font-size: 0.85rem;
+        }
+        body.light-mode .nav-link {
+            background: #f1f5f9;
+            color: #1f6392;
+        }
+
+        /* 单位换算等 */
+        .unit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; margin-top: 12px; }
+        .unit-btn { background: #1e293b; border: none; padding: 8px; border-radius: 12px; color: inherit; cursor: pointer; }
+        body.light-mode .unit-btn { background: #e2e8f0; }
+
+        /* 页面导航卡片 */
+        .pages-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-top: 20px; }
+        .page-card {
+            background: #1e293b;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #e2e8f0;
+        }
+        body.light-mode .page-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            color: #1e293b;
+        }
+        .page-card:hover { transform: translateY(-3px); background: #2d3e5f; }
+        body.light-mode .page-card:hover { background: #f1f5f9; }
+
+        .plugin-card { background: #1e293b; border-radius: 24px; padding: 20px; margin-bottom: 20px; }
+        body.light-mode .plugin-card { background: #ffffff; border: 1px solid #e2e8f0; }
+        .map-container { width: 100%; height: 500px; border-radius: 24px; overflow: hidden; }
+        .map-frame { width: 100%; height: 100%; border: none; }
+    </style>
+</head>
+<body>
+    <div class="bg-layer" id="bgLayer"></div>
+    <div class="acrylic-layer" id="acrylicLayer"></div>
+    <div class="surfer-container" id="surferContainer">
+        <div class="toolbar">
+            <div class="nav-buttons"><button class="nav-btn" id="backBtn">◀</button><button class="nav-btn" id="forwardBtn">▶</button><button class="nav-btn" id="reloadBtn">⟳</button></div>
+            <div class="url-bar"><input type="text" id="urlInput" class="url-input" placeholder="surfer:settings / note / embassy / translate / count / pages" value="about:blank"><button id="goBtn" class="go-btn">冲浪</button></div>
+            <button id="bossKeyBtn" class="boss-btn">🕹️ B</button><button id="hideWindowBtn" class="hide-window-btn">🙈 隐藏</button>
+            <div class="status" id="statusMsg">⚡ Surfer2 3.21.00</div>
+        </div>
+        <div class="wave-area" id="waveArea"><iframe id="surfFrame" src="about:blank" style="display:none;"></iframe><div id="internalContainer" style="width:100%;height:100%;overflow:auto;"></div></div>
+    </div>
+    <script>
+        (function(){
+            const frame = document.getElementById('surfFrame');
+            const internalContainer = document.getElementById('internalContainer');
+            const urlInput = document.getElementById('urlInput');
+            const goBtn = document.getElementById('goBtn');
+            const backBtn = document.getElementById('backBtn');
+            const forwardBtn = document.getElementById('forwardBtn');
+            const reloadBtn = document.getElementById('reloadBtn');
+            const statusSpan = document.getElementById('statusMsg');
+            const bossBtn = document.getElementById('bossKeyBtn');
+            const hideBtn = document.getElementById('hideWindowBtn');
+            const surferContainer = document.getElementById('surferContainer');
+            const bgLayer = document.getElementById('bgLayer');
+            let historyStack = [], historyIndex = -1;
+
+            function loadCustomStyles(){
+                const bgImage = localStorage.getItem('surfer2_bgImage');
+                const fontFamily = localStorage.getItem('surfer2_fontFamily') || 'system-ui';
+                const containerBg = localStorage.getItem('surfer2_containerBg') || '#0e1427';
+                const borderColor = localStorage.getItem('surfer2_borderColor') || '#2d3e5f';
+                const acrylic = localStorage.getItem('surfer2_acrylic') === 'true';
+                const lightMode = localStorage.getItem('surfer2_lightMode') === 'true';
+                document.body.style.fontFamily = fontFamily;
+                surferContainer.style.background = containerBg;
+                surferContainer.style.borderColor = borderColor;
+                if(lightMode) document.body.classList.add('light-mode'); else document.body.classList.remove('light-mode');
+                if(acrylic) document.body.classList.add('acrylic-active'); else document.body.classList.remove('acrylic-active');
+                if(bgImage) { bgLayer.style.backgroundImage = `url(${bgImage})`; bgLayer.style.backgroundSize = 'cover'; bgLayer.style.backgroundPosition = 'center'; }
+                else bgLayer.style.backgroundImage = '';
+            }
+            function saveCustomStyles(bgImageUrl, font, containerBg, borderCol, acrylic, lightMode){
+                if(bgImageUrl !== undefined) localStorage.setItem('surfer2_bgImage', bgImageUrl);
+                if(font !== undefined) localStorage.setItem('surfer2_fontFamily', font);
+                if(containerBg !== undefined) localStorage.setItem('surfer2_containerBg', containerBg);
+                if(borderCol !== undefined) localStorage.setItem('surfer2_borderColor', borderCol);
+                if(acrylic !== undefined) localStorage.setItem('surfer2_acrylic', acrylic);
+                if(lightMode !== undefined) localStorage.setItem('surfer2_lightMode', lightMode);
+                loadCustomStyles();
+            }
+
+            function renderInternalPage(pageId){
+                frame.style.display = 'none';
+                internalContainer.style.display = 'block';
+                internalContainer.innerHTML = '';
+                if(pageId === 'settings') internalContainer.innerHTML = renderSettingsPage(), attachSettingsEvents();
+                else if(pageId === 'note') internalContainer.innerHTML = renderNotePage(), attachNoteEvents();
+                else if(pageId === 'chess') internalContainer.innerHTML = renderChessPage(), attachChessEvents();
+                else if(pageId === 'easyabroad') internalContainer.innerHTML = renderEasyAbroadPage(), attachEasyAbroadEvents();
+                else if(pageId === 'embassy') internalContainer.innerHTML = renderEmbassyPage();
+                else if(pageId === 'translate') internalContainer.innerHTML = renderTranslatePage(), attachTranslateEvents();
+                else if(pageId === 'count') internalContainer.innerHTML = renderCountPage(), attachCountEvents();
+                else if(pageId === 'pages') internalContainer.innerHTML = renderPagesPage(), attachPagesEvents();
+                else if(pageId === 'chajian') internalContainer.innerHTML = renderChajianPage(), attachChajianEvents();
+                else internalContainer.innerHTML = `<div class="internal-page"><h2>❓ 未知域名</h2></div>`;
+                statusSpan.innerText = `📄 ${pageId}`;
+                urlInput.value = `surfer:${pageId}`;
+            }
+
+            function renderSettingsPage(){
+                const lightModeEnabled = localStorage.getItem('surfer2_lightMode') === 'true';
+                const acrylicEnabled = localStorage.getItem('surfer2_acrylic') === 'true';
+                return `<div class="internal-page"><h2>⚙️ Surfer2 设置</h2>
+                <div class="settings-group"><label><input type="checkbox" id="acrylicToggle" ${acrylicEnabled ? 'checked' : ''}> 亚克力磨砂</label><label><input type="checkbox" id="lightModeToggle" ${lightModeEnabled ? 'checked' : ''}> 浅色模式</label></div>
+                <div class="settings-group"><div>背景图片: <input type="text" id="bgImageUrl" style="width:60%;"><input type="file" id="bgImageUpload" accept="image/*"></div>
+                <div>字体: <select id="fontSelect"><option value="system-ui">跟随系统</option><option value="monospace">等宽</option></select></div>
+                <div>容器背景: <input type="color" id="containerBgColor" class="color-wheel"></div>
+                <div>边框颜色: <input type="color" id="borderColorPicker" class="color-wheel"></div>
+                <button id="applyStyleBtn">应用</button></div>
+                <div class="settings-group"><strong>版本信息</strong><div class="version-info-item"><span>Surfer2 3.21.00</span><span>内部域名全功能</span></div></div>
+                <button id="saveAllBtn">保存</button></div>`;
+            }
+            function attachSettingsEvents(){
+                const bgUpload = document.getElementById('bgImageUpload');
+                if(bgUpload) bgUpload.onchange = (e)=>{const f=e.target.files[0]; if(f){const r=new FileReader(); r.onload=ev=>document.getElementById('bgImageUrl').value=ev.target.result; r.readAsDataURL(f);}};
+                document.getElementById('applyStyleBtn').onclick = ()=>saveCustomStyles(document.getElementById('bgImageUrl').value, document.getElementById('fontSelect').value, document.getElementById('containerBgColor').value, document.getElementById('borderColorPicker').value, document.getElementById('acrylicToggle').checked, document.getElementById('lightModeToggle').checked);
+                document.getElementById('saveAllBtn').onclick = ()=>saveCustomStyles(document.getElementById('bgImageUrl').value, document.getElementById('fontSelect').value, document.getElementById('containerBgColor').value, document.getElementById('borderColorPicker').value, document.getElementById('acrylicToggle').checked, document.getElementById('lightModeToggle').checked);
+            }
+
+            function renderNotePage(){ return `<div class="internal-page"><h2>📝 surfer:note · Markdown + LaTeX</h2><div class="note-editor"><div class="note-toolbar"><button id="noteSaveBtn">保存</button><button id="noteExportBtn">导出HTML</button></div><div class="note-split"><div class="note-input-area"><textarea id="noteContent" class="note-textarea" placeholder="# 标题\n\n$$E=mc^2$$"></textarea></div><div class="note-preview-area"><div id="notePreview" class="note-preview"></div></div></div></div></div>`; }
+            function attachNoteEvents(){
+                const ta = document.getElementById('noteContent');
+                const preview = document.getElementById('notePreview');
+                const saved = localStorage.getItem('surfer2_note') || '# Surfer2 笔记本\n\n支持 **Markdown** 和 $$\\\\LaTeX$$\n\n$$E = mc^2$$';
+                ta.value = saved;
+                function render(){ let html = marked.parse(ta.value); html = html.replace(/\$\$([\s\S]+?)\$\$/g, (_,latex)=>{ try{ return katex.renderToString(latex,{displayMode:true}); }catch(e){ return `<span style="color:red">${latex}</span>`; } }); html = html.replace(/\$([^\$]+?)\$/g, (_,latex)=>{ try{ return katex.renderToString(latex,{displayMode:false}); }catch(e){ return `<span style="color:red">${latex}</span>`; } }); preview.innerHTML = html; }
+                ta.addEventListener('input', render);
+                document.getElementById('noteSaveBtn').onclick = ()=>{ localStorage.setItem('surfer2_note', ta.value); statusSpan.innerText='笔记已保存'; };
+                document.getElementById('noteExportBtn').onclick = ()=>{ const blob = new Blob([`<!DOCTYPE html><html><head><meta charset="UTF-8"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"></head><body>${preview.innerHTML}</body></html>`], {type:'text/html'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='note.html'; a.click(); };
+                render();
+            }
+
+            // 井字棋 - 背景自动跟随深浅色
+            function renderChessPage(){ return `<div class="internal-page"><h2>⭕ 井字棋</h2><div id="chessBoardContainer" class="chess-board"></div><div style="text-align:center;"><button id="resetChessBtn">新对局</button><span id="chessStatus"></span></div></div>`; }
+            function attachChessEvents(){
+                let board=['','','','','','','','',''], active=true, turn='X';
+                const container = document.getElementById('chessBoardContainer'), statusSpanChess=document.getElementById('chessStatus');
+                function update(){ container.innerHTML=''; for(let i=0;i<9;i++){ const c=document.createElement('div'); c.className='chess-cell'; c.innerText=board[i]; if(active && board[i]==='' && turn==='X') c.onclick=()=>playerMove(i); container.appendChild(c); } }
+                function winner(b){ const l=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]; for(let line of l) if(b[line[0]] && b[line[0]]===b[line[1]] && b[line[0]]===b[line[2]]) return b[line[0]]; return b.every(c=>c)?'tie':null; }
+                function end(w){ active=false; statusSpanChess.innerText=w==='X'?'你赢了':w==='O'?'AI赢了':'平局'; update(); }
+                function aiMove(){ if(!active || turn!=='O') return; const empty=board.reduce((a,c,i)=>{ if(!c) a.push(i); return a; },[]); if(!empty.length) return; const move = empty.includes(4)?4:empty[Math.floor(Math.random()*empty.length)]; board[move]='O'; const w=winner(board); if(w){ end(w); turn=null; update(); return; } turn='X'; update(); }
+                function playerMove(i){ if(!active || turn!=='X' || board[i]) return; board[i]='X'; const w=winner(board); if(w){ end(w); update(); return; } turn='O'; update(); setTimeout(aiMove,100); }
+                function reset(){ board=['','','','','','','','','']; active=true; turn='X'; statusSpanChess.innerText='你的回合'; update(); }
+                document.getElementById('resetChessBtn').onclick=reset; reset();
+            }
+
+            // EasyAbroad 排版修复
+            function renderEasyAbroadPage(){
+                return `<div class="easyabroad-container">
+                    <div class="easyabroad-header"><h1>EasyAbroad</h1><p>📍 自动定位 · 汇率 · 翻译</p></div>
+                    <div class="easyabroad-grid">
+                        <div class="easyabroad-card"><h3>📍 当前信息</h3><div id="eaCountry" class="info-row"><span>国家:</span><span>检测中...</span></div><div id="eaTime" class="info-row"><span>时间:</span><span>--</span></div></div>
+                        <div class="easyabroad-card"><h3>💱 汇率换算</h3><select id="eaFrom"><option>CNY</option><option>USD</option><option>EUR</option></select><select id="eaTo"><option>USD</option><option>EUR</option></select><input id="eaAmount" value="100"><button id="eaConvert">换算</button><div id="eaResult" class="rate-result"></div></div>
+                        <div class="easyabroad-card"><h3>🌍 翻译</h3><select id="eaSrcLang"><option value="auto">自动</option><option value="zh">中文</option><option value="en">英语</option></select><select id="eaTgtLang"><option value="en">英语</option><option value="zh">中文</option></select><textarea id="eaSrcText" rows="2" placeholder="输入文字..."></textarea><button id="eaTranslate">翻译</button><textarea id="eaResultText" rows="2" readonly placeholder="翻译结果"></textarea></div>
+                    </div>
+                    <div class="easyabroad-card"><h3>🌐 国际导航</h3><div class="link-grid"><a href="https://www.youtube.com" target="_blank" class="nav-link">YouTube</a><a href="https://twitter.com" target="_blank" class="nav-link">X</a><a href="https://www.google.com" target="_blank" class="nav-link">Google</a><a href="https://www.wikipedia.org" target="_blank" class="nav-link">Wikipedia</a></div></div>
+                </div>`;
+            }
+            function attachEasyAbroadEvents(){
+                fetch('https://ipapi.co/json/').then(r=>r.json()).then(d=>{ document.getElementById('eaCountry').innerHTML=`<span>国家:</span><span>${d.country_name}</span>`; if(d.timezone) setInterval(()=>{document.getElementById('eaTime').innerHTML=`<span>时间:</span><span>${new Intl.DateTimeFormat('zh-CN',{timeZone:d.timezone,hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date())}</span>`},1000); });
+                document.getElementById('eaConvert').onclick = async ()=>{ const f=document.getElementById('eaFrom').value, t=document.getElementById('eaTo').value, a=parseFloat(document.getElementById('eaAmount').value); try{ const r=await fetch(`https://api.exchangerate-api.com/v4/latest/${f}`); const d=await r.json(); const rate=d.rates[t]; document.getElementById('eaResult').innerHTML=`${a} ${f} = ${(a*rate).toFixed(2)} ${t}`; }catch(e){ document.getElementById('eaResult').innerHTML='获取失败'; } };
+                document.getElementById('eaTranslate').onclick = async ()=>{ const text=document.getElementById('eaSrcText').value, tgt=document.getElementById('eaTgtLang').value; if(!text) return; const res=await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=auto|${tgt}`); const data=await res.json(); document.getElementById('eaResultText').value=data.responseData?.translatedText||'失败'; };
+            }
+
+            function renderEmbassyPage(){
+                return `<div class="internal-page" style="padding:0; height:100%; display:flex; flex-direction:column;"><iframe src="https://lkjy-coding.github.io/ChineseEmbassyV5.html" style="width:100%; height:100%; border:none; flex:1;"></iframe></div>`;
+            }
+
+            // 翻译页面 - 输入框背景修复
+            const fullLang = {auto:'自动',zh:'中文',en:'英语',ja:'日语',ko:'韩语',fr:'法语',de:'德语',es:'西班牙语',ru:'俄语',it:'意大利语',pt:'葡萄牙语'};
+            function renderTranslatePage(){ return `<div class="internal-page"><div class="translate-container"><h2>🌐 翻译</h2><div class="translate-box"><select id="transSrc">${Object.entries(fullLang).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select> → <select id="transTgt">${Object.entries(fullLang).filter(([k])=>k!='auto').map(([k,v])=>`<option value="${k}" ${k==='en'?'selected':''}>${v}</option>`).join('')}</select><textarea id="transSrcText" class="translate-textarea" placeholder="输入要翻译的文字..."></textarea><button id="transBtn">翻译</button><div id="transResult" class="translate-result"></div></div></div></div>`; }
+            function attachTranslateEvents(){
+                document.getElementById('transBtn').onclick = async ()=>{ const text=document.getElementById('transSrcText').value, src=document.getElementById('transSrc').value, tgt=document.getElementById('transTgt').value; if(!text) return; const res=await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${src==='auto'?'auto':src}|${tgt}`); const data=await res.json(); document.getElementById('transResult').innerHTML=data.responseData?.translatedText||'失败'; };
+            }
+
+            // 计算器 GUI
+            function renderCountPage(){
+                return `<div class="internal-page"><div class="calc-container"><h2>📐 按键式图形计算器</h2>
+                <div class="calc-gui"><div class="calc-display" id="calcDisplay">0</div>
+                <div class="calc-gui-row"><button class="calc-gui-btn clear" data-action="clear">AC</button><button class="calc-gui-btn" data-action="back">⌫</button><button class="calc-gui-btn operator" data-op="/">÷</button><button class="calc-gui-btn operator" data-op="*">×</button></div>
+                <div class="calc-gui-row"><button class="calc-gui-btn" data-num="7">7</button><button class="calc-gui-btn" data-num="8">8</button><button class="calc-gui-btn" data-num="9">9</button><button class="calc-gui-btn operator" data-op="-">−</button></div>
+                <div class="calc-gui-row"><button class="calc-gui-btn" data-num="4">4</button><button class="calc-gui-btn" data-num="5">5</button><button class="calc-gui-btn" data-num="6">6</button><button class="calc-gui-btn operator" data-op="+">+</button></div>
+                <div class="calc-gui-row"><button class="calc-gui-btn" data-num="1">1</button><button class="calc-gui-btn" data-num="2">2</button><button class="calc-gui-btn" data-num="3">3</button><button class="calc-gui-btn equals" data-action="equals">=</button></div>
+                <div class="calc-gui-row"><button class="calc-gui-btn" data-num="0">0</button><button class="calc-gui-btn" data-num=".">.</button><button class="calc-gui-btn func" data-func="sqrt">√</button><button class="calc-gui-btn func" data-func="pow">x²</button></div>
+                <div class="calc-gui-row"><button class="calc-gui-btn func" data-func="sin">sin</button><button class="calc-gui-btn func" data-func="cos">cos</button><button class="calc-gui-btn func" data-func="tan">tan</button><button class="calc-gui-btn func" data-func="pi">π</button></div>
+                <div class="calc-gui-row"><button id="calcSoundBtn" class="calc-gui-btn" style="background:#22c55e;">🔊 朗读</button><button id="calcPlotBtn" class="calc-gui-btn" style="background:#8b5cf6;">📈 绘图</button></div>
+                <div id="calcResultArea" class="calc-result" style="margin-top:16px;">结果将显示在这里</div>
+                <div id="plotPreview" class="plot-container" style="display:none;"></div>
+                </div></div></div>`;
+            }
+            function attachCountEvents(){
+                let calcDisplay = document.getElementById('calcDisplay');
+                let currentExpr = '';
+                function updateDisplay(){ calcDisplay.innerText = currentExpr || '0'; }
+                function calculate(){
+                    try {
+                        let expr = currentExpr.replace(/×/g, '*').replace(/÷/g, '/').replace(/\^/g, '**');
+                        expr = expr.replace(/√\(?([^)]+)\)?/g, 'Math.sqrt($1)');
+                        expr = expr.replace(/(\d+)²/g, 'Math.pow($1,2)');
+                        expr = expr.replace(/sin\(/g, 'Math.sin(');
+                        expr = expr.replace(/cos\(/g, 'Math.cos(');
+                        expr = expr.replace(/tan\(/g, 'Math.tan(');
+                        expr = expr.replace(/π/g, 'Math.PI');
+                        let result = eval(expr);
+                        document.getElementById('calcResultArea').innerHTML = `📐 结果: ${result}`;
+                        currentExpr = result.toString();
+                        updateDisplay();
+                    } catch(e){ document.getElementById('calcResultArea').innerHTML = `❌ 错误: ${e.message}`; }
+                }
+                function handleInput(value){
+                    if(value === 'clear'){ currentExpr = ''; updateDisplay(); document.getElementById('calcResultArea').innerHTML = '结果将显示在这里'; return; }
+                    if(value === 'back'){ currentExpr = currentExpr.slice(0,-1); updateDisplay(); return; }
+                    if(value === 'equals'){ calculate(); return; }
+                    if(value === 'sqrt'){ currentExpr += '√('; updateDisplay(); return; }
+                    if(value === 'pow'){ currentExpr += '²'; updateDisplay(); return; }
+                    if(value === 'sin'){ currentExpr += 'sin('; updateDisplay(); return; }
+                    if(value === 'cos'){ currentExpr += 'cos('; updateDisplay(); return; }
+                    if(value === 'tan'){ currentExpr += 'tan('; updateDisplay(); return; }
+                    if(value === 'pi'){ currentExpr += 'π'; updateDisplay(); return; }
+                    currentExpr += value;
+                    updateDisplay();
+                }
+                document.querySelectorAll('.calc-gui-btn[data-num]').forEach(btn => btn.onclick = () => handleInput(btn.dataset.num));
+                document.querySelectorAll('.calc-gui-btn[data-op]').forEach(btn => btn.onclick = () => handleInput(btn.dataset.op));
+                document.querySelector('[data-action="clear"]').onclick = () => handleInput('clear');
+                document.querySelector('[data-action="back"]').onclick = () => handleInput('back');
+                document.querySelector('[data-action="equals"]').onclick = () => handleInput('equals');
+                document.querySelectorAll('.calc-gui-btn[data-func]').forEach(btn => btn.onclick = () => handleInput(btn.dataset.func));
+                document.getElementById('calcSoundBtn').onclick = () => { const resultText = document.getElementById('calcResultArea').innerText; if(resultText && resultText !== '结果将显示在这里'){ const u=new SpeechSynthesisUtterance(resultText); u.lang='zh-CN'; speechSynthesis.speak(u); } };
+                document.getElementById('calcPlotBtn').onclick = () => { try { let expr = currentExpr.replace(/²/g, '^2').replace(/×/g,'*').replace(/÷/g,'/'); functionPlot({ target: '#plotPreview', width: 500, height: 300, grid: true, data: [{ fn: expr, sampler: 'builtIn' }] }); document.getElementById('plotPreview').style.display = 'block'; } catch(e){ alert('绘图失败: ' + e.message); } };
+            }
+
+            function renderPagesPage(){
+                const pages = ['settings','note','chess','easyabroad','embassy','translate','count','chajian'];
+                return `<div class="internal-page"><h2>📌 内部域名导航</h2><div class="pages-grid">${pages.map(p=>`<div class="page-card" data-domain="${p}"><h3>🔗 surfer:${p}</h3></div>`).join('')}</div></div>`;
+            }
+            function attachPagesEvents(){ document.querySelectorAll('.page-card').forEach(c=>c.onclick = ()=>navigateTo(`surfer:${c.dataset.domain}`)); }
+
+            function renderChajianPage(){ return `<div class="internal-page"><h2>🔌 插件中心</h2><div class="plugin-card"><div class="map-container"><iframe class="map-frame" src="https://www.openstreetmap.org/export/embed.html?bbox=-30,-20,70,60&layer=mapnik"></iframe></div><button id="irTestBtn">📡 红外线测试</button><div id="irResult"></div></div></div>`; }
+            function attachChajianEvents(){ document.getElementById('irTestBtn').onclick = ()=>{ document.getElementById('irResult').innerHTML = '红外信号已发送(模拟)'; }; }
+
+            function navigateTo(url){
+                let target = url.trim();
+                if(target.startsWith('surfer:')){ const page = target.slice(7).split('?')[0]; if(['settings','note','chess','easyabroad','embassy','translate','count','pages','chajian'].includes(page)){ renderInternalPage(page); historyStack = historyStack.slice(0, historyIndex+1); historyStack.push(target); historyIndex++; urlInput.value = target; return; } }
+                if(target === 'about:blank'){ frame.style.display='block'; internalContainer.style.display='none'; frame.src='about:blank'; historyStack=historyStack.slice(0,historyIndex+1); historyStack.push(target); historyIndex++; urlInput.value=target; statusSpan.innerText='空白页'; return; }
+                if(!target.startsWith('http')) target='https://'+target;
+                frame.style.display='block'; internalContainer.style.display='none'; frame.src=target; historyStack=historyStack.slice(0,historyIndex+1); historyStack.push(target); historyIndex++; urlInput.value=target;
+            }
+            function goBack(){ if(historyIndex>0){ historyIndex--; navigateTo(historyStack[historyIndex]); } }
+            function goForward(){ if(historyIndex<historyStack.length-1){ historyIndex++; navigateTo(historyStack[historyIndex]); } }
+            function reloadCurrent(){ navigateTo(urlInput.value); }
+            goBtn.onclick = () => navigateTo(urlInput.value);
+            backBtn.onclick = goBack; forwardBtn.onclick = goForward; reloadBtn.onclick = reloadCurrent;
+            urlInput.onkeypress = (e) => { if(e.key === 'Enter') navigateTo(urlInput.value); };
+            bossBtn.onclick = () => navigateTo('surfer:settings');
+            document.addEventListener('keydown', (e) => { if(e.key === 'b' || e.key === 'B') { e.preventDefault(); navigateTo('surfer:settings'); } });
+            let hidden=false; hideBtn.onclick = ()=>{ const c=document.querySelector('.surfer-container'); if(!hidden){ c.style.opacity='0'; c.style.visibility='hidden'; hidden=true; statusSpan.innerText='窗口已隐藏'; const restore=document.createElement('button'); restore.innerText='显示'; restore.style.cssText='position:fixed;bottom:20px;right:20px;z-index:10000;background:#3b82f6;border:none;padding:8px 16px;border-radius:40px;color:white;cursor:pointer'; restore.onclick=()=>{ c.style.opacity='1'; c.style.visibility='visible'; hidden=false; restore.remove(); statusSpan.innerText='窗口已恢复'; }; document.body.appendChild(restore); } };
+            loadCustomStyles();
+            navigateTo('about:blank');
+        })();
+    </script>
+</body>
+  </html>
