@@ -1196,3 +1196,97 @@ Now cards are clearly readable in both themes.
 - The AI opponent is **random** (not intelligent) – suitable for casual play but not challenging for advanced players.
 - The in‑app feedback option may require users to log into GitHub within the iframe (due to GitHub's authentication). The external browser option is recommended for first‑time issue reporters.
 - Shortcut deletion is permanent – no confirmation dialog (can be added in future updates).
+
+## 5.00.00
+
+### 🚀 New Features
+
+#### 1. Surfer2 Account System
+- **GitHub account binding** – register and log in using your GitHub username.
+- One GitHub account can only bind to **one** Surfer2 account (enforced locally).
+- Account data is stored in `localStorage` (users list + current session).
+- **Sudo admin reservation:** Administrators can be manually specified in the `SUDO_ADMINS` array inside the code:
+  ```
+  const SUDO_ADMINS = [
+      { username: "lkjy-coding", isAdmin: true }
+  ];
+  ```
+  Anyone listed here will have admin privileges when logged in.
+
+#### 2. Guest Mode vs Logged-in Mode
+
+| Feature | Guest | Logged-in User |
+|---------|-------|----------------|
+| Search & browse websites | ✅ | ✅ |
+| All `surfer:*` domains | ✅ | ✅ |
+| Boss Key (B key) | ✅ | ✅ |
+| `surfer:pin` shortcuts | ❌ | ✅ |
+| `surfer:report` submit feedback | ❌ | ✅ |
+| Admin view/respond to feedback | ❌ | only admins |
+
+#### 3. `surfer:report` – Feedback System
+- Logged-in users can submit feedback (title + content).
+- **Admin panel** inside the report page allows administrators to:
+  - View all submitted feedback
+  - Change feedback status (`pending` → `responded` → `resolved`)
+  - Add admin responses to each feedback entry
+- All feedback data is stored in `localStorage`.
+- Original GitHub Issues link is still available as an alternative.
+
+#### 4. `surfer:chess` – Smart AI with Difficulty Levels
+- **Easy mode:** Random moves – suitable for beginners.
+- **Normal mode:** Basic blocking + center preference.
+- **Hard mode:** Intelligent AI that:
+  - Prioritizes winning moves
+  - Blocks player's winning moves
+  - Prefers center and corners
+- **Game modes available:**
+  - 3×3 Tic‑Tac‑Toe (Easy / Hard)
+  - 5×5 Tic‑Tac‑Toe (Normal)
+  - 18×18 Go (simplified, 5‑in‑a‑row)
+  - 25×25 Go (simplified, 5‑in‑a‑row)
+
+#### 5. `surfer:pin` Requires Login
+- The shortcuts feature is now **only available to logged-in users**.
+- Pressing the `P` key or clicking the 📌 button will prompt guest users to log in first.
+- Shortcuts are stored separately per user (different localStorage keys).
+
+#### 6. Completely Fixed `surfer:easyabroad` Light Mode Background
+- **Problem:** Light mode background remained black even after previous fixes.
+- **Fix:** Applied `!important` to force the correct background colors:
+  - Dark mode: `background: #1e293b !important`
+  - Light mode: `background: #ffffff !important; border: 1px solid #e2e8f0`
+- **Title visibility improved:** Added `text-shadow` to the EasyAbroad title (`h1`) so it stands out better in dark mode.
+
+---
+
+### 🧠 How to Use
+
+| Feature | Action |
+|---------|--------|
+| Create / log into account | Click the **👤 登录** button on the toolbar → enter your GitHub username |
+| Log out | Click the user button again → confirm logout |
+| Use shortcuts (pin) | Log in first → press `P` key or click 📌 button → add/remove shortcuts |
+| Submit feedback | Log in → go to `surfer:report` → fill in title and content → submit |
+| Administer feedback | Add your GitHub username to `SUDO_ADMINS` in the code → log in → go to `surfer:report` → manage all feedback |
+| Play chess with AI | Go to `surfer:chess` → select game mode and difficulty → play against AI |
+| Fix EasyAbroad light mode | Simply toggle light/dark mode in settings → EasyAbroad now switches correctly |
+
+---
+
+### 📦 Upgrade Notes
+
+- **Account data is stored locally** – users will lose their account data if they clear browser storage.
+- **Backward compatibility:** All previous settings (theme, acrylic, font, background, notes) remain unchanged.
+- **Existing shortcuts from previous versions are NOT automatically migrated** – users must re‑add them after logging in.
+- The `SUDO_ADMINS` array is hardcoded – to add a new admin, the HTML file must be manually edited.
+
+---
+
+### 🐞 Known Limitations
+
+- The account system uses **local storage only** – accounts are not synced across devices or browsers.
+- GitHub username is used as the unique identifier – there is no password or OAuth verification (trust‑based within the local environment).
+- The AI in chess is still relatively simple; it does not use machine learning or deep search algorithms.
+- Feedback system does not have real‑time notifications – users must manually refresh the page to see admin responses.
+- The `surfer:pin` shortcuts from pre‑5.00.00 versions are not accessible after upgrading (users need to log in and re‑add them).
