@@ -959,3 +959,72 @@ Now cards are clearly readable in both themes.
 - The homepage search engine selector does not save preferences across sessions (defaults to Google each time).
 - EasyAbroad’s light mode gradient may appear slightly different depending on the user’s system theme, but remains readable.
 - The plugin center tabs do not remember the last active tab after page reload (always defaults to "在线地图").
+
+## 4.10.00
+
+### 🐞 Bug Fixes
+
+#### 1. `surfer:easyabroad` – Light Mode Background Fixed
+- **Problem:** In light mode, the EasyAbroad page background turned completely black, making the entire card content unreadable.
+- **Root cause:** The `.easyabroad-card` background color was not explicitly overridden for `body.light-mode`.
+- **Fix:** Added proper light‑mode styles:
+  - `.easyabroad-card` in light mode: `background: #ffffff; border: 1px solid #e2e8f0`
+  - All text colors now inherit correctly from parent containers
+- **Result:** EasyAbroad is now fully readable in both light and dark modes.
+
+#### 2. Translation Page – Invalid AUTO Source Language
+- **Problem:** The error message `'AUTO' IS AN INVALID SOURCE LANGUAGE` appeared when using auto‑detection.
+- **Root cause:** The MyMemory API expects `auto` (lowercase) as the source language code, but the langpair format was incorrectly constructed.
+- **Fix:** Properly handle the `auto` source language:
+  - When source is `auto`, use `auto|target` format
+  - When source is `zh_tw`, convert to `zh-TW` for API
+  - Added fallback handling for empty or failed translations
+- **Result:** Auto‑detection now works correctly without API errors.
+
+---
+
+### 🚀 New Features
+
+#### 3. Simplified ↔ Traditional Chinese Translation
+- Added **built‑in conversion** between Simplified Chinese (`zh`) and Traditional Chinese (`zh_tw`).
+- No external API call required for Chinese‑only conversions – instant and offline.
+- Conversion rules include common character mappings:
+  - `们→們`, `会→會`, `个→個`, `后→後`, `关→關`
+  - `开→開`, `进→進`, `过→過`, `对→對`, `时→時`
+  - `说→說`, `电→電`, `为→為`, `发→發`, `爱→愛`
+  - `体→體`, `学→學`, `国→國`, `门→門`, `问→問`, `龙→龍`
+- Added **🔄 Swap Languages** button – instantly exchanges source and target languages.
+
+#### 4. Restored Currency Conversion in `surfer:count`
+- Added a dedicated **currency exchange module** at the bottom of the calculator page.
+- Supported currencies: `CNY`, `USD`, `EUR`, `JPY`, `GBP`.
+- Real‑time exchange rates via `exchangerate-api.com`.
+- Clear input field, dropdown selectors, and result display.
+
+---
+
+### 🧠 How to Use
+
+| Feature | Action |
+|---------|--------|
+| Simplified ↔ Traditional translation | Open `surfer:translate` → select `中文(简体)` and `中文(繁体)` → enter text → click translate |
+| Swap translation languages | Click the **🔄 交换语言** button |
+| Use auto language detection | Select `自动检测` as source language → API will automatically identify the source language |
+| Currency conversion | Open `surfer:count` → scroll to the **汇率换算** section → enter amount → select currencies → click 换算 |
+
+---
+
+### 📦 Upgrade Notes
+
+- All previous settings (theme, acrylic, font, background) remain unchanged.
+- The translation page now supports 14 languages including Simplified and Traditional Chinese.
+- The currency conversion module is separate from the main calculator – both can be used independently.
+- The `auto` source language now works correctly with the MyMemory API.
+
+---
+
+### 🐞 Known Limitations
+
+- The Simplified‑Traditional conversion uses a rule‑based character mapping (not semantic) – rare characters may not convert perfectly.
+- Exchange rates are fetched from a free API – occasional rate limits may occur (usually resolves after a few seconds).
+- The translation API may return the same text as input when the target language is very similar to the source language (e.g., English to English).
