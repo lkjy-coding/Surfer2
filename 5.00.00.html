@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Surfer2 · 5.00.00 专业冲浪器</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/function-plot@1.22.9/dist/function-plot.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: system-ui, 'Segoe UI', monospace;
+            background: #0a0f1e;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            transition: background-color 0.35s ease, color 0.25s ease;
+            margin: 0;
+            position: relative;
+            overflow: hidden;
+        }
+        body.light-mode { background: #e2e8f0; }
+
+        .bg-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; background-size: cover; background-position: center; background-repeat: no-repeat; transition: opacity 0.3s ease; }
+        .acrylic-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; transition: opacity 0.35s ease; opacity: 0; background: rgba(14, 20, 39, 0.6); backdrop-filter: blur(20px) saturate(180%); }
+        body.acrylic-active .acrylic-layer { opacity: 1; }
+
+        .surfer-container {
+            width: 100%; max-width: 1400px; height: 90vh; background: #0e1427; border-radius: 32px;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.5); display: flex; flex-direction: column;
+            overflow: hidden; border: 1px solid #2d3e5f; transition: background-color 0.35s ease, border-color 0.3s ease, backdrop-filter 0.3s ease;
+            position: relative; z-index: 1;
+        }
+        body.light-mode .surfer-container { background: #ffffff; border-color: #cbd5e1; }
+        body.acrylic-active .surfer-container { background: rgba(14, 20, 39, 0.65); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.25); }
+
+        .toolbar {
+            background: #111927cc; backdrop-filter: blur(8px); padding: 8px 16px;
+            border-bottom: 1px solid #2a3a55; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+        }
+        body.light-mode .toolbar { background: #f1f5f9; border-bottom-color: #e2e8f0; }
+        .nav-buttons { display: flex; gap: 6px; background: #0b101e99; padding: 4px 10px; border-radius: 48px; }
+        body.light-mode .nav-buttons { background: #e2e8f0; }
+        .nav-btn { background: #1e2a3e; border: none; color: #b4d0ff; font-size: 1.2rem; width: 32px; height: 32px; border-radius: 40px; cursor: pointer; }
+        body.light-mode .nav-btn { background: #cbd5e1; color: #1e293b; }
+        .url-bar { flex: 1; display: flex; gap: 6px; background: #0b101e99; padding: 4px 12px; border-radius: 60px; align-items: center; }
+        body.light-mode .url-bar { background: #e2e8f0; }
+        .url-input { flex: 1; background: #010a1a; border: 1px solid #2c5270; padding: 8px 14px; border-radius: 48px; color: #c0e0ff; font-size: 0.85rem; outline: none; }
+        body.light-mode .url-input { background: #ffffff; border-color: #cbd5e1; color: #1e293b; }
+        .go-btn { background: #1f6392; border: none; padding: 5px 14px; border-radius: 40px; color: white; cursor: pointer; font-size: 0.75rem; }
+        .status { font-size: 0.65rem; background: #030a17aa; padding: 3px 10px; border-radius: 20px; color: #87b9ff; }
+        body.light-mode .status { background: #e2e8f0; color: #475569; }
+        .boss-btn, .pin-btn, .hide-window-btn, .user-btn { background: #4a5568; border: none; padding: 4px 14px; border-radius: 32px; color: white; cursor: pointer; font-size: 0.8rem; }
+        .boss-btn { background: #9e4a2c; }
+        .pin-btn { background: #8b5cf6; }
+        .user-btn { background: #22c55e; }
+        .wave-area { flex: 1; position: relative; overflow: auto; }
+        iframe { width: 100%; height: 100%; border: none; background: white; display: block; }
+        .internal-page { width: 100%; min-height: 100%; background: #0f172a; color: #e2e8f0; padding: 20px; overflow-y: auto; }
+        body.light-mode .internal-page { background: #f8fafc; color: #1e293b; }
+        .settings-group { margin-bottom: 20px; padding: 12px; background: #1e293b; border-radius: 16px; }
+        body.light-mode .settings-group { background: #ffffff; border: 1px solid #e2e8f0; }
+        .color-wheel { width: 100%; height: 40px; margin-top: 8px; cursor: pointer; border-radius: 12px; border: 1px solid #475569; }
+        .version-info-item { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+        .clickable-link { cursor: pointer; text-decoration: underline; color: #3b82f6; }
+        .clickable-link:hover { opacity: 0.8; }
+
+        /* 账号相关样式 */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #1e293b;
+            padding: 4px 12px;
+            border-radius: 40px;
+        }
+        body.light-mode .user-info { background: #e2e8f0; }
+        .user-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #3b82f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        .auth-badge {
+            font-size: 0.7rem;
+            background: #8b5cf6;
+            padding: 2px 8px;
+            border-radius: 20px;
+            color: white;
+        }
+
+        /* 首页样式 */
+        .homepage-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100%;
+            padding: 40px 20px;
+        }
+        .homepage-title {
+            font-size: 3rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 20px;
+        }
+        .homepage-sub {
+            color: #87b9ff;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        body.light-mode .homepage-sub { color: #4a627a; }
+        .search-box {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .search-input {
+            width: 400px;
+            max-width: 70vw;
+            padding: 14px 20px;
+            border-radius: 60px;
+            border: 1px solid #475569;
+            background: #0f172a;
+            color: #e2e8f0;
+            font-size: 1rem;
+            outline: none;
+        }
+        body.light-mode .search-input {
+            background: #ffffff;
+            border-color: #cbd5e1;
+            color: #1e293b;
+        }
+        .engine-select {
+            padding: 12px 20px;
+            border-radius: 60px;
+            background: #1e293b;
+            border: 1px solid #475569;
+            color: #e2e8f0;
+            cursor: pointer;
+        }
+        body.light-mode .engine-select {
+            background: #ffffff;
+            color: #1e293b;
+        }
+        .search-btn {
+            padding: 12px 28px;
+            border-radius: 60px;
+            background: #3b82f6;
+            border: none;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .pure-search {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: #87b9ff;
+        }
+        body.light-mode .pure-search { color: #4a627a; }
+        .pure-search input { width: 18px; height: 18px; cursor: pointer; }
+        .github-link {
+            margin-top: 40px;
+            text-align: center;
+        }
+        .github-link a {
+            color: #87b9ff;
+            text-decoration: none;
+            font-size: 1rem;
+            background: #1e293b;
+            padding: 10px 20px;
+            border-radius: 40px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        body.light-mode .github-link a { background: #e2e8f0; color: #1f6392; }
+
+        /* 计算器 GUI */
+        .calc-gui { background: #1e293b; border-radius: 24px; padding: 20px; margin-top: 16px; }
+        body.light-mode .calc-gui { background: #ffffff; border: 1px solid #e2e8f0; }
+        .calc-display { background: #0f172a; border-radius: 20px; padding: 20px; margin-bottom: 20px; font-family: monospace; font-size: 1.8rem; text-align: right; word-break: break-all; min-height: 80px; }
+        body.light-mode .calc-display { background: #f1f5f9; }
+        .calc-gui-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .calc-gui-btn { flex: 1; padding: 16px 8px; font-size: 1.2rem; font-weight: bold; border: none; border-radius: 20px; cursor: pointer; background: #2d3748; color: #e2e8f0; transition: 0.05s linear; }
+        .calc-gui-btn:active { transform: scale(0.96); }
+        body.light-mode .calc-gui-btn { background: #e2e8f0; color: #1e293b; }
+        .calc-gui-btn.operator { background: #3b82f6; color: white; }
+        .calc-gui-btn.equals { background: #22c55e; color: white; }
+        .calc-gui-btn.clear { background: #ef4444; color: white; }
+        .calc-gui-btn.func { background: #8b5cf6; color: white; }
+        .plot-container { width: 100%; height: 300px; margin-top: 16px; background: #0f172a; border-radius: 16px; }
+
+        /* 笔记本 */
+        .note-editor { display: flex; flex-direction: column; gap: 16px; }
+        .note-toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
+        .note-split { display: flex; gap: 16px; min-height: 500px; flex-wrap: wrap; }
+        .note-input-area, .note-preview-area { flex: 1; min-width: 250px; display: flex; flex-direction: column; }
+        .note-textarea { width: 100%; height: 400px; background: #0f172a; border: 1px solid #475569; border-radius: 16px; padding: 16px; color: #f1f5f9; font-family: monospace; resize: vertical; }
+        body.light-mode .note-textarea { background: #ffffff; border-color: #cbd5e1; color: #1e293b; }
+        .note-preview { background: #0f172a; border: 1px solid #475569; border-radius: 16px; padding: 16px; min-height: 400px; overflow-y: auto; }
+        body.light-mode .note-preview { background: #ffffff; }
+
+        /* 翻译页面 */
+        .translate-container { max-width: 900px; margin: 0 auto; }
+        .translate-box { background: #1e293b; border-radius: 24px; padding: 20px; margin-bottom: 20px; }
+        body.light-mode .translate-box { background: #ffffff; border: 1px solid #e2e8f0; }
+        .translate-textarea { width: 100%; height: 150px; padding: 12px; border-radius: 16px; background: #0f172a; border: 1px solid #475569; color: inherit; resize: vertical; }
+        body.light-mode .translate-textarea { background: #ffffff; border-color: #cbd5e1; color: #1e293b; }
+        .translate-result { background: #0f172a; border-radius: 16px; padding: 12px; margin-top: 12px; min-height: 100px; }
+        body.light-mode .translate-result { background: #f1f5f9; }
+        .translate-switch { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+        .translate-switch button { background: #3b82f6; border: none; padding: 6px 16px; border-radius: 40px; color: white; cursor: pointer; }
+
+        /* 棋类游戏 */
+        .game-selector { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
+        .game-btn { background: #3b82f6; border: none; padding: 8px 20px; border-radius: 40px; color: white; cursor: pointer; }
+        .game-board { display: grid; gap: 2px; justify-content: center; margin: 20px auto; background: #2d3748; padding: 10px; border-radius: 16px; }
+        .game-cell { background: #1e293b; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: bold; cursor: pointer; transition: background 0.2s ease; aspect-ratio: 1 / 1; min-width: 30px; }
+        body.light-mode .game-cell { background: #f1f5f9; color: #1e293b; }
+        .game-cell:hover { background: #3b82f6; opacity: 0.7; }
+
+        /* EasyAbroad - 彻底修复 */
+        .easyabroad-container { padding: 16px; max-width: 1200px; margin: 0 auto; }
+        .easyabroad-header { text-align: center; margin-bottom: 24px; }
+        .easyabroad-header h1 {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 20px rgba(59,130,246,0.3);
+        }
+        body.light-mode .easyabroad-header h1 {
+            background: linear-gradient(135deg, #1f6392, #6b21a5);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+        .easyabroad-header p { color: #87b9ff; }
+        body.light-mode .easyabroad-header p { color: #4a627a; }
+        .easyabroad-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .easyabroad-card { background: #1e293b !important; border-radius: 24px; padding: 20px; }
+        body.light-mode .easyabroad-card { background: #ffffff !important; border: 1px solid #e2e8f0; }
+        .easyabroad-card h3 { margin-bottom: 16px; border-left: 4px solid #3b82f6; padding-left: 12px; color: inherit; }
+        .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #334155; color: inherit; }
+        body.light-mode .info-row { border-bottom-color: #e2e8f0; }
+        .rate-result { background: #0f172a; border-radius: 16px; padding: 12px; margin-top: 12px; text-align: center; }
+        body.light-mode .rate-result { background: #f1f5f9; }
+        .easyabroad-card select, .easyabroad-card input, .easyabroad-card textarea {
+            width: 100%; padding: 8px; margin: 8px 0; border-radius: 40px; background: #0f172a; border: 1px solid #475569; color: inherit;
+        }
+        body.light-mode .easyabroad-card select, body.light-mode .easyabroad-card input, body.light-mode .easyabroad-card textarea {
+            background: #ffffff; border-color: #cbd5e1;
+        }
+        .link-grid { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+        .nav-link { background: #0f172a; padding: 6px 16px; border-radius: 40px; text-decoration: none; color: #87b9ff; font-size: 0.85rem; }
+        body.light-mode .nav-link { background: #f1f5f9; color: #1f6392; }
+
+        /* 插件中心 */
+        .plugin-tabs { display: flex; gap: 8px; border-bottom: 1px solid #475569; margin-bottom: 20px; flex-wrap: wrap; }
+        .plugin-tab { padding: 10px 24px; cursor: pointer; border-radius: 20px 20px 0 0; transition: 0.1s; background: #1e293b; color: #e2e8f0; }
+        .plugin-tab.active { background: #3b82f6; color: white; }
+        body.light-mode .plugin-tab { background: #e2e8f0; color: #1e293b; }
+        body.light-mode .plugin-tab.active { background: #3b82f6; color: white; }
+        .plugin-pane { display: none; }
+        .plugin-pane.active { display: block; }
+        .map-container { width: 100%; height: 500px; border-radius: 24px; overflow: hidden; }
+        .map-frame { width: 100%; height: 100%; border: none; }
+        .plugin-card { background: #1e293b; border-radius: 24px; padding: 20px; }
+        body.light-mode .plugin-card { background: #ffffff; border: 1px solid #e2e8f0; }
+
+        /* 快捷方式页面 */
+        .pin-container { display: flex; flex-direction: column; gap: 20px; }
+        .pin-add { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; background: #1e293b; padding: 16px; border-radius: 24px; }
+        body.light-mode .pin-add { background: #ffffff; border: 1px solid #e2e8f0; }
+        .pin-add input { flex: 1; padding: 10px 16px; border-radius: 40px; background: #0f172a; border: 1px solid #475569; color: inherit; }
+        body.light-mode .pin-add input { background: #ffffff; border-color: #cbd5e1; }
+        .pin-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+        .pin-item { background: #1e293b; border-radius: 20px; padding: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.1s; }
+        body.light-mode .pin-item { background: #ffffff; border: 1px solid #e2e8f0; }
+        .pin-item:hover { background: #2d3e5f; transform: translateY(-2px); }
+        .pin-item .pin-name { font-weight: bold; }
+        .pin-item .pin-delete { background: #ef4444; border: none; padding: 4px 12px; border-radius: 20px; color: white; cursor: pointer; }
+
+        .pages-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-top: 20px; }
+        .page-card { background: #1e293b; border-radius: 20px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s ease; color: #e2e8f0; }
+        body.light-mode .page-card { background: #ffffff; border: 1px solid #e2e8f0; color: #1e293b; }
+        .page-card:hover { transform: translateY(-3px); background: #2d3e5f; }
+        body.light-mode .page-card:hover { background: #f1f5f9; }
+
+        .report-container { max-width: 600px; margin: 0 auto; text-align: center; }
+        .report-buttons { display: flex; gap: 20px; justify-content: center; margin-top: 30px; flex-wrap: wrap; }
+        .report-btn { padding: 14px 28px; border-radius: 60px; font-size: 1.1rem; font-weight: bold; cursor: pointer; border: none; }
+        .report-btn.primary { background: #3b82f6; color: white; }
+        .report-btn.secondary { background: #8b5cf6; color: white; }
+        .report-btn.disabled { background: #4a5568; cursor: not-allowed; opacity: 0.5; }
+        .feedback-list { margin-top: 30px; max-height: 300px; overflow-y: auto; text-align: left; }
+        .feedback-item { background: #1e293b; border-radius: 16px; padding: 12px; margin-bottom: 12px; }
+        body.light-mode .feedback-item { background: #f1f5f9; }
+        .feedback-status { font-size: 0.7rem; display: inline-block; padding: 2px 8px; border-radius: 20px; margin-left: 8px; }
+        .feedback-status.pending { background: #f59e0b; }
+        .feedback-status.responded { background: #22c55e; }
+        .feedback-status.resolved { background: #3b82f6; }
+    </style>
+</head>
+<body>
+    <div class="bg-layer" id="bgLayer"></div>
+    <div class="acrylic-layer" id="acrylicLayer"></div>
+    <div class="surfer-container" id="surferContainer">
+        <div class="toolbar">
+            <div class="nav-buttons"><button class="nav-btn" id="backBtn">◀</button><button class="nav-btn" id="forwardBtn">▶</button><button class="nav-btn" id="reloadBtn">⟳</button></div>
+            <div class="url-bar"><input type="text" id="urlInput" class="url-input" placeholder="surfer:homepage / settings / note / embassy / translate / count / pages / pin / report" value="about:blank"><button id="goBtn" class="go-btn">冲浪</button></div>
+            <button id="bossKeyBtn" class="boss-btn">🕹️ B</button>
+            <button id="pinKeyBtn" class="pin-btn">📌 P</button>
+            <button id="hideWindowBtn" class="hide-window-btn">🙈 隐藏</button>
+            <button id="userBtn" class="user-btn">👤 登录</button>
+            <div class="status" id="statusMsg">⚡ Surfer2 5.00.00</div>
+        </div>
+        <div class="wave-area" id="waveArea"><iframe id="surfFrame" src="about:blank" style="display:none;"></iframe><div id="internalContainer" style="width:100%;height:100%;overflow:auto;"></div></div>
+    </div>
+    <script>
+        (function(){
+            const frame = document.getElementById('surfFrame');
+            const internalContainer = document.getElementById('internalContainer');
+            const urlInput = document.getElementById('urlInput');
+            const goBtn = document.getElementById('goBtn');
+            const backBtn = document.getElementById('backBtn');
+            const forwardBtn = document.getElementById('forwardBtn');
+            const reloadBtn = document.getElementById('reloadBtn');
+            const statusSpan = document.getElementById('statusMsg');
+            const bossBtn = document.getElementById('bossKeyBtn');
+            const pinBtn = document.getElementById('pinKeyBtn');
+            const hideBtn = document.getElementById('hideWindowBtn');
+            const userBtn = document.getElementById('userBtn');
+            const surferContainer = document.getElementById('surferContainer');
+            const bgLayer = document.getElementById('bgLayer');
+            let historyStack = [], historyIndex = -1;
+
+            // ========== 账号系统 ==========
+            // sudo 管理员账号配置 (手动修改此处即可赋予管理员权限)
+            // 格式: { username: "GitHub用户名", isAdmin: true }
+            const SUDO_ADMINS = [
+                // 🔧 在此处添加管理员账号，例如: { username: "lkjy-coding", isAdmin: true }
+                { username: "lkjy-coding", isAdmin: true }
+            ];
+            
+            let currentUser = JSON.parse(localStorage.getItem('surfer2_user') || 'null');
+            let users = JSON.parse(localStorage.getItem('surfer2_users') || '[]');
+            // 反馈数据存储
+            let feedbacks = JSON.parse(localStorage.getItem('surfer2_feedbacks') || '[]');
+            // 快捷方式存储 (仅登录用户可用)
+            let shortcuts = [];
+            
+            function saveUsers(){ localStorage.setItem('surfer2_users', JSON.stringify(users)); }
+            function saveCurrentUser(){ localStorage.setItem('surfer2_user', JSON.stringify(currentUser)); }
+            function saveFeedbacks(){ localStorage.setItem('surfer2_feedbacks', JSON.stringify(feedbacks)); }
+            function saveShortcuts(){ if(currentUser) localStorage.setItem(`surfer2_shortcuts_${currentUser.username}`, JSON.stringify(shortcuts)); }
+            function loadShortcuts(){ 
+                if(currentUser) {
+                    let saved = localStorage.getItem(`surfer2_shortcuts_${currentUser.username}`);
+                    shortcuts = saved ? JSON.parse(saved) : [];
+                } else {
+                    shortcuts = [];
+                }
+            }
+            
+            function isAdmin(){
+                if(!currentUser) return false;
+                return SUDO_ADMINS.some(admin => admin.username === currentUser.username && admin.isAdmin);
+            }
+            
+            // GitHub OAuth 模拟注册/登录
+            function loginWithGitHub(){
+                const githubUsername = prompt("请输入您的 GitHub 用户名以登录/注册 Surfer2 账号:\n(需要与 GitHub 账号一致，用于识别身份)");
+                if(!githubUsername || githubUsername.trim() === '') return;
+                const username = githubUsername.trim();
+                // 检查是否已存在
+                let existingUser = users.find(u => u.username === username);
+                if(existingUser){
+                    currentUser = existingUser;
+                    saveCurrentUser();
+                    loadShortcuts();
+                    statusSpan.innerText = `✅ 欢迎回来, ${username}`;
+                    updateUserButton();
+                    alert(`登录成功！欢迎回来，${username}`);
+                } else {
+                    // 注册新用户
+                    const newUser = { username: username, createdAt: new Date().toISOString() };
+                    users.push(newUser);
+                    currentUser = newUser;
+                    saveUsers();
+                    saveCurrentUser();
+                    loadShortcuts();
+                    statusSpan.innerText = `🎉 注册成功, ${username}`;
+                    updateUserButton();
+                    alert(`注册成功！欢迎加入 Surfer2，${username}`);
+                }
+                // 刷新页面相关UI
+                if(internalContainer.innerHTML.includes('pin')) renderPinPage();
+                if(internalContainer.innerHTML.includes('report')) renderReportPage();
+            }
+            
+            function logout(){
+                if(!currentUser) return;
+                saveShortcuts(); // 登出前保存当前快捷方式
+                currentUser = null;
+                shortcuts = [];
+                saveCurrentUser();
+                statusSpan.innerText = '👋 已登出，当前为游客模式';
+                updateUserButton();
+                alert('已登出，部分功能将受限');
+                navigateTo('surfer:homepage');
+            }
+            
+            function updateUserButton(){
+                if(currentUser){
+                    const isAdminUser = isAdmin();
+                    userBtn.innerHTML = `👤 ${currentUser.username.substring(0,12)}${isAdminUser ? ' ⭐' : ''}`;
+                    userBtn.onclick = () => {
+                        if(confirm(`当前登录: ${currentUser.username}\n是否登出？`)) logout();
+                    };
+                } else {
+                    userBtn.innerHTML = '👤 登录';
+                    userBtn.onclick = () => loginWithGitHub();
+                }
+            }
+            
+            // 反馈功能 (仅管理员可查看/回复)
+            function addFeedback(title, content){
+                if(!currentUser){
+                    alert('请先登录后再提交反馈');
+                    return false;
+                }
+                const newFeedback = {
+                    id: Date.now(),
+                    username: currentUser.username,
+                    title: title,
+                    content: content,
+                    status: 'pending', // pending, responded, resolved
+                    adminResponse: null,
+                    createdAt: new Date().toISOString()
+                };
+                feedbacks.unshift(newFeedback);
+                saveFeedbacks();
+                return true;
+            }
+            
+            function renderReportPage(){
+                const isAdminUser = isAdmin();
+                return `<div class="internal-page"><div class="report-container"><h2>📝 反馈问题</h2>
+                ${currentUser ? `<div class="settings-group"><input type="text" id="feedbackTitle" placeholder="标题" style="width:100%; margin-bottom:8px;"><textarea id="feedbackContent" rows="3" placeholder="请详细描述您遇到的问题或建议..."></textarea><button id="submitFeedbackBtn" class="report-btn primary" style="width:100%; margin-top:8px;">📮 提交反馈</button></div>` : '<p style="color:#f59e0b;">⚠️ 请先登录后再提交反馈</p>'}
+                <div class="report-buttons">
+                    <button id="reportInAppBtn" class="report-btn primary">📱 在 Surfer2 内打开 GitHub Issues</button>
+                    <button id="reportExternalBtn" class="report-btn secondary">🌐 在系统浏览器中打开</button>
+                </div>
+                ${isAdminUser ? `<div class="settings-group" style="margin-top:20px;"><h3>📋 用户反馈管理 (管理员)</h3><div id="adminFeedbackList" class="feedback-list"></div></div>` : ''}
+                <p style="margin-top:20px; font-size:0.8rem;">反馈地址: <a href="https://github.com/lkjy-coding/Surfer2/issues" target="_blank">github.com/lkjy-coding/Surfer2/issues</a></p>
+                </div></div>`;
+            }
+            
+            function attachReportEvents(){
+                if(currentUser){
+                    const submitBtn = document.getElementById('submitFeedbackBtn');
+                    if(submitBtn){
+                        submitBtn.onclick = () => {
+                            const title = document.getElementById('feedbackTitle').value.trim();
+                            const content = document.getElementById('feedbackContent').value.trim();
+                            if(!title || !content){ alert('请填写标题和内容'); return; }
+                            if(addFeedback(title, content)){
+                                alert('反馈已提交，管理员将尽快处理');
+                                document.getElementById('feedbackTitle').value = '';
+                                document.getElementById('feedbackContent').value = '';
+                                if(isAdmin()) renderAdminFeedbackList();
+                            }
+                        };
+                    }
+                }
+                document.getElementById('reportInAppBtn').onclick = () => { navigateTo('https://github.com/lkjy-coding/Surfer2/issues'); };
+                document.getElementById('reportExternalBtn').onclick = () => { window.open('https://github.com/lkjy-coding/Surfer2/issues', '_blank'); };
+                if(isAdmin()) renderAdminFeedbackList();
+            }
+            
+            function renderAdminFeedbackList(){
+                const container = document.getElementById('adminFeedbackList');
+                if(!container) return;
+                container.innerHTML = '';
+                feedbacks.forEach(fb => {
+                    const div = document.createElement('div');
+                    div.className = 'feedback-item';
+                    let statusText = '', statusClass = '';
+                    if(fb.status === 'pending'){ statusText = '待处理'; statusClass = 'pending'; }
+                    else if(fb.status === 'responded'){ statusText = '已回复'; statusClass = 'responded'; }
+                    else{ statusText = '已解决'; statusClass = 'resolved'; }
+                    div.innerHTML = `<div><strong>${escapeHtml(fb.title)}</strong><span class="feedback-status ${statusClass}">${statusText}</span></div>
+                                    <div style="font-size:0.7rem; color:#87b9ff;">来自: ${fb.username} | ${new Date(fb.createdAt).toLocaleString()}</div>
+                                    <div style="margin-top:8px;">${escapeHtml(fb.content)}</div>
+                                    ${fb.adminResponse ? `<div style="margin-top:8px; background:#0f172a; padding:8px; border-radius:12px;"><strong>🔹 管理员回复:</strong> ${escapeHtml(fb.adminResponse)}</div>` : ''}
+                                    <div style="margin-top:8px;"><select id="status_${fb.id}"><option value="pending" ${fb.status==='pending'?'selected':''}>待处理</option><option value="responded" ${fb.status==='responded'?'selected':''}>已回复</option><option value="resolved" ${fb.status==='resolved'?'selected':''}>已解决</option></select>
+                                    <input type="text" id="response_${fb.id}" placeholder="回复内容" value="${fb.adminResponse || ''}" style="width:200px;"><button onclick="window.adminRespond(${fb.id})">回复</button></div>`;
+                    container.appendChild(div);
+                });
+                window.adminRespond = (id) => {
+                    const status = document.getElementById(`status_${id}`).value;
+                    const response = document.getElementById(`response_${id}`).value;
+                    const fb = feedbacks.find(f => f.id === id);
+                    if(fb){
+                        fb.status = status;
+                        if(response) fb.adminResponse = response;
+                        saveFeedbacks();
+                        renderAdminFeedbackList();
+                    }
+                };
+            }
+            
+            function escapeHtml(str){ return str.replace(/[&<>]/g, function(m){ return m==='&'?'&amp;': m==='<'?'&lt;':'&gt;'; }); }
+            
+            // 智能AI (改进版)
+            function getSmartAIMove(board, size){
+                const empty = board.reduce((arr,cell,idx)=>{ if(cell==='') arr.push(idx); return arr; }, []);
+                if(empty.length === 0) return null;
+                // 1. 尝试直接获胜
+                for(let move of empty){
+                    board[move] = 'O';
+                    if(checkWinner(board, size) === 'O'){
+                        board[move] = '';
+                        return move;
+                    }
+                    board[move] = '';
+                }
+                // 2. 阻止玩家获胜
+                for(let move of empty){
+                    board[move] = 'X';
+                    if(checkWinner(board, size) === 'X'){
+                        board[move] = '';
+                        return move;
+                    }
+                    board[move] = '';
+                }
+                // 3. 优先占中心或角
+                const center = Math.floor(size/2) * size + Math.floor(size/2);
+                if(empty.includes(center)) return center;
+                const corners = [0, size-1, size*(size-1), size*size-1];
+                const availableCorners = corners.filter(c => empty.includes(c));
+                if(availableCorners.length > 0) return availableCorners[Math.floor(Math.random() * availableCorners.length)];
+                return empty[Math.floor(Math.random() * empty.length)];
+            }
+            
+            // 全局变量
+            let currentGame = { type: 'tictactoe', size: 3, board: [], turn: 'X', active: true, winner: null, difficulty: 'normal' };
+            function initGame(type, size, difficulty = 'normal'){
+                currentGame = { type, size, board: Array(size*size).fill(''), turn: 'X', active: true, winner: null, difficulty };
+                renderGameBoard();
+            }
+            function checkWinner(board, size){
+                const winLen = (size <= 5) ? Math.min(3, size) : 5;
+                for(let i=0;i<size;i++){
+                    for(let j=0;j<=size-winLen;j++){
+                        const idx = i*size+j;
+                        const val = board[idx];
+                        if(val && board.slice(idx, idx+winLen).every(v=>v===val)) return val;
+                    }
+                }
+                for(let i=0;i<=size-winLen;i++){
+                    for(let j=0;j<size;j++){
+                        let allSame = true;
+                        for(let k=0;k<winLen;k++) if(board[(i+k)*size+j] !== board[i*size+j]) allSame=false;
+                        if(allSame && board[i*size+j]) return board[i*size+j];
+                    }
+                }
+                for(let i=0;i<=size-winLen;i++){
+                    for(let j=0;j<=size-winLen;j++){
+                        let allSame = true;
+                        for(let k=0;k<winLen;k++) if(board[(i+k)*size+(j+k)] !== board[i*size+j]) allSame=false;
+                        if(allSame && board[i*size+j]) return board[i*size+j];
+                        allSame = true;
+                        for(let k=0;k<winLen;k++) if(board[(i+k)*size+(j+winLen-1-k)] !== board[i*size+j+winLen-1]) allSame=false;
+                        if(allSame && board[i*size+j+winLen-1]) return board[i*size+j+winLen-1];
+                    }
+                }
+                if(board.every(c=>c!=='')) return 'tie';
+                return null;
+            }
+            function aiMove(){
+                if(!currentGame.active || currentGame.turn !== 'O') return;
+                let move = null;
+                if(currentGame.difficulty === 'easy'){
+                    const empty = currentGame.board.reduce((arr,cell,idx)=>{ if(cell==='') arr.push(idx); return arr; },[]);
+                    if(empty.length>0) move = empty[Math.floor(Math.random()*empty.length)];
+                } else {
+                    move = getSmartAIMove(currentGame.board, currentGame.size);
+                }
+                if(move !== null){
+                    currentGame.board[move] = 'O';
+                    const winner = checkWinner(currentGame.board, currentGame.size);
+                    if(winner){
+                        currentGame.active = false;
+                        currentGame.winner = winner;
+                    } else { currentGame.turn = 'X'; }
+                    renderGameBoard();
+                }
+            }
+            function renderGameBoard(){
+                const container = document.getElementById('gameBoardContainer');
+                const statusSpanGame = document.getElementById('gameStatus');
+                if(!container) return;
+                const size = currentGame.size;
+                const cellSize = Math.min(60, Math.floor(500 / size));
+                container.style.gridTemplateColumns = `repeat(${size}, ${cellSize}px)`;
+                container.innerHTML = '';
+                for(let i=0;i<size*size;i++){
+                    const cell = document.createElement('div');
+                    cell.className = 'game-cell';
+                    cell.style.width = `${cellSize}px`;
+                    cell.style.height = `${cellSize}px`;
+                    cell.style.fontSize = `${Math.min(24, cellSize * 0.4)}px`;
+                    cell.innerText = currentGame.board[i];
+                    if(currentGame.active && !currentGame.board[i] && (!currentGame.winner) && currentGame.turn === 'X') cell.onclick = () => gameMove(i);
+                    container.appendChild(cell);
+                }
+                if(statusSpanGame){
+                    if(currentGame.winner) statusSpanGame.innerText = currentGame.winner === 'X' ? '🏆 你赢了！' : '🤖 AI赢了！';
+                    else if(!currentGame.active) statusSpanGame.innerText = '游戏结束';
+                    else statusSpanGame.innerText = `${currentGame.turn === 'X' ? '👤 你的回合' : '🤖 AI思考中...'}`;
+                }
+            }
+            function gameMove(idx){
+                if(!currentGame.active || currentGame.turn !== 'X' || currentGame.board[idx]!=='') return;
+                currentGame.board[idx] = 'X';
+                const winner = checkWinner(currentGame.board, currentGame.size);
+                if(winner){
+                    currentGame.active = false;
+                    currentGame.winner = winner;
+                    renderGameBoard();
+                    return;
+                }
+                currentGame.turn = 'O';
+                renderGameBoard();
+                setTimeout(()=>aiMove(), 100);
+            }
+            
+            function renderChessPage(){
+                return `<div class="internal-page"><h2>🎮 棋类游戏 · 井字棋 / 围棋</h2>
+                <div class="game-selector">
+                    <button class="game-btn" data-game="tictactoe3" data-diff="easy">3x3 井字棋 (简单)</button>
+                    <button class="game-btn" data-game="tictactoe3hard" data-diff="hard">3x3 井字棋 (困难)</button>
+                    <button class="game-btn" data-game="tictactoe5" data-diff="normal">5x5 井字棋</button>
+                    <button class="game-btn" data-game="go18" data-diff="normal">18x18 围棋</button>
+                    <button class="game-btn" data-game="go25" data-diff="normal">25x25 围棋</button>
+                </div>
+                <div id="gameBoardContainer" class="game-board"></div>
+                <div style="text-align:center;"><span id="gameStatus"></span></div>
+                </div>`;
+            }
+            function attachChessEvents(){
+                document.querySelectorAll('.game-btn').forEach(btn=>{
+                    btn.onclick = () => {
+                        const game = btn.dataset.game;
+                        const diff = btn.dataset.diff || 'normal';
+                        if(game === 'tictactoe3') initGame('tictactoe', 3, diff);
+                        else if(game === 'tictactoe3hard') initGame('tictactoe', 3, 'hard');
+                        else if(game === 'tictactoe5') initGame('tictactoe', 5, 'normal');
+                        else if(game === 'go18') initGame('go', 18, 'normal');
+                        else if(game === 'go25') initGame('go', 25, 'normal');
+                    };
+                });
+                initGame('tictactoe', 3, 'easy');
+            }
+
+            function renderInternalPage(pageId){
+                frame.style.display = 'none';
+                internalContainer.style.display = 'block';
+                internalContainer.innerHTML = '';
+                if(pageId === 'homepage') internalContainer.innerHTML = renderHomepage();
+                else if(pageId === 'settings') internalContainer.innerHTML = renderSettingsPage(), attachSettingsEvents();
+                else if(pageId === 'note') internalContainer.innerHTML = renderNotePage(), attachNoteEvents();
+                else if(pageId === 'chess') internalContainer.innerHTML = renderChessPage(), attachChessEvents();
+                else if(pageId === 'easyabroad') internalContainer.innerHTML = renderEasyAbroadPage(), attachEasyAbroadEvents();
+                else if(pageId === 'embassy') internalContainer.innerHTML = renderEmbassyPage();
+                else if(pageId === 'translate') internalContainer.innerHTML = renderTranslatePage(), attachTranslateEvents();
+                else if(pageId === 'count') internalContainer.innerHTML = renderCountPage(), attachCountEvents();
+                else if(pageId === 'pages') internalContainer.innerHTML = renderPagesPage(), attachPagesEvents();
+                else if(pageId === 'chajian') internalContainer.innerHTML = renderChajianPage(), attachChajianEvents();
+                else if(pageId === 'pin') {
+                    if(!currentUser){ internalContainer.innerHTML = `<div class="internal-page"><h2>🔒 需要登录</h2><p>快捷方式功能需要登录 Surfer2 账号后使用。</p><button onclick="window.loginFromPin()">立即登录</button></div>`; window.loginFromPin = () => loginWithGitHub(); return; }
+                    internalContainer.innerHTML = renderPinPage(); attachPinEvents();
+                }
+                else if(pageId === 'report') internalContainer.innerHTML = renderReportPage(), attachReportEvents();
+                else internalContainer.innerHTML = `<div class="internal-page"><h2>❓ 未知域名</h2></div>`;
+                statusSpan.innerText = `📄 ${pageId}`;
+                urlInput.value = `surfer:${pageId}`;
+            }
+
+            function renderHomepage(){
+                return `<div class="internal-page"><div class="homepage-container">
+                    <div class="homepage-title">🌊 Surfer2</div>
+                    <div class="homepage-sub">快速搜索 · 内置导航 · 安全冲浪</div>
+                    <div class="search-box">
+                        <input type="text" id="homeSearchInput" class="search-input" placeholder="输入搜索内容...">
+                        <select id="homeEngineSelect" class="engine-select">
+                            <option value="google">Google</option><option value="bing">Bing</option><option value="baidu">百度</option>
+                            <option value="duckduckgo">DuckDuckGo</option><option value="github">GitHub 仓库搜索</option>
+                        </select>
+                        <button id="homeSearchBtn" class="search-btn">🔍 搜索</button>
+                    </div>
+                    <div class="pure-search"><input type="checkbox" id="pureSearchCheckbox"><label>✨ 纯净搜索 (自动添加 -surfer 过滤干扰内容)</label></div>
+                    <div class="github-link"><a href="https://github.com/lkjy-coding/Surfer2" target="_blank"><span>📦</span> GitHub 仓库 · Surfer2</a></div>
+                </div></div>`;
+            }
+
+            function renderSettingsPage(){
+                const lightModeEnabled = localStorage.getItem('surfer2_lightMode') === 'true';
+                const acrylicEnabled = localStorage.getItem('surfer2_acrylic') === 'true';
+                return `<div class="internal-page"><h2>⚙️ Surfer2 设置</h2>
+                <div class="settings-group"><label><input type="checkbox" id="acrylicToggle" ${acrylicEnabled ? 'checked' : ''}> 亚克力磨砂</label><label><input type="checkbox" id="lightModeToggle" ${lightModeEnabled ? 'checked' : ''}> 浅色模式</label></div>
+                <div class="settings-group"><div>背景图片: <input type="text" id="bgImageUrl" style="width:60%;"><input type="file" id="bgImageUpload" accept="image/*"></div>
+                <div>字体: <select id="fontSelect"><option value="system-ui">跟随系统</option><option value="monospace">等宽</option></select></div>
+                <div>容器背景: <input type="color" id="containerBgColor" class="color-wheel"></div>
+                <div>边框颜色: <input type="color" id="borderColorPicker" class="color-wheel"></div>
+                <button id="applyStyleBtn">应用</button></div>
+                <div class="settings-group"><strong>👤 账号信息</strong>${currentUser ? `<div>当前登录: ${currentUser.username}${isAdmin() ? ' (管理员)' : ''}</div><button id="logoutSettingsBtn">登出账号</button>` : `<div>未登录</div><button id="loginSettingsBtn">登录/注册</button>`}</div>
+                <div class="settings-group"><strong>版本信息</strong><div class="version-info-item"><span>Surfer2 5.00.00</span><span class="clickable-link" id="domainsLink">内部域名全功能</span></div></div>
+                <button id="saveAllBtn">保存</button></div>`;
+            }
+            function attachSettingsEvents(){
+                const bgUpload = document.getElementById('bgImageUpload');
+                if(bgUpload) bgUpload.onchange = (e)=>{const f=e.target.files[0]; if(f){const r=new FileReader(); r.onload=ev=>document.getElementById('bgImageUrl').value=ev.target.result; r.readAsDataURL(f);}};
+                document.getElementById('applyStyleBtn').onclick = ()=>saveCustomStyles(document.getElementById('bgImageUrl').value, document.getElementById('fontSelect').value, document.getElementById('containerBgColor').value, document.getElementById('borderColorPicker').value, document.getElementById('acrylicToggle').checked, document.getElementById('lightModeToggle').checked);
+                document.getElementById('saveAllBtn').onclick = ()=>saveCustomStyles(document.getElementById('bgImageUrl').value, document.getElementById('fontSelect').value, document.getElementById('containerBgColor').value, document.getElementById('borderColorPicker').value, document.getElementById('acrylicToggle').checked, document.getElementById('lightModeToggle').checked);
+                document.getElementById('domainsLink').onclick = () => navigateTo('surfer:pages');
+                if(document.getElementById('logoutSettingsBtn')) document.getElementById('logoutSettingsBtn').onclick = () => logout();
+                if(document.getElementById('loginSettingsBtn')) document.getElementById('loginSettingsBtn').onclick = () => loginWithGitHub();
+            }
+
+            function renderNotePage(){ return `<div class="internal-page"><h2>📝 surfer:note · Markdown + LaTeX</h2><div class="note-editor"><div class="note-toolbar"><button id="noteSaveBtn">保存</button><button id="noteExportBtn">导出HTML</button></div><div class="note-split"><div class="note-input-area"><textarea id="noteContent" class="note-textarea" placeholder="# 标题\n\n$$E=mc^2$$"></textarea></div><div class="note-preview-area"><div id="notePreview" class="note-preview"></div></div></div></div></div>`; }
+            function attachNoteEvents(){
+                const ta = document.getElementById('noteContent');
+                const preview = document.getElementById('notePreview');
+                const saved = localStorage.getItem('surfer2_note') || '# Surfer2 笔记本\n\n支持 **Markdown** 和 $$\\\\LaTeX$$\n\n$$E = mc^2$$';
+                ta.value = saved;
+                function render(){ let html = marked.parse(ta.value); html = html.replace(/\$\$([\s\S]+?)\$\$/g, (_,latex)=>{ try{ return katex.renderToString(latex,{displayMode:true}); }catch(e){ return `<span style="color:red">${latex}</span>`; } }); html = html.replace(/\$([^\$]+?)\$/g, (_,latex)=>{ try{ return katex.renderToString(latex,{displayMode:false}); }catch(e){ return `<span style="color:red">${latex}</span>`; } }); preview.innerHTML = html; }
+                ta.addEventListener('input', render);
+                document.getElementById('noteSaveBtn').onclick = ()=>{ localStorage.setItem('surfer2_note', ta.value); statusSpan.innerText='笔记已保存'; };
+                document.getElementById('noteExportBtn').onclick = ()=>{ const blob = new Blob([`<!DOCTYPE html><html><head><meta charset="UTF-8"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"></head><body>${preview.innerHTML}</body></html>`], {type:'text/html'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='note.html'; a.click(); };
+                render();
+            }
+
+            function renderEasyAbroadPage(){
+                return `<div class="easyabroad-container"><div class="easyabroad-header"><h1>EasyAbroad</h1><p>📍 自动定位 · 汇率 · 翻译</p></div>
+                <div class="easyabroad-grid"><div class="easyabroad-card"><h3>📍 当前信息</h3><div id="eaCountry" class="info-row"><span>国家:</span><span>检测中...</span></div><div id="eaTime" class="info-row"><span>时间:</span><span>--</span></div></div>
+                <div class="easyabroad-card"><h3>💱 汇率换算</h3><select id="eaFrom"><option>CNY</option><option>USD</option><option>EUR</option></select><select id="eaTo"><option>USD</option><option>EUR</option></select><input id="eaAmount" value="100"><button id="eaConvert">换算</button><div id="eaResult" class="rate-result"></div></div>
+                <div class="easyabroad-card"><h3>🌍 翻译</h3><select id="eaSrcLang"><option value="auto">自动</option><option value="zh">中文</option><option value="en">英语</option></select><select id="eaTgtLang"><option value="en">英语</option><option value="zh">中文</option></select><textarea id="eaSrcText" rows="2" placeholder="输入文字..."></textarea><button id="eaTranslate">翻译</button><textarea id="eaResultText" rows="2" readonly placeholder="翻译结果"></textarea></div></div>
+                <div class="easyabroad-card"><h3>🌐 国际导航</h3><div class="link-grid"><a href="https://www.youtube.com" target="_blank" class="nav-link">YouTube</a><a href="https://twitter.com" target="_blank" class="nav-link">X</a><a href="https://www.google.com" target="_blank" class="nav-link">Google</a><a href="https://www.wikipedia.org" target="_blank" class="nav-link">Wikipedia</a></div></div></div>`;
+            }
+            function attachEasyAbroadEvents(){
+                fetch('https://ipapi.co/json/').then(r=>r.json()).then(d=>{ document.getElementById('eaCountry').innerHTML=`<span>国家:</span><span>${d.country_name}</span>`; if(d.timezone) setInterval(()=>{document.getElementById('eaTime').innerHTML=`<span>时间:</span><span>${new Intl.DateTimeFormat('zh-CN',{timeZone:d.timezone,hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date())}</span>`},1000); });
+                document.getElementById('eaConvert').onclick = async ()=>{ const f=document.getElementById('eaFrom').value, t=document.getElementById('eaTo').value, a=parseFloat(document.getElementById('eaAmount').value); try{ const r=await fetch(`https://api.exchangerate-api.com/v4/latest/${f}`); const d=await r.json(); const rate=d.rates[t]; document.getElementById('eaResult').innerHTML=`${a} ${f} = ${(a*rate).toFixed(2)} ${t}`; }catch(e){ document.getElementById('eaResult').innerHTML='获取失败'; } };
+                document.getElementById('eaTranslate').onclick = async ()=>{ const text=document.getElementById('eaSrcText').value, tgt=document.getElementById('eaTgtLang').value; if(!text) return; const res=await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=auto|${tgt}`); const data=await res.json(); document.getElementById('eaResultText').value=data.responseData?.translatedText||'失败'; };
+            }
+
+            function renderEmbassyPage(){ return `<div class="internal-page" style="padding:0; height:100%; display:flex; flex-direction:column;"><iframe src="https://lkjy-coding.github.io/ChineseEmbassyV5.html" style="width:100%; height:100%; border:none; flex:1;"></iframe></div>`; }
+
+            const fullLang = { auto:'自动检测', zh:'中文(简体)', zh_tw:'中文(繁体)', en:'English', ja:'日本語', ko:'한국어', fr:'Français', de:'Deutsch', es:'Español', ru:'Русский', it:'Italiano', pt:'Português' };
+            const s2tMap = { '们':'們','会':'會','个':'個','后':'後','关':'關','开':'開','进':'進','过':'過','对':'對','时':'時','说':'說','电':'電','为':'為','发':'發','爱':'愛','体':'體','学':'學','国':'國','门':'門','问':'問','龙':'龍' };
+            const t2sMap = Object.fromEntries(Object.entries(s2tMap).map(([s,t]) => [t,s]));
+            function convertSimpleToTraditional(text){ let r=''; for(let ch of text) r += s2tMap[ch] || ch; return r; }
+            function convertTraditionalToSimple(text){ let r=''; for(let ch of text) r += t2sMap[ch] || ch; return r; }
+            function detectLanguage(text){
+                if(/[們會個後關開進過對時說電為發愛體學國門問龍]/.test(text)) return 'zh_tw';
+                if(/[\u4e00-\u9fa5]/.test(text)) return 'zh';
+                if(/[ぁ-んァ-ン]/.test(text)) return 'ja';
+                if(/[가-힣]/.test(text)) return 'ko';
+                return 'en';
+            }
+            function renderTranslatePage(){
+                return `<div class="internal-page"><div class="translate-container"><h2>🌐 翻译 · 支持简繁互译 + 自动检测</h2>
+                <div class="translate-box"><div class="translate-switch"><button id="swapLangBtn">🔄 交换语言</button></div>
+                <select id="transSrc">${Object.entries(fullLang).map(([k,v])=>`<option value="${k}" ${k==='auto'?'selected':''}>${v}</option>`).join('')}</select> → 
+                <select id="transTgt">${Object.entries(fullLang).filter(([k])=>k!=='auto').map(([k,v])=>`<option value="${k}" ${k==='en'?'selected':''}>${v}</option>`).join('')}</select>
+                <textarea id="transSrcText" class="translate-textarea" placeholder="输入要翻译的文字..."></textarea>
+                <button id="transBtn" style="margin-top:12px;">翻译</button>
+                <div id="transResult" class="translate-result"></div></div></div></div>`;
+            }
+            function attachTranslateEvents(){
+                document.getElementById('swapLangBtn').onclick = () => { const s=document.getElementById('transSrc').value, t=document.getElementById('transTgt').value; document.getElementById('transSrc').value=t; document.getElementById('transTgt').value=s; };
+                document.getElementById('transBtn').onclick = async () => {
+                    const text = document.getElementById('transSrcText').value;
+                    let src = document.getElementById('transSrc').value, tgt = document.getElementById('transTgt').value;
+                    if(!text.trim()){ document.getElementById('transResult').innerHTML='请输入文字'; return; }
+                    if(src === 'auto'){ src = detectLanguage(text); }
+                    if(src === tgt){ document.getElementById('transResult').innerHTML='⚠️ 源语言和目标语言不能相同，请选择两种不同的语言'; return; }
+                    if((src === 'zh' && tgt === 'zh_tw')){ document.getElementById('transResult').innerHTML = convertSimpleToTraditional(text); return; }
+                    if((src === 'zh_tw' && tgt === 'zh')){ document.getElementById('transResult').innerHTML = convertTraditionalToSimple(text); return; }
+                    const srcCode = src === 'zh_tw' ? 'zh-TW' : src;
+                    const tgtCode = tgt === 'zh_tw' ? 'zh-TW' : tgt;
+                    try{
+                        const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${srcCode}|${tgtCode}`);
+                        const data = await res.json();
+                        document.getElementById('transResult').innerHTML = data.responseData?.translatedText || '翻译失败';
+                    } catch(e){ document.getElementById('transResult').innerHTML = '服务暂不可用'; }
+                };
+            }
+
+            function renderCountPage(){
+                return `<div class="internal-page"><div class="calc-container"><h2>📐 按键式图形计算器 + 汇率换算</h2>
+                <div class="calc-gui"><div class="calc-display" id="calcDisplay">0</div>
+                <div class="calc-gui-row"><button class="calc-gui-btn clear" data-action="clear">AC</button><button class="calc-gui-btn" data-action="back">⌫</button><button class="calc-gui-btn operator" data-op="/">÷</button><button class="calc-gui-btn operator" data-op="*">×</button></div>
+                <div class="calc-gui-row"><button class="calc-gui-btn" data-num="7">7</button><button class="calc-gui-btn" data-num="8">8</button><button class="calc-gui-btn" data-num="9">9</button><button class="calc-gui-btn operator" data-op="-">−</button></div>
+                <div class="calc-gui-row"><button class="calc-gui-btn" data-num="4">4</button><button class="calc-gui-btn" data-num="5">5</button><button class="calc-gui-btn" data-num="6">6</button><button class="calc-gui-btn operator" data-op="+">+</button></div>
+                <div class="calc-gui-row"><button class="calc-gui-btn" data-num="1">1</button><button class="calc-gui-btn" data-num="2">2</button><button class="calc-gui-btn" data-num="3">3</button><button class="calc-gui-btn equals" data-action="equals">=</button></div>
+                <div class="calc-gui-row"><button class="calc-gui-btn" data-num="0">0</button><button class="calc-gui-btn" data-num=".">.</button><button class="calc-gui-btn func" data-func="sqrt">√</button><button class="calc-gui-btn func" data-func="pow">x²</button></div>
+                <div class="calc-gui-row"><button class="calc-gui-btn func" data-func="sin">sin</button><button class="calc-gui-btn func" data-func="cos">cos</button><button class="calc-gui-btn func" data-func="tan">tan</button><button class="calc-gui-btn func" data-func="pi">π</button></div>
+                <div class="calc-gui-row"><button id="calcSoundBtn" class="calc-gui-btn" style="background:#22c55e;">🔊 朗读</button><button id="calcPlotBtn" class="calc-gui-btn" style="background:#8b5cf6;">📈 绘图</button></div>
+                <div id="calcResultArea" class="calc-result">结果将显示在这里</div>
+                <div id="plotPreview" class="plot-container" style="display:none;"></div></div>
+                <div class="settings-group"><h3>💱 汇率换算</h3><div style="display:flex; gap:12px; flex-wrap:wrap;"><input type="number" id="currencyAmount" value="100" style="flex:1; padding:12px; border-radius:40px;"><select id="currencyFrom"><option>CNY</option><option>USD</option><option>EUR</option><option>JPY</option><option>GBP</option></select> → <select id="currencyTo"><option>USD</option><option selected>EUR</option></select><button id="currencyCalcBtn">换算</button></div><div id="currencyResult" class="calc-result"></div></div></div>`;
+            }
+            function attachCountEvents(){
+                let currentExpr = '';
+                const display = document.getElementById('calcDisplay');
+                function update(){ display.innerText = currentExpr || '0'; }
+                function calc(){
+                    try{
+                        let expr = currentExpr.replace(/×/g,'*').replace(/÷/g,'/').replace(/\^/g,'**');
+                        expr = expr.replace(/√\(?([^)]+)\)?/g,'Math.sqrt($1)').replace(/(\d+)²/g,'Math.pow($1,2)');
+                        expr = expr.replace(/sin\(/g,'Math.sin(').replace(/cos\(/g,'Math.cos(').replace(/tan\(/g,'Math.tan(').replace(/π/g,'Math.PI');
+                        const result = eval(expr);
+                        document.getElementById('calcResultArea').innerHTML = `📐 结果: ${result}`;
+                        currentExpr = result.toString(); update();
+                    } catch(e){ document.getElementById('calcResultArea').innerHTML = `错误: ${e.message}`; }
+                }
+                function handle(v){
+                    if(v==='clear'){ currentExpr=''; document.getElementById('calcResultArea').innerHTML='结果将显示在这里'; update(); return; }
+                    if(v==='back'){ currentExpr=currentExpr.slice(0,-1); update(); return; }
+                    if(v==='equals'){ calc(); return; }
+                    if(v==='sqrt'){ currentExpr+='√('; update(); return; }
+                    if(v==='pow'){ currentExpr+='²'; update(); return; }
+                    if(v==='sin'){ currentExpr+='sin('; update(); return; }
+                    if(v==='cos'){ currentExpr+='cos('; update(); return; }
+                    if(v==='tan'){ currentExpr+='tan('; update(); return; }
+                    if(v==='pi'){ currentExpr+='π'; update(); return; }
+                    currentExpr += v; update();
+                }
+                document.querySelectorAll('.calc-gui-btn[data-num]').forEach(b=>b.onclick=()=>handle(b.dataset.num));
+                document.querySelectorAll('.calc-gui-btn[data-op]').forEach(b=>b.onclick=()=>handle(b.dataset.op));
+                document.querySelector('[data-action="clear"]').onclick=()=>handle('clear');
+                document.querySelector('[data-action="back"]').onclick=()=>handle('back');
+                document.querySelector('[data-action="equals"]').onclick=()=>handle('equals');
+                document.querySelectorAll('.calc-gui-btn[data-func]').forEach(b=>b.onclick=()=>handle(b.dataset.func));
+                document.getElementById('calcSoundBtn').onclick=()=>{ const t=document.getElementById('calcResultArea').innerText; if(t){ const u=new SpeechSynthesisUtterance(t); u.lang='zh-CN'; speechSynthesis.speak(u); } };
+                document.getElementById('calcPlotBtn').onclick=()=>{ try{ functionPlot({ target:'#plotPreview', width:500, height:300, grid:true, data:[{ fn:currentExpr, sampler:'builtIn' }] }); document.getElementById('plotPreview').style.display='block'; }catch(e){ alert('绘图失败'); } };
+                document.getElementById('currencyCalcBtn').onclick=async()=>{ const a=parseFloat(document.getElementById('currencyAmount').value), f=document.getElementById('currencyFrom').value, t=document.getElementById('currencyTo').value; try{ const r=await fetch(`https://api.exchangerate-api.com/v4/latest/${f}`); const d=await r.json(); const rate=d.rates[t]; document.getElementById('currencyResult').innerHTML=`${a} ${f} = ${(a*rate).toFixed(4)} ${t}`; }catch(e){ document.getElementById('currencyResult').innerHTML='获取失败'; } };
+            }
+
+            function renderPagesPage(){
+                const pages = ['homepage','settings','note','chess','easyabroad','embassy','translate','count','pin','report','chajian'];
+                return `<div class="internal-page"><h2>📌 内部域名导航</h2><div class="pages-grid">${pages.map(p=>`<div class="page-card" data-domain="${p}"><h3>🔗 surfer:${p}</h3></div>`).join('')}</div></div>`;
+            }
+            function attachPagesEvents(){ document.querySelectorAll('.page-card').forEach(c=>c.onclick = ()=>navigateTo(`surfer:${c.dataset.domain}`)); }
+
+            function renderChajianPage(){
+                return `<div class="internal-page"><h2>🔌 插件中心</h2><div class="plugin-tabs"><div class="plugin-tab active" data-tab="maps">🗺️ 在线地图</div><div class="plugin-tab" data-tab="ir">📡 红外线发射</div></div>
+                <div id="plugin-maps" class="plugin-pane active"><div class="map-container"><iframe class="map-frame" src="https://www.openstreetmap.org/export/embed.html?bbox=-30,-20,70,60&layer=mapnik"></iframe></div></div>
+                <div id="plugin-ir" class="plugin-pane"><div class="plugin-card"><p>📡 红外线发射插件</p><button id="irTestBtn">测试发射</button><div id="irResult"></div></div></div></div>`;
+            }
+            function attachChajianEvents(){
+                document.querySelectorAll('.plugin-tab').forEach(tab=>{ tab.onclick=()=>{ document.querySelectorAll('.plugin-tab').forEach(t=>t.classList.remove('active')); tab.classList.add('active'); document.querySelectorAll('.plugin-pane').forEach(p=>p.classList.remove('active')); document.getElementById(`plugin-${tab.dataset.tab}`).classList.add('active'); }; });
+                document.getElementById('irTestBtn').onclick = () => { document.getElementById('irResult').innerHTML = '红外信号已发送(模拟)'; };
+            }
+
+            function renderPinPage(){
+                loadShortcuts();
+                return `<div class="internal-page"><div class="pin-container"><div class="pin-add"><input type="text" id="pinName" placeholder="名称"><input type="text" id="pinUrl" placeholder="网址 (如 https://... 或 surfer:xxx)"><button id="addPinBtn">➕ 添加快捷方式</button></div>
+                <div id="pinList" class="pin-list"></div></div></div>`;
+            }
+            function attachPinEvents(){
+                function renderPins(){
+                    const container = document.getElementById('pinList');
+                    if(!container) return;
+                    container.innerHTML = '';
+                    shortcuts.forEach((pin, idx) => {
+                        const div = document.createElement('div'); div.className = 'pin-item';
+                        div.innerHTML = `<span class="pin-name">📌 ${escapeHtml(pin.name)}</span><span class="pin-url" style="font-size:0.7rem; color:#87b9ff;">${pin.url.substring(0,40)}</span><button class="pin-delete" data-idx="${idx}">删除</button>`;
+                        div.onclick = (e) => { if(e.target.tagName !== 'BUTTON') navigateTo(pin.url); };
+                        div.querySelector('.pin-delete').onclick = (e) => { e.stopPropagation(); shortcuts.splice(idx,1); saveShortcuts(); renderPins(); };
+                        container.appendChild(div);
+                    });
+                }
+                document.getElementById('addPinBtn').onclick = () => {
+                    const name = document.getElementById('pinName').value.trim();
+                    const url = document.getElementById('pinUrl').value.trim();
+                    if(name && url){ shortcuts.push({name, url}); saveShortcuts(); renderPins(); document.getElementById('pinName').value=''; document.getElementById('pinUrl').value=''; }
+                };
+                renderPins();
+            }
+
+            function initHomepageEvents(){
+                const searchBtn = document.getElementById('homeSearchBtn');
+                const searchInput = document.getElementById('homeSearchInput');
+                const engineSelect = document.getElementById('homeEngineSelect');
+                const pureCheckbox = document.getElementById('pureSearchCheckbox');
+                if(searchBtn){
+                    searchBtn.onclick = () => {
+                        let query = searchInput.value.trim();
+                        if(!query) return;
+                        if(pureCheckbox && pureCheckbox.checked) query += ' -surfer';
+                        const encoded = encodeURIComponent(query);
+                        const engine = engineSelect.value;
+                        let url = '';
+                        if(engine === 'google') url = `https://www.google.com/search?q=${encoded}`;
+                        else if(engine === 'bing') url = `https://www.bing.com/search?q=${encoded}`;
+                        else if(engine === 'baidu') url = `https://www.baidu.com/s?wd=${encoded}`;
+                        else if(engine === 'duckduckgo') url = `https://duckduckgo.com/?q=${encoded}`;
+                        else if(engine === 'github') url = `https://github.com/search?q=${encoded}`;
+                        navigateTo(url);
+                    };
+                }
+            }
+
+            function loadCustomStyles(){
+                const bgImage = localStorage.getItem('surfer2_bgImage');
+                const fontFamily = localStorage.getItem('surfer2_fontFamily') || 'system-ui';
+                const containerBg = localStorage.getItem('surfer2_containerBg') || '#0e1427';
+                const borderColor = localStorage.getItem('surfer2_borderColor') || '#2d3e5f';
+                const acrylic = localStorage.getItem('surfer2_acrylic') === 'true';
+                const lightMode = localStorage.getItem('surfer2_lightMode') === 'true';
+                document.body.style.fontFamily = fontFamily;
+                surferContainer.style.background = containerBg;
+                surferContainer.style.borderColor = borderColor;
+                if(lightMode) document.body.classList.add('light-mode'); else document.body.classList.remove('light-mode');
+                if(acrylic) document.body.classList.add('acrylic-active'); else document.body.classList.remove('acrylic-active');
+                if(bgImage) { bgLayer.style.backgroundImage = `url(${bgImage})`; bgLayer.style.backgroundSize = 'cover'; bgLayer.style.backgroundPosition = 'center'; }
+                else bgLayer.style.backgroundImage = '';
+            }
+            function saveCustomStyles(bgImageUrl, font, containerBg, borderCol, acrylic, lightMode){
+                if(bgImageUrl !== undefined) localStorage.setItem('surfer2_bgImage', bgImageUrl);
+                if(font !== undefined) localStorage.setItem('surfer2_fontFamily', font);
+                if(containerBg !== undefined) localStorage.setItem('surfer2_containerBg', containerBg);
+                if(borderCol !== undefined) localStorage.setItem('surfer2_borderColor', borderCol);
+                if(acrylic !== undefined) localStorage.setItem('surfer2_acrylic', acrylic);
+                if(lightMode !== undefined) localStorage.setItem('surfer2_lightMode', lightMode);
+                loadCustomStyles();
+            }
+
+            function navigateTo(url){
+                let target = url.trim();
+                if(target.startsWith('surfer:')){
+                    const page = target.slice(7).split('?')[0];
+                    const validPages = ['homepage','settings','note','chess','easyabroad','embassy','translate','count','pages','chajian','pin','report'];
+                    if(validPages.includes(page)){
+                        renderInternalPage(page);
+                        if(page === 'homepage') setTimeout(()=>initHomepageEvents(), 50);
+                        historyStack = historyStack.slice(0, historyIndex+1);
+                        historyStack.push(target);
+                        historyIndex++;
+                        urlInput.value = target;
+                        return;
+                    }
+                }
+                if(target === 'about:blank'){ frame.style.display='block'; internalContainer.style.display='none'; frame.src='about:blank'; historyStack=historyStack.slice(0,historyIndex+1); historyStack.push(target); historyIndex++; urlInput.value=target; statusSpan.innerText='空白页'; return; }
+                if(!target.startsWith('http')) target='https://'+target;
+                frame.style.display='block'; internalContainer.style.display='none'; frame.src=target; historyStack=historyStack.slice(0,historyIndex+1); historyStack.push(target); historyIndex++; urlInput.value=target;
+            }
+
+            function goBack(){ if(historyIndex>0){ historyIndex--; navigateTo(historyStack[historyIndex]); } }
+            function goForward(){ if(historyIndex<historyStack.length-1){ historyIndex++; navigateTo(historyStack[historyIndex]); } }
+            function reloadCurrent(){ navigateTo(urlInput.value); }
+            goBtn.onclick = () => navigateTo(urlInput.value);
+            backBtn.onclick = goBack; forwardBtn.onclick = goForward; reloadBtn.onclick = reloadCurrent;
+            urlInput.onkeypress = (e) => { if(e.key === 'Enter') navigateTo(urlInput.value); };
+            bossBtn.onclick = () => navigateTo('surfer:settings');
+            pinBtn.onclick = () => { if(!currentUser){ alert('请先登录后再使用快捷方式功能'); loginWithGitHub(); } else navigateTo('surfer:pin'); };
+            document.addEventListener('keydown', (e) => {
+                if(e.key === 'b' || e.key === 'B') { e.preventDefault(); navigateTo('surfer:settings'); }
+                if(e.key === 'p' || e.key === 'P') { e.preventDefault(); if(!currentUser){ alert('请先登录后再使用快捷方式功能'); loginWithGitHub(); } else navigateTo('surfer:pin'); }
+            });
+            let hidden=false; hideBtn.onclick = ()=>{ const c=document.querySelector('.surfer-container'); if(!hidden){ c.style.opacity='0'; c.style.visibility='hidden'; hidden=true; statusSpan.innerText='窗口已隐藏'; const restore=document.createElement('button'); restore.innerText='显示'; restore.style.cssText='position:fixed;bottom:20px;right:20px;z-index:10000;background:#3b82f6;border:none;padding:8px 16px;border-radius:40px;color:white;cursor:pointer'; restore.onclick=()=>{ c.style.opacity='1'; c.style.visibility='visible'; hidden=false; restore.remove(); statusSpan.innerText='窗口已恢复'; }; document.body.appendChild(restore); } };
+            
+            loadCustomStyles();
+            updateUserButton();
+            navigateTo('surfer:homepage');
+        })();
+    </script>
+</body>
+</html>
