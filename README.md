@@ -12,6 +12,10 @@ Currently known in version 3.00.00, in `surfer:settings`: When switching **betwe
 
 Now I am trying to make the connection by Surfer2 safe,but I'm still not sure about it.So **I don't suggest you to enter something important on it**.
 
+## The brand
+
+**Surfer** and **Surfer2** is my own brand.It **has no thing to do** with **the APP Surfer** or **the algoritmo surfer2**.
+
 ---
 
 # Updates
