@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Surfer2 · 5.30.00 专业冲浪器</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/function-plot@1.22.9/dist/function-plot.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: system-ui, 'Segoe UI', monospace;
+            background: #0a0f1e;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            transition: background-color 0.35s ease, color 0.25s ease;
+            margin: 0;
+            position: relative;
+            overflow: hidden;
+        }
+        /* 高对比度模式 - 强制覆盖 */
+        body.high-contrast {
+            background: #000000 !important;
+            color: #ffffff !important;
+        }
+        body.high-contrast .surfer-container,
+        body.high-contrast .internal-page,
+        body.high-contrast .settings-group,
+        body.high-contrast .easyabroad-card,
+        body.high-contrast .calc-gui,
+        body.high-contrast .toolbar,
+        body.high-contrast .url-bar,
+        body.high-contrast .nav-buttons,
+        body.high-contrast .plugin-card,
+        body.high-contrast .pin-item,
+        body.high-contrast .page-card,
+        body.high-contrast .feedback-item,
+        body.high-contrast .chat-message,
+        body.high-contrast .chat-messages {
+            background: #000000 !important;
+            border-color: #ffffff !important;
+            color: #ffffff !important;
+        }
+        body.high-contrast button,
+        body.high-contrast .calc-gui-btn,
+        body.high-contrast .game-btn,
+        body.high-contrast .report-btn,
+        body.high-contrast .go-btn,
+        body.high-contrast .boss-btn,
+        body.high-contrast .pin-btn,
+        body.high-contrast .user-btn {
+            background: #333333 !important;
+            color: #ffffff !important;
+            border: 1px solid #ffffff !important;
+        }
+        body.high-contrast a {
+            color: #ffff00 !important;
+        }
+        body.light-mode { background: #e2e8f0; }
+
+        .bg-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; background-size: cover; background-position: center; background-repeat: no-repeat; transition: opacity 0.3s ease; }
+        .acrylic-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; transition: opacity 0.35s ease; opacity: 0; background: rgba(14, 20, 39, 0.6); backdrop-filter: blur(20px) saturate(180%); }
+        body.acrylic-active .acrylic-layer { opacity: 1; }
+
+        .surfer-container {
+            width: 100%; max-width: 1400px; height: 90vh; background: #0e1427; border-radius: 32px;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.5); display: flex; flex-direction: column;
+            overflow: hidden; border: 1px solid #2d3e5f; transition: background-color 0.35s ease, border-color 0.3s ease, backdrop-filter 0.3s ease;
+            position: relative; z-index: 1;
+        }
+        body.light-mode .surfer-container { background: #ffffff; border-color: #cbd5e1; }
+        body.acrylic-active .surfer-container { background: rgba(14, 20, 39, 0.65); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.25); }
+
+        .toolbar {
+            background: #111927cc; backdrop-filter: blur(8px); padding: 8px 16px;
+            border-bottom: 1px solid #2a3a55; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+        }
+        body.light-mode .toolbar { background: #f1f5f9; border-bottom-color: #e2e8f0; }
+        .nav-buttons { display: flex; gap: 6px; background: #0b101e99; padding: 4px 10px; border-radius: 48px; }
+        body.light-mode .nav-buttons { background: #e2e8f0; }
+        .nav-btn { background: #1e2a3e; border: none; color: #b4d0ff; font-size: 1.2rem; width: 32px; height: 32px; border-radius: 40px; cursor: pointer; }
+        body.light-mode .nav-btn { background: #cbd5e1; color: #1e293b; }
+        .url-bar { flex: 1; display: flex; gap: 6px; background: #0b101e99; padding: 4px 12px; border-radius: 60px; align-items: center; }
+        body.light-mode .url-bar { background: #e2e8f0; }
+        .url-input { flex: 1; background: #010a1a; border: 1px solid #2c5270; padding: 8px 14px; border-radius: 48px; color: #c0e0ff; font-size: 0.85rem; outline: none; }
+        body.light-mode .url-input { background: #ffffff; border-color: #cbd5e1; color: #1e293b; }
+        .go-btn { background: #1f6392; border: none; padding: 5px 14px; border-radius: 40px; color: white; cursor: pointer; font-size: 0.75rem; }
+        .status { font-size: 0.65rem; background: #030a17aa; padding: 3px 10px; border-radius: 20px; color: #87b9ff; }
+        body.light-mode .status { background: #e2e8f0; color: #475569; }
+        .boss-btn, .pin-btn, .hide-window-btn, .user-btn { background: #4a5568; border: none; padding: 4px 14px; border-radius: 32px; color: white; cursor: pointer; font-size: 0.8rem; }
+        .boss-btn { background: #9e4a2c; }
+        .pin-btn { background: #8b5cf6; }
+        .user-btn { background: #22c55e; }
+        .wave-area { flex: 1; position: relative; overflow: auto; }
+        iframe { width: 100%; height: 100%; border: none; background: white; display: block; }
+        .internal-page { width: 100%; min-height: 100%; background: #0f172a; color: #e2e8f0; padding: 20px; overflow-y: auto; }
+        body.light-mode .internal-page { background: #f8fafc; color: #1e293b; }
+        .settings-group { margin-bottom: 20px; padding: 12px; background: #1e293b; border-radius: 16px; }
+        body.light-mode .settings-group { background: #ffffff; border: 1px solid #e2e8f0; }
+        .color-wheel { width: 100%; height: 40px; margin-top: 8px; cursor: pointer; border-radius: 12px; border: 1px solid #475569; }
+        .version-info-item { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+        .clickable-link { cursor: pointer; text-decoration: underline; color: #3b82f6; }
+
+        /* 屏幕键盘 */
+        .onscreen-keyboard {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #1e293b;
+            padding: 8px;
+            display: none;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 4px;
+            z-index: 1000;
+            border-top: 1px solid #475569;
+        }
+        body.light-mode .onscreen-keyboard { background: #f1f5f9; }
+        .onscreen-keyboard.show { display: flex; }
+        .key-btn {
+            background: #2d3748;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+            min-width: 40px;
+        }
+        body.light-mode .key-btn { background: #cbd5e1; color: #1e293b; }
+
+        .user-menu {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            background: #1e293b;
+            border-radius: 20px;
+            padding: 12px;
+            min-width: 220px;
+            z-index: 200;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid #475569;
+            display: none;
+        }
+        body.light-mode .user-menu { background: #ffffff; border-color: #cbd5e1; }
+        .user-menu.show { display: block; }
+        .user-menu-item { padding: 8px 12px; cursor: pointer; border-radius: 12px; margin: 2px 0; }
+        .user-menu-item:hover { background: #2d3e5f; }
+        body.light-mode .user-menu-item:hover { background: #e2e8f0; }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #8b5cf6); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; }
+
+        /* 其他样式 */
+        .homepage-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100%; padding: 40px 20px; }
+        .homepage-title { font-size: 3rem; font-weight: bold; background: linear-gradient(135deg, #3b82f6, #8b5cf6); background-clip: text; -webkit-background-clip: text; color: transparent; margin-bottom: 20px; }
+        .homepage-sub { color: #87b9ff; margin-bottom: 40px; text-align: center; }
+        body.light-mode .homepage-sub { color: #4a627a; }
+        .search-box { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-bottom: 20px; }
+        .search-input { width: 400px; max-width: 70vw; padding: 14px 20px; border-radius: 60px; border: 1px solid #475569; background: #0f172a; color: #e2e8f0; font-size: 1rem; outline: none; }
+        body.light-mode .search-input { background: #ffffff; border-color: #cbd5e1; color: #1e293b; }
+        .engine-select { padding: 12px 20px; border-radius: 60px; background: #1e293b; border: 1px solid #475569; color: #e2e8f0; cursor: pointer; }
+        body.light-mode .engine-select { background: #ffffff; color: #1e293b; }
+        .search-btn { padding: 12px 28px; border-radius: 60px; background: #3b82f6; border: none; color: white; font-weight: bold; cursor: pointer; }
+        .pure-search { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 0.85rem; color: #87b9ff; }
+        body.light-mode .pure-search { color: #4a627a; }
+        .github-link { margin-top: 40px; text-align: center; }
+        .github-link a { color: #87b9ff; text-decoration: none; font-size: 1rem; background: #1e293b; padding: 10px 20px; border-radius: 40px; display: inline-flex; align-items: center; gap: 8px; }
+        body.light-mode .github-link a { background: #e2e8f0; color: #1f6392; }
+        .calc-gui { background: #1e293b; border-radius: 24px; padding: 20px; margin-top: 16px; }
+        body.light-mode .calc-gui { background: #ffffff; border: 1px solid #e2e8f0; }
+        .calc-display { background: #0f172a; border-radius: 20px; padding: 20px; margin-bottom: 20px; font-family: monospace; font-size: 1.8rem; text-align: right; word-break: break-all; min-height: 80px; }
+        body.light-mode .calc-display { background: #f1f5f9; }
+        .calc-gui-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .calc-gui-btn { flex: 1; padding: 16px 8px; font-size: 1.2rem; font-weight: bold; border: none; border-radius: 20px; cursor: pointer; background: #2d3748; color: #e2e8f0; transition: 0.05s linear; }
+        .calc-gui-btn:active { transform: scale(0.96); }
+        body.light-mode .calc-gui-btn { background: #e2e8f0; color: #1e293b; }
+        .calc-gui-btn.operator { background: #3b82f6; color: white; }
+        .calc-gui-btn.equals { background: #22c55e; color: white; }
+        .calc-gui-btn.clear { background: #ef4444; color: white; }
+        .calc-gui-btn.func { background: #8b5cf6; color: white; }
+        .plot-container { width: 100%; height: 300px; margin-top: 16px; background: #0f172a; border-radius: 16px; }
+        .note-editor { display: flex; flex-direction: column; gap: 16px; }
+        .note-split { display: flex; gap: 16px; min-height: 500px; flex-wrap: wrap; }
+        .note-input-area, .note-preview-area { flex: 1; min-width: 250px; display: flex; flex-direction: column; }
+        .note-textarea { width: 100%; height: 400px; background: #0f172a; border: 1px solid #475569; border-radius: 16px; padding: 16px; color: #f1f5f9; font-family: monospace; resize: vertical; }
+        body.light-mode .note-textarea { background: #ffffff; border-color: #cbd5e1; color: #1e293b; }
+        .note-preview { background: #0f172a; border: 1px solid #475569; border-radius: 16px; padding: 16px; min-height: 400px; overflow-y: auto; }
+        body.light-mode .note-preview { background: #ffffff; }
+        .game-selector { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
+        .game-btn { background: #3b82f6; border: none; padding: 8px 20px; border-radius: 40px; color: white; cursor: pointer; }
+        .game-board { display: grid; gap: 2px; justify-content: center; margin: 20px auto; background: #2d3748; padding: 10px; border-radius: 16px; }
+        .game-cell { background: #1e293b; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: bold; cursor: pointer; transition: background 0.2s ease; aspect-ratio: 1 / 1; min-width: 30px; }
+        body.light-mode .game-cell { background: #f1f5f9; color: #1e293b; }
+        .game-cell:hover { background: #3b82f6; opacity: 0.7; }
+        .translate-container { max-width: 900px; margin: 0 auto; }
+        .translate-box { background: #1e293b; border-radius: 24px; padding: 20px; margin-bottom: 20px; }
+        body.light-mode .translate-box { background: #ffffff; border: 1px solid #e2e8f0; }
+        .translate-textarea { width: 100%; height: 150px; padding: 12px; border-radius: 16px; background: #0f172a; border: 1px solid #475569; color: inherit; resize: vertical; }
+        body.light-mode .translate-textarea { background: #ffffff; border-color: #cbd5e1; color: #1e293b; }
+        .translate-result { background: #0f172a; border-radius: 16px; padding: 12px; margin-top: 12px; min-height: 100px; }
+        body.light-mode .translate-result { background: #f1f5f9; }
+        .translate-switch { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+        .translate-switch button { background: #3b82f6; border: none; padding: 6px 16px; border-radius: 40px; color: white; cursor: pointer; }
+        .plugin-tabs { display: flex; gap: 8px; border-bottom: 1px solid #475569; margin-bottom: 20px; flex-wrap: wrap; }
+        .plugin-tab { padding: 10px 24px; cursor: pointer; border-radius: 20px 20px 0 0; transition: 0.1s; background: #1e293b; color: #e2e8f0; }
+        .plugin-tab.active { background: #3b82f6; color: white; }
+        body.light-mode .plugin-tab { background: #e2e8f0; color: #1e293b; }
+        body.light-mode .plugin-tab.active { background: #3b82f6; color: white; }
+        .plugin-pane { display: none; }
+        .plugin-pane.active { display: block; }
+        .map-container { width: 100%; height: 500px; border-radius: 24px; overflow: hidden; }
+        .map-frame { width: 100%; height: 100%; border: none; }
+        .pin-container { display: flex; flex-direction: column; gap: 20px; }
+        .pin-add { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; background: #1e293b; padding: 16px; border-radius: 24px; }
+        body.light-mode .pin-add { background: #ffffff; border: 1px solid #e2e8f0; }
+        .pin-add input { flex: 1; padding: 10px 16px; border-radius: 40px; background: #0f172a; border: 1px solid #475569; color: inherit; }
+        body.light-mode .pin-add input { background: #ffffff; border-color: #cbd5e1; }
+        .pin-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+        .pin-item { background: #1e293b; border-radius: 20px; padding: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.1s; }
+        body.light-mode .pin-item { background: #ffffff; border: 1px solid #e2e8f0; }
+        .pin-item:hover { background: #2d3e5f; transform: translateY(-2px); }
+        .pin-item .pin-name { font-weight: bold; }
+        .pin-item .pin-delete { background: #ef4444; border: none; padding: 4px 12px; border-radius: 20px; color: white; cursor: pointer; }
+        .pages-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-top: 20px; }
+        .page-card { background: #1e293b; border-radius: 20px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s ease; color: #e2e8f0; }
+        body.light-mode .page-card { background: #ffffff; border: 1px solid #e2e8f0; color: #1e293b; }
+        .page-card:hover { transform: translateY(-3px); background: #2d3e5f; }
+        body.light-mode .page-card:hover { background: #f1f5f9; }
+        .report-container { max-width: 600px; margin: 0 auto; text-align: center; }
+        .report-buttons { display: flex; gap: 20px; justify-content: center; margin-top: 30px; flex-wrap: wrap; }
+        .report-btn { padding: 14px 28px; border-radius: 60px; font-size: 1.1rem; font-weight: bold; cursor: pointer; border: none; }
+        .report-btn.primary { background: #3b82f6; color: white; }
+        .report-btn.secondary { background: #8b5cf6; color: white; }
+        .feedback-list { margin-top: 30px; max-height: 300px; overflow-y: auto; text-align: left; }
+        .feedback-item { background: #1e293b; border-radius: 16px; padding: 12px; margin-bottom: 12px; }
+        body.light-mode .feedback-item { background: #f1f5f9; }
+        .feedback-status { font-size: 0.7rem; display: inline-block; padding: 2px 8px; border-radius: 20px; margin-left: 8px; }
+        .feedback-status.pending { background: #f59e0b; }
+        .feedback-status.responded { background: #22c55e; }
+        .feedback-status.resolved { background: #3b82f6; }
+        .chat-container { max-width: 800px; margin: 0 auto; }
+        .chat-messages { height: 400px; overflow-y: auto; background: #0f172a; border-radius: 16px; padding: 12px; margin-bottom: 12px; }
+        .chat-message { margin-bottom: 12px; padding: 8px; border-radius: 12px; background: #1e293b; }
+        body.light-mode .chat-message { background: #ffffff; border: 1px solid #e2e8f0; }
+        .chat-message .sender { font-weight: bold; color: #3b82f6; }
+        .chat-message .time { font-size: 0.7rem; color: #87b9ff; margin-left: 8px; }
+    </style>
+</head>
+<body>
+    <div class="bg-layer" id="bgLayer"></div>
+    <div class="acrylic-layer" id="acrylicLayer"></div>
+    <div class="surfer-container" id="surferContainer">
+        <div class="toolbar">
+            <div class="nav-buttons"><button class="nav-btn" id="backBtn">◀</button><button class="nav-btn" id="forwardBtn">▶</button><button class="nav-btn" id="reloadBtn">⟳</button></div>
+            <div class="url-bar"><input type="text" id="urlInput" class="url-input" placeholder="surfer:homepage / settings / note / chess / embassy / translate / count / pages / pin / report / chat" value="about:blank"><button id="goBtn" class="go-btn">冲浪</button></div>
+            <button id="bossKeyBtn" class="boss-btn">🕹️ B</button>
+            <button id="pinKeyBtn" class="pin-btn">📌 P</button>
+            <button id="hideWindowBtn" class="hide-window-btn">🙈 隐藏</button>
+            <button id="userBtn" class="user-btn">👤 登录</button>
+            <div class="status" id="statusMsg">⚡ Surfer2 5.30.00</div>
+        </div>
+        <div class="wave-area" id="waveArea"><iframe id="surfFrame" src="about:blank" style="display:none;"></iframe><div id="internalContainer" style="width:100%;height:100%;overflow:auto;"></div></div>
+    </div>
+    <div id="onscreenKeyboard" class="onscreen-keyboard">
+        <button class="key-btn" data-key="1">1</button><button class="key-btn" data-key="2">2</button><button class="key-btn" data-key="3">3</button><button class="key-btn" data-key="4">4</button><button class="key-btn" data-key="5">5</button>
+        <button class="key-btn" data-key="6">6</button><button class="key-btn" data-key="7">7</button><button class="key-btn" data-key="8">8</button><button class="key-btn" data-key="9">9</button><button class="key-btn" data-key="0">0</button>
+        <button class="key-btn" data-key="q">q</button><button class="key-btn" data-key="w">w</button><button class="key-btn" data-key="e">e</button><button class="key-btn" data-key="r">r</button><button class="key-btn" data-key="t">t</button>
+        <button class="key-btn" data-key="y">y</button><button class="key-btn" data-key="u">u</button><button class="key-btn" data-key="i">i</button><button class="key-btn" data-key="o">o</button><button class="key-btn" data-key="p">p</button>
+        <button class="key-btn" data-key="a">a</button><button class="key-btn" data-key="s">s</button><button class="key-btn" data-key="d">d</button><button class="key-btn" data-key="f">f</button><button class="key-btn" data-key="g">g</button>
+        <button class="key-btn" data-key="h">h</button><button class="key-btn" data-key="j">j</button><button class="key-btn" data-key="k">k</button><button class="key-btn" data-key="l">l</button><button class="key-btn" data-key="z">z</button>
+        <button class="key-btn" data-key="x">x</button><button class="key-btn" data-key="c">c</button><button class="key-btn" data-key="v">v</button><button class="key-btn" data-key="b">b</button><button class="key-btn" data-key="n">n</button>
+        <button class="key-btn" data-key="m">m</button><button class="key-btn" data-key=".">.</button><button class="key-btn" data-key=",">,</button><button class="key-btn" data-key="/">/</button>
+        <button class="key-btn" data-key="Backspace">⌫</button><button class="key-btn" data-key="Enter">↵</button><button id="closeKeyboardBtn" class="key-btn">关闭</button>
+    </div>
+    <div id="userMenu" class="user-menu">
+        <div id="userMenuAvatar" class="user-avatar" style="margin: 0 auto 12px;"></div>
+        <div id="userMenuName" style="text-align:center; font-weight:bold; margin-bottom:8px;"></div>
+        <div id="userMenuStatus" style="text-align:center; font-size:0.7rem; margin-bottom:12px;"></div>
+        <div class="user-menu-item" id="menuChangeAvatar">🖼️ 修改头像</div>
+        <div class="user-menu-item" id="menuBindGitHub">🔗 绑定 GitHub</div>
+        <div class="user-menu-item" id="menuSwitchAccount">🔄 切换账号</div>
+        <div class="user-menu-item" id="menuLogout">🚪 登出</div>
+    </div>
+    <script>
+        (function(){
+            const frame = document.getElementById('surfFrame');
+            const internalContainer = document.getElementById('internalContainer');
+            const urlInput = document.getElementById('urlInput');
+            const goBtn = document.getElementById('goBtn');
+            const backBtn = document.getElementById('backBtn');
+            const forwardBtn = document.getElementById('forwardBtn');
+            const reloadBtn = document.getElementById('reloadBtn');
+            const statusSpan = document.getElementById('statusMsg');
+            const bossBtn = document.getElementById('bossKeyBtn');
+            const pinBtn = document.getElementById('pinKeyBtn');
+            const hideBtn = document.getElementById('hideWindowBtn');
+            const userBtn = document.getElementById('userBtn');
+            const userMenu = document.getElementById('userMenu');
+            const surferContainer = document.getElementById('surferContainer');
+            const bgLayer = document.getElementById('bgLayer');
+            let historyStack = [], historyIndex = -1;
+
+            // 设置变量
+            let enableBKey = localStorage.getItem('surfer2_enableBKey') !== 'false';
+            let enablePKey = localStorage.getItem('surfer2_enablePKey') !== 'false';
+            let defaultEngine = localStorage.getItem('surfer2_defaultEngine') || 'google';
+            let highContrast = localStorage.getItem('surfer2_highContrast') === 'true';
+            let enableOnscreenKeyboard = localStorage.getItem('surfer2_onscreenKeyboard') === 'true';
+
+            // 强制应用高对比度
+            if(highContrast) document.body.classList.add('high-contrast');
+            
+            // 强制应用屏幕键盘
+            function applyKeyboardSetting(){
+                const keyboard = document.getElementById('onscreenKeyboard');
+                if(enableOnscreenKeyboard) keyboard.classList.add('show');
+                else keyboard.classList.remove('show');
+            }
+            
+            // 获取账号相关数据 (云端同步模拟 - 使用 GitHub Gist 作为云端存储)
+            // 由于真正的跨设备同步需要后端，此处使用 localStorage + 导入/导出功能
+            // 用户可手动导出设置到云端，其他设备导入
+            
+            const SUDO_ADMINS = [{ username: "lkjy-coding", isAdmin: true }];
+            let currentUser = JSON.parse(localStorage.getItem('surfer2_user') || 'null');
+            let users = JSON.parse(localStorage.getItem('surfer2_users') || '[]');
+            let feedbacks = JSON.parse(localStorage.getItem('surfer2_feedbacks') || '[]');
+            let shortcuts = [];
+            let chatMessages = JSON.parse(localStorage.getItem('surfer2_chat_messages') || '[]');
+            let chatEnabled = localStorage.getItem('surfer2_chat_enabled') !== 'false';
+            let chatBlockedUsers = JSON.parse(localStorage.getItem('surfer2_chat_blocked') || '[]');
+            
+            // 反馈系统改进 - 添加云端同步提示 (实际跨设备需后端，此处提供导入导出)
+            window.syncFeedbacksToCloud = function(){
+                const data = JSON.stringify(feedbacks);
+                prompt("复制以下内容到其他设备导入:", data);
+                alert("已复制反馈数据到剪贴板");
+            };
+            window.importFeedbacksFromCloud = function(){
+                const json = prompt("粘贴从其他设备导出的反馈数据:");
+                try{
+                    const imported = JSON.parse(json);
+                    if(Array.isArray(imported)){
+                        feedbacks = imported;
+                        saveFeedbacks();
+                        alert("反馈数据导入成功");
+                        if(internalContainer.innerHTML.includes('report')) renderReportPage();
+                    } else throw new Error();
+                } catch(e){ alert("无效的数据格式"); }
+            };
+            
+            // 壁纸同步 - 使用账号绑定云端存储的模拟 (实际跨设备需后端)
+            // 改为使用云端存储API (免费服务如 JSONBin.io)
+            const CLOUD_BIN_URL = "https://api.jsonbin.io/v3/b";
+            let cloudBinId = localStorage.getItem('surfer2_cloudBinId');
+            
+            async function syncWallpaperToCloud(){
+                if(!currentUser) return;
+                const bgImage = localStorage.getItem('surfer2_bgImage');
+                if(!bgImage) return;
+                try{
+                    const data = { username: currentUser.username, bgImage: bgImage, timestamp: Date.now() };
+                    if(cloudBinId){
+                        await fetch(`${CLOUD_BIN_URL}/${cloudBinId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data)
+                        });
+                    } else {
+                        const res = await fetch(CLOUD_BIN_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data)
+                        });
+                        const result = await res.json();
+                        cloudBinId = result.metadata?.id;
+                        if(cloudBinId) localStorage.setItem('surfer2_cloudBinId', cloudBinId);
+                    }
+                    statusSpan.innerText = '☁️ 壁纸已同步到云端';
+                } catch(e){ console.warn('云端同步失败', e); }
+            }
+            
+            async function syncWallpaperFromCloud(){
+                if(!currentUser || !cloudBinId) return;
+                try{
+                    const res = await fetch(`${CLOUD_BIN_URL}/${cloudBinId}/latest`);
+                    const data = await res.json();
+                    if(data.record && data.record.username === currentUser.username && data.record.bgImage){
+                        localStorage.setItem('surfer2_bgImage', data.record.bgImage);
+                        loadCustomStyles();
+                        statusSpan.innerText = '☁️ 已从云端同步壁纸';
+                    }
+                } catch(e){ console.warn('云端同步失败', e); }
+            }
+            
+            function saveChatMessages(){ localStorage.setItem('surfer2_chat_messages', JSON.stringify(chatMessages)); }
+            function saveChatSettings(){ localStorage.setItem('surfer2_chat_enabled', chatEnabled); localStorage.setItem('surfer2_chat_blocked', JSON.stringify(chatBlockedUsers)); }
+            function isChatTimeAllowed(){ const hour = new Date().getHours(); return !(hour >= 23 || hour < 7); }
+            function canUserChat(){
+                if(!currentUser) return false;
+                if(isAdmin()) return true;
+                if(!chatEnabled) return false;
+                if(chatBlockedUsers.includes(currentUser.username)) return false;
+                if(!isChatTimeAllowed()) return false;
+                return getUserAccountType() === 'bound';
+            }
+            function addChatMessage(content){
+                if(!canUserChat()) return false;
+                chatMessages.unshift({ id: Date.now(), username: currentUser.username, avatar: getAvatar(currentUser.username), content, time: new Date().toISOString(), isAdmin: isAdmin() });
+                while(chatMessages.length > 200) chatMessages.pop();
+                saveChatMessages();
+                return true;
+            }
+            function getUserAccountType(){
+                if(!currentUser) return 'guest';
+                if(!currentUser.githubBound) return 'temp';
+                return 'bound';
+            }
+            function getAccountTypeName(){
+                const type = getUserAccountType();
+                return type === 'guest' ? '游客账号' : (type === 'temp' ? '临时账号' : '绑定账号');
+            }
+            function getAvatar(username){
+                const user = users.find(u => u.username === username);
+                if(user && user.avatar) return user.avatar;
+                const letter = username.charAt(0).toUpperCase();
+                return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' fill='%233b82f6'/%3E%3Ctext x='40' y='52' font-size='36' text-anchor='middle' fill='white' font-weight='bold'%3E${encodeURIComponent(letter)}%3C/text%3E%3C/svg%3E`;
+            }
+            function setAvatar(dataUrl){
+                if(!currentUser) return false;
+                const userIndex = users.findIndex(u => u.username === currentUser.username);
+                if(userIndex !== -1){
+                    users[userIndex].avatar = dataUrl;
+                    saveUsers();
+                    if(currentUser.username === users[userIndex].username) currentUser.avatar = dataUrl;
+                    saveCurrentUser();
+                    return true;
+                }
+                return false;
+            }
+            function saveUsers(){ localStorage.setItem('surfer2_users', JSON.stringify(users)); }
+            function saveCurrentUser(){ localStorage.setItem('surfer2_user', JSON.stringify(currentUser)); }
+            function saveFeedbacks(){ localStorage.setItem('surfer2_feedbacks', JSON.stringify(feedbacks)); }
+            function saveShortcuts(){ if(currentUser) localStorage.setItem(`surfer2_shortcuts_${currentUser.username}`, JSON.stringify(shortcuts)); }
+            function loadShortcuts(){ 
+                if(currentUser) {
+                    let saved = localStorage.getItem(`surfer2_shortcuts_${currentUser.username}`);
+                    shortcuts = saved ? JSON.parse(saved) : [];
+                } else { shortcuts = []; }
+            }
+            function isAdmin(){ return currentUser && SUDO_ADMINS.some(admin => admin.username === currentUser.username && admin.isAdmin); }
+            
+            function loginWithGitHub(){
+                const githubUsername = prompt("请输入您的 GitHub 用户名以登录/注册 Surfer2 账号:");
+                if(!githubUsername || githubUsername.trim() === '') return;
+                const username = githubUsername.trim();
+                let existingUser = users.find(u => u.username === username);
+                if(existingUser){
+                    currentUser = existingUser;
+                    saveCurrentUser();
+                    loadShortcuts();
+                    updateUserButton();
+                    closeUserMenu();
+                    statusSpan.innerText = `✅ 欢迎回来, ${username}`;
+                    alert(`登录成功！欢迎回来，${username}`);
+                    syncWallpaperFromCloud();
+                } else {
+                    const newUser = { username: username, createdAt: new Date().toISOString(), githubBound: true, avatar: null };
+                    users.push(newUser);
+                    currentUser = newUser;
+                    saveUsers();
+                    saveCurrentUser();
+                    loadShortcuts();
+                    updateUserButton();
+                    closeUserMenu();
+                    statusSpan.innerText = `🎉 注册成功, ${username}`;
+                    alert(`注册成功！欢迎加入 Surfer2，${username}`);
+                }
+                if(internalContainer.innerHTML.includes('pin')) renderPinPage();
+                if(internalContainer.innerHTML.includes('report')) renderReportPage();
+                if(internalContainer.innerHTML.includes('chat')) renderChatPage();
+            }
+            
+            function bindGitHub(){
+                if(!currentUser){ alert('请先登录'); return; }
+                if(currentUser.githubBound){ alert('您已绑定 GitHub 账号'); return; }
+                const githubUsername = prompt("请输入您的 GitHub 用户名进行绑定:");
+                if(!githubUsername || githubUsername.trim() === '') return;
+                const existing = users.find(u => u.githubBound && u.githubName === githubUsername.trim() && u.username !== currentUser.username);
+                if(existing){
+                    alert('该 GitHub 账号已被其他账号绑定');
+                    return;
+                }
+                currentUser.githubBound = true;
+                currentUser.githubName = githubUsername.trim();
+                const userIndex = users.findIndex(u => u.username === currentUser.username);
+                if(userIndex !== -1){
+                    users[userIndex].githubBound = true;
+                    users[userIndex].githubName = githubUsername.trim();
+                    saveUsers();
+                }
+                saveCurrentUser();
+                updateUserButton();
+                closeUserMenu();
+                alert('GitHub 账号绑定成功！您现在可以使用完整功能。');
+                if(internalContainer.innerHTML.includes('chat')) renderChatPage();
+            }
+            
+            function switchAccount(){
+                if(users.length === 0){ alert('没有其他账号，请先注册'); return; }
+                const userList = users.map((u, idx) => `${idx + 1}. ${u.username}${u.githubBound ? ' ✓' : ''}`).join('\n');
+                const choice = prompt(`当前账号: ${currentUser?.username || '未登录'}\n\n选择要切换的账号:\n${userList}\n\n输入序号或用户名:`);
+                if(!choice) return;
+                let targetUser = null;
+                if(!isNaN(parseInt(choice))) targetUser = users[parseInt(choice) - 1];
+                else targetUser = users.find(u => u.username === choice);
+                if(targetUser){
+                    currentUser = targetUser;
+                    saveCurrentUser();
+                    loadShortcuts();
+                    updateUserButton();
+                    closeUserMenu();
+                    statusSpan.innerText = `👤 已切换至 ${targetUser.username}`;
+                    alert(`已切换至 ${targetUser.username}`);
+                    if(internalContainer.innerHTML.includes('pin')) renderPinPage();
+                    if(internalContainer.innerHTML.includes('chat')) renderChatPage();
+                    syncWallpaperFromCloud();
+                } else { alert('未找到该账号'); }
+            }
+            
+            function changeAvatar(){
+                if(!currentUser){ alert('请先登录'); return; }
+                const accountType = getUserAccountType();
+                if(accountType === 'guest'){ alert('游客账号不能修改头像'); return; }
+                if(accountType === 'temp'){ alert('临时账号不能修改头像，请先绑定 GitHub'); return; }
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if(file){
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                            if(setAvatar(ev.target.result)){
+                                alert('头像修改成功');
+                                updateUserButton();
+                                closeUserMenu();
+                                if(internalContainer.innerHTML.includes('chat')) renderChatPage();
+                            } else { alert('修改失败'); }
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                };
+                input.click();
+            }
+            
+            function logout(){
+                if(!currentUser) return;
+                saveShortcuts();
+                currentUser = null;
+                shortcuts = [];
+                saveCurrentUser();
+                updateUserButton();
+                closeUserMenu();
+                statusSpan.innerText = '👋 已登出，当前为游客模式';
+                alert('已登出');
+                if(internalContainer.innerHTML.includes('pin')) renderPinPage();
+                if(internalContainer.innerHTML.includes('chat')) renderChatPage();
+                navigateTo('surfer:homepage');
+            }
+            
+            function toggleUserMenu(){ userMenu.classList.toggle('show'); }
+            function closeUserMenu(){ userMenu.classList.remove('show'); }
+            
+            function updateUserButton(){
+                if(currentUser){
+                    const isAdminUser = isAdmin();
+                    userBtn.innerHTML = `👤 ${currentUser.username.substring(0,12)}${isAdminUser ? ' ⭐' : ''}`;
+                    const avatarUrl = getAvatar(currentUser.username);
+                    const avatarDiv = document.getElementById('userMenuAvatar');
+                    if(avatarDiv) avatarDiv.style.backgroundImage = `url(${avatarUrl})`;
+                    document.getElementById('userMenuName').innerHTML = `${currentUser.username}${isAdminUser ? ' (管理员)' : ''}<br><span style="font-size:0.7rem;">${getAccountTypeName()}</span>`;
+                    document.getElementById('userMenuStatus').innerHTML = currentUser.githubBound ? '✅ 已绑定 GitHub' : '⚠️ 未绑定 GitHub (临时账号)';
+                } else {
+                    userBtn.innerHTML = '👤 登录';
+                    document.getElementById('userMenuName').innerHTML = '未登录';
+                    document.getElementById('userMenuStatus').innerHTML = '游客账号';
+                }
+            }
+            
+            // 拦截iframe内所有链接，强制在Surfer2内跳转
+            function hijackLinksInIframe(){
+                try {
+                    const doc = frame.contentWindow.document;
+                    const allLinks = doc.querySelectorAll('a');
+                    allLinks.forEach(link => {
+                        const href = link.getAttribute('href');
+                        if(href && !href.startsWith('javascript:') && !href.startsWith('#') && !href.startsWith('about:')){
+                            link.setAttribute('target', '_self');
+                            link.onclick = (e) => {
+                                e.preventDefault();
+                                let targetUrl = href;
+                                if(targetUrl.startsWith('/')){
+                                    const baseUrl = new URL(frame.src);
+                                    targetUrl = baseUrl.origin + targetUrl;
+                                }
+                                navigateTo(targetUrl);
+                                return false;
+                            };
+                        }
+                    });
+                } catch(e) { console.log('跨域限制，无法劫持链接'); }
+            }
+            
+            function renderInternalPage(pageId){
+                frame.style.display = 'none';
+                internalContainer.style.display = 'block';
+                internalContainer.innerHTML = '';
+                if(pageId === 'homepage') internalContainer.innerHTML = renderHomepage();
+                else if(pageId === 'settings') internalContainer.innerHTML = renderSettingsPage(), attachSettingsEvents();
+                else if(pageId === 'note') internalContainer.innerHTML = renderNotePage(), attachNoteEvents();
+                else if(pageId === 'chess') internalContainer.innerHTML = renderChessPage(), attachChessEvents();
+                else if(pageId === 'easyabroad') internalContainer.innerHTML = `<div class="internal-page"><h2>⏸️ EasyAbroad 服务已暂停</h2><p>由于严重技术问题，该服务暂时不可用。请稍后再试。</p></div>`;
+                else if(pageId === 'embassy') internalContainer.innerHTML = renderEmbassyPage();
+                else if(pageId === 'translate') internalContainer.innerHTML = renderTranslatePage(), attachTranslateEvents();
+                else if(pageId === 'count') internalContainer.innerHTML = renderCountPage(), attachCountEvents();
+                else if(pageId === 'pages') internalContainer.innerHTML = renderPagesPage(), attachPagesEvents();
+                else if(pageId === 'chajian') internalContainer.innerHTML = renderChajianPage(), attachChajianEvents();
+                else if(pageId === 'pin') {
+                    if(!currentUser){ internalContainer.innerHTML = `<div class="internal-page"><h2>🔒 需要登录</h2><p>快捷方式功能需要登录 Surfer2 账号后使用。</p><button onclick="window.loginFromPin()">立即登录</button></div>`; window.loginFromPin = () => loginWithGitHub(); return; }
+                    internalContainer.innerHTML = renderPinPage(); attachPinEvents();
+                }
+                else if(pageId === 'report') internalContainer.innerHTML = renderReportPage(), attachReportEvents();
+                else if(pageId === 'chat') internalContainer.innerHTML = renderChatPage(), attachChatEvents();
+                else internalContainer.innerHTML = `<div class="internal-page"><h2>❓ 未知域名</h2></div>`;
+                statusSpan.innerText = `📄 ${pageId}`;
+                urlInput.value = `surfer:${pageId}`;
+            }
+            
+            function renderHomepage(){
+                const savedEngine = localStorage.getItem('surfer2_defaultEngine') || 'google';
+                return `<div class="internal-page"><div class="homepage-container"><div class="homepage-title">🌊 Surfer2</div><div class="homepage-sub">快速搜索 · 内置导航 · 安全冲浪</div>
+                <div class="search-box"><input type="text" id="homeSearchInput" class="search-input" placeholder="输入搜索内容..."><select id="homeEngineSelect" class="engine-select">
+                    <option value="google" ${savedEngine==='google'?'selected':''}>Google</option><option value="bing" ${savedEngine==='bing'?'selected':''}>Bing</option>
+                    <option value="baidu" ${savedEngine==='baidu'?'selected':''}>百度</option><option value="duckduckgo" ${savedEngine==='duckduckgo'?'selected':''}>DuckDuckGo</option>
+                    <option value="github" ${savedEngine==='github'?'selected':''}>GitHub 仓库搜索</option></select><button id="homeSearchBtn" class="search-btn">🔍 搜索</button></div>
+                <div class="pure-search"><input type="checkbox" id="pureSearchCheckbox"><label>✨ 纯净搜索 (自动添加 -surfer 过滤干扰内容)</label></div>
+                <div class="github-link"><a href="https://github.com/lkjy-coding/Surfer2" target="_blank"><span>📦</span> GitHub 仓库 · Surfer2</a></div></div></div>`;
+            }
+            
+            function renderSettingsPage(){
+                const lightModeEnabled = localStorage.getItem('surfer2_lightMode') === 'true';
+                const acrylicEnabled = localStorage.getItem('surfer2_acrylic') === 'true';
+                const bKeyEnabled = localStorage.getItem('surfer2_enableBKey') !== 'false';
+                const pKeyEnabled = localStorage.getItem('surfer2_enablePKey') !== 'false';
+                const defaultEngineSaved = localStorage.getItem('surfer2_defaultEngine') || 'google';
+                const highContrastEnabled = localStorage.getItem('surfer2_highContrast') === 'true';
+                const keyboardEnabled = localStorage.getItem('surfer2_onscreenKeyboard') === 'true';
+                return `<div class="internal-page"><h2>⚙️ Surfer2 设置</h2>
+                <div class="settings-group"><strong>⌨️ 快捷键设置</strong>
+                    <label><input type="checkbox" id="enableBKeyToggle" ${bKeyEnabled ? 'checked' : ''}> 启用 B 键 (跳转设置)</label>
+                    <label><input type="checkbox" id="enablePKeyToggle" ${pKeyEnabled ? 'checked' : ''}> 启用 P 键 (跳转快捷方式)</label>
+                </div>
+                <div class="settings-group"><strong>🔍 默认搜索引擎</strong>
+                    <select id="defaultEngineSelect">
+                        <option value="google" ${defaultEngineSaved==='google'?'selected':''}>Google</option>
+                        <option value="bing" ${defaultEngineSaved==='bing'?'selected':''}>Bing</option>
+                        <option value="baidu" ${defaultEngineSaved==='baidu'?'selected':''}>百度</option>
+                        <option value="duckduckgo" ${defaultEngineSaved==='duckduckgo'?'selected':''}>DuckDuckGo</option>
+                        <option value="github" ${defaultEngineSaved==='github'?'selected':''}>GitHub</option>
+                    </select>
+                </div>
+                <div class="settings-group"><strong>♿ 无障碍功能</strong>
+                    <label><input type="checkbox" id="highContrastToggle" ${highContrastEnabled ? 'checked' : ''}> 高对比度模式</label>
+                    <label><input type="checkbox" id="onscreenKeyboardToggle" ${keyboardEnabled ? 'checked' : ''}> 屏幕键盘</label>
+                </div>
+                <div class="settings-group"><strong>☁️ 云端同步</strong>
+                    <button id="syncWallpaperBtn">📤 同步壁纸到云端</button>
+                    <button id="importFeedbackBtn">📥 导入反馈数据</button>
+                    <button id="exportFeedbackBtn">📤 导出反馈数据</button>
+                </div>
+                <div class="settings-group"><label><input type="checkbox" id="acrylicToggle" ${acrylicEnabled ? 'checked' : ''}> 亚克力磨砂</label><label><input type="checkbox" id="lightModeToggle" ${lightModeEnabled ? 'checked' : ''}> 浅色模式</label></div>
+                <div class="settings-group"><div>背景图片: <input type="text" id="bgImageUrl" style="width:60%;"><input type="file" id="bgImageUpload" accept="image/*"></div>
+                <div>字体: <select id="fontSelect"><option value="system-ui">跟随系统</option><option value="monospace">等宽</option></select></div>
+                <div>容器背景: <input type="color" id="containerBgColor" class="color-wheel"></div>
+                <div>边框颜色: <input type="color" id="borderColorPicker" class="color-wheel"></div>
+                <button id="applyStyleBtn">应用</button></div>
+                <div class="settings-group"><strong>👤 账号信息</strong>${currentUser ? `<div>当前登录: ${currentUser.username}${isAdmin() ? ' (管理员)' : ''}<br>账号类型: ${getAccountTypeName()}${currentUser.githubBound ? ' ✅ 已绑定 GitHub' : ' ❌ 未绑定'}</div><button id="logoutSettingsBtn">登出账号</button><button id="bindGitHubSettingsBtn">绑定 GitHub</button>` : `<div>未登录</div><button id="loginSettingsBtn">登录/注册</button>`}</div>
+                <div class="settings-group"><strong>版本信息</strong><div class="version-info-item"><span>Surfer2 5.30.00</span><span class="clickable-link" id="domainsLink">内部域名全功能</span></div></div>
+                <button id="saveAllBtn">保存</button></div>`;
+            }
+            
+            function attachSettingsEvents(){
+                const bgUpload = document.getElementById('bgImageUpload');
+                if(bgUpload) bgUpload.onchange = (e)=>{const f=e.target.files[0]; if(f){const r=new FileReader(); r.onload=ev=>document.getElementById('bgImageUrl').value=ev.target.result; r.readAsDataURL(f);}};
+                document.getElementById('applyStyleBtn').onclick = ()=>{
+                    saveCustomStyles(document.getElementById('bgImageUrl').value, document.getElementById('fontSelect').value, document.getElementById('containerBgColor').value, document.getElementById('borderColorPicker').value, document.getElementById('acrylicToggle').checked, document.getElementById('lightModeToggle').checked);
+                    syncWallpaperToCloud();
+                };
+                document.getElementById('saveAllBtn').onclick = () => {
+                    saveCustomStyles(document.getElementById('bgImageUrl').value, document.getElementById('fontSelect').value, document.getElementById('containerBgColor').value, document.getElementById('borderColorPicker').value, document.getElementById('acrylicToggle').checked, document.getElementById('lightModeToggle').checked);
+                    localStorage.setItem('surfer2_enableBKey', document.getElementById('enableBKeyToggle').checked);
+                    localStorage.setItem('surfer2_enablePKey', document.getElementById('enablePKeyToggle').checked);
+                    localStorage.setItem('surfer2_defaultEngine', document.getElementById('defaultEngineSelect').value);
+                    localStorage.setItem('surfer2_highContrast', document.getElementById('highContrastToggle').checked);
+                    localStorage.setItem('surfer2_onscreenKeyboard', document.getElementById('onscreenKeyboardToggle').checked);
+                    location.reload();
+                };
+                document.getElementById('domainsLink').onclick = () => navigateTo('surfer:pages');
+                if(document.getElementById('logoutSettingsBtn')) document.getElementById('logoutSettingsBtn').onclick = () => logout();
+                if(document.getElementById('loginSettingsBtn')) document.getElementById('loginSettingsBtn').onclick = () => loginWithGitHub();
+                if(document.getElementById('bindGitHubSettingsBtn')) document.getElementById('bindGitHubSettingsBtn').onclick = () => bindGitHub();
+                document.getElementById('syncWallpaperBtn').onclick = () => syncWallpaperToCloud();
+                document.getElementById('importFeedbackBtn').onclick = () => window.importFeedbacksFromCloud();
+                document.getElementById('exportFeedbackBtn').onclick = () => window.syncFeedbacksToCloud();
+            }
+            
+            function renderNotePage(){ return `<div class="internal-page"><h2>📝 surfer:note · Markdown + LaTeX</h2><div class="note-editor"><div class="note-toolbar"><button id="noteSaveBtn">保存</button><button id="noteExportBtn">导出HTML</button></div><div class="note-split"><div class="note-input-area"><textarea id="noteContent" class="note-textarea" placeholder="# 标题\n\n$$E=mc^2$$"></textarea></div><div class="note-preview-area"><div id="notePreview" class="note-preview"></div></div></div></div></div>`; }
+            function attachNoteEvents(){
+                const ta = document.getElementById('noteContent');
+                const preview = document.getElementById('notePreview');
+                const saved = localStorage.getItem('surfer2_note') || '# Surfer2 笔记本';
+                ta.value = saved;
+                function render(){ let html = marked.parse(ta.value); html = html.replace(/\$\$([\s\S]+?)\$\$/g, (_,latex)=>{ try{ return katex.renderToString(latex,{displayMode:true}); }catch(e){ return `<span style="color:red">${latex}</span>`; } }); html = html.replace(/\$([^\$]+?)\$/g, (_,latex)=>{ try{ return katex.renderToString(latex,{displayMode:false}); }catch(e){ return `<span style="color:red">${latex}</span>`; } }); preview.innerHTML = html; }
+                ta.addEventListener('input', render);
+                document.getElementById('noteSaveBtn').onclick = ()=>{ localStorage.setItem('surfer2_note', ta.value); statusSpan.innerText='笔记已保存'; };
+                document.getElementById('noteExportBtn').onclick = ()=>{ const blob = new Blob([`<!DOCTYPE html><html><head><meta charset="UTF-8"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"></head><body>${preview.innerHTML}</body></html>`], {type:'text/html'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='note.html'; a.click(); };
+                render();
+            }
+            
+            function renderEmbassyPage(){ return `<div class="internal-page" style="padding:0; height:100%; display:flex; flex-direction:column;"><iframe src="https://lkjy-coding.github.io/ChineseEmbassyV5.html" style="width:100%; height:100%; border:none; flex:1;"></iframe></div>`; }
+            
+            // 棋类游戏
+            let currentGame = { type: 'tictactoe', size: 3, board: [], turn: 'X', active: true, winner: null, difficulty: 'normal' };
+            function initGame(type, size, difficulty){ currentGame = { type, size, board: Array(size*size).fill(''), turn: 'X', active: true, winner: null, difficulty }; renderGameBoard(); }
+            function checkWinner(board, size){
+                const winLen = (size <= 5) ? Math.min(3, size) : 5;
+                for(let i=0;i<size;i++) for(let j=0;j<=size-winLen;j++){ const idx=i*size+j; const val=board[idx]; if(val && board.slice(idx,idx+winLen).every(v=>v===val)) return val; }
+                for(let i=0;i<=size-winLen;i++) for(let j=0;j<size;j++){ if(board[i*size+j] && Array(winLen).fill().every((_,k)=>board[(i+k)*size+j]===board[i*size+j])) return board[i*size+j]; }
+                for(let i=0;i<=size-winLen;i++) for(let j=0;j<=size-winLen;j++){ if(board[i*size+j] && Array(winLen).fill().every((_,k)=>board[(i+k)*size+(j+k)]===board[i*size+j])) return board[i*size+j];
+                if(board[i*size+j+winLen-1] && Array(winLen).fill().every((_,k)=>board[(i+k)*size+(j+winLen-1-k)]===board[i*size+j+winLen-1])) return board[i*size+j+winLen-1]; }
+                const isFull = board.every(c=>c!=='');
+                if(isFull) return 'tie';
+                return null;
+            }
+            function getSmartAIMove(board, size){
+                const empty = board.reduce((a,c,i)=>{ if(c==='') a.push(i); return a; },[]);
+                for(let move of empty){ board[move]='O'; if(checkWinner(board,size)==='O'){ board[move]=''; return move; } board[move]=''; }
+                for(let move of empty){ board[move]='X'; if(checkWinner(board,size)==='X'){ board[move]=''; return move; } board[move]=''; }
+                const center = Math.floor(size/2)*size+Math.floor(size/2);
+                if(empty.includes(center)) return center;
+                const corners = [0, size-1, size*(size-1), size*size-1];
+                const availableCorners = corners.filter(c=>empty.includes(c));
+                if(availableCorners.length) return availableCorners[Math.floor(Math.random()*availableCorners.length)];
+                return empty[Math.floor(Math.random()*empty.length)];
+            }
+            function aiMove(){
+                if(!currentGame.active || currentGame.turn !== 'O') return;
+                let move = null;
+                if(currentGame.difficulty === 'easy'){
+                    const empty = currentGame.board.reduce((a,c,i)=>{ if(c==='') a.push(i); return a; },[]);
+                    if(empty.length) move = empty[Math.floor(Math.random()*empty.length)];
+                } else { move = getSmartAIMove(currentGame.board, currentGame.size); }
+                if(move !== null){
+                    currentGame.board[move] = 'O';
+                    const winner = checkWinner(currentGame.board, currentGame.size);
+                    if(winner === 'O'){ currentGame.active = false; currentGame.winner = 'O'; }
+                    else if(winner === 'tie'){ currentGame.active = false; currentGame.winner = 'tie'; }
+                    else { currentGame.turn = 'X'; }
+                    renderGameBoard();
+                }
+            }
+            function renderGameBoard(){
+                const container = document.getElementById('gameBoardContainer');
+                const statusSpanGame = document.getElementById('gameStatus');
+                if(!container) return;
+                const size = currentGame.size;
+                const cellSize = Math.min(60, Math.floor(500 / size));
+                container.style.gridTemplateColumns = `repeat(${size}, ${cellSize}px)`;
+                container.innerHTML = '';
+                for(let i=0;i<size*size;i++){
+                    const cell = document.createElement('div');
+                    cell.className = 'game-cell';
+                    cell.style.width = `${cellSize}px`;
+                    cell.style.height = `${cellSize}px`;
+                    cell.style.fontSize = `${Math.min(24, cellSize * 0.4)}px`;
+                    cell.innerText = currentGame.board[i];
+                    if(currentGame.active && !currentGame.board[i] && (!currentGame.winner) && currentGame.turn === 'X') cell.onclick = () => gameMove(i);
+                    container.appendChild(cell);
+                }
+                if(statusSpanGame){
+                    if(currentGame.winner === 'X') statusSpanGame.innerText = '🏆 你赢了！';
+                    else if(currentGame.winner === 'O') statusSpanGame.innerText = '🤖 AI赢了！';
+                    else if(currentGame.winner === 'tie') statusSpanGame.innerText = '🤝 平局！';
+                    else if(!currentGame.active) statusSpanGame.innerText = '游戏结束';
+                    else statusSpanGame.innerText = `${currentGame.turn === 'X' ? '👤 你的回合' : '🤖 AI思考中...'}`;
+                }
+            }
+            function gameMove(idx){
+                if(!currentGame.active || currentGame.turn !== 'X' || currentGame.board[idx]!=='') return;
+                currentGame.board[idx] = 'X';
+                const winner = checkWinner(currentGame.board, currentGame.size);
+                if(winner === 'X'){ currentGame.active = false; currentGame.winner = 'X'; renderGameBoard(); return; }
+                if(winner === 'tie'){ currentGame.active = false; currentGame.winner = 'tie'; renderGameBoard(); return; }
+                currentGame.turn = 'O'; renderGameBoard(); setTimeout(()=>aiMove(), 100);
+            }
+            function renderChessPage(){
+                return `<div class="internal-page"><h2>🎮 棋类游戏 · 井字棋 / 围棋</h2>
+                <div class="game-selector"><button class="game-btn" data-game="tictactoe3" data-diff="easy">3x3 井字棋 (简单)</button><button class="game-btn" data-game="tictactoe3hard" data-diff="hard">3x3 井字棋 (困难)</button>
+                <button class="game-btn" data-game="tictactoe5" data-diff="normal">5x5 井字棋</button><button class="game-btn" data-game="go18" data-diff="normal">18x18 围棋</button><button class="game-btn" data-game="go25" data-diff="normal">25x25 围棋</button></div>
+                <div id="gameBoardContainer" class="game-board"></div><div style="text-align:center;"><span id="gameStatus"></span></div></div>`;
+            }
+            function attachChessEvents(){
+                document.querySelectorAll('.game-btn').forEach(btn=>{ btn.onclick = () => { const game=btn.dataset.game, diff=btn.dataset.diff||'normal'; if(game==='tictactoe3') initGame('tictactoe',3,diff); else if(game==='tictactoe3hard') initGame('tictactoe',3,'hard'); else if(game==='tictactoe5') initGame('tictactoe',5,'normal'); else if(game==='go18') initGame('go',18,'normal'); else if(game==='go25') initGame('go',25,'normal'); }; });
+                initGame('tictactoe',3,'easy');
+            }
+            
+            function renderTranslatePage(){
+                return `<div class="internal-page"><div class="translate-container"><h2>🌐 翻译 · 支持简繁互译 + 自动检测</h2>
+                <div class="translate-box"><div class="translate-switch"><button id="swapLangBtn">🔄 交换语言</button></div>
+                <select id="transSrc"><option value="auto">自动检测</option><option value="zh">中文(简体)</option><option value="zh_tw">中文(繁体)</option><option value="en">English</option><option value="ja">日本語</option><option value="ko">한국어</option></select> → 
+                <select id="transTgt"><option value="zh">中文(简体)</option><option value="zh_tw">中文(繁体)</option><option value="en" selected>English</option><option value="ja">日本語</option><option value="ko">한국어</option></select>
+                <textarea id="transSrcText" class="translate-textarea" placeholder="输入要翻译的文字..."></textarea>
+                <button id="transBtn" style="margin-top:12px;">翻译</button>
+                <div id="transResult" class="translate-result"></div></div></div></div>`;
+            }
+            function attachTranslateEvents(){
+                document.getElementById('swapLangBtn').onclick = () => { const s=document.getElementById('transSrc').value, t=document.getElementById('transTgt').value; document.getElementById('transSrc').value=t; document.getElementById('transTgt').value=s; };
+                document.getElementById('transBtn').onclick = async () => {
+                    const text = document.getElementById('transSrcText').value;
+                    let src = document.getElementById('transSrc').value, tgt = document.getElementById('transTgt').value;
+                    if(!text.trim()){ document.getElementById('transResult').innerHTML='请输入文字'; return; }
+                    if(src === 'auto'){ src = 'en'; }
+                    if(src === tgt){ document.getElementById('transResult').innerHTML='⚠️ 源语言和目标语言不能相同'; return; }
+                    const s2t = { '们':'們','会':'會','个':'個' };
+                    if(src === 'zh' && tgt === 'zh_tw'){ let r=''; for(let ch of text) r += s2t[ch]||ch; document.getElementById('transResult').innerHTML=r; return; }
+                    if(src === 'zh_tw' && tgt === 'zh'){ let r=''; for(let ch of text) r += Object.entries(s2t).find(([k,v])=>v===ch)?.[0]||ch; document.getElementById('transResult').innerHTML=r; return; }
+                    try{
+                        const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${src}|${tgt}`);
+                        const data = await res.json();
+                        document.getElementById('transResult').innerHTML = data.responseData?.translatedText || '翻译失败';
+                    } catch(e){ document.getElementById('transResult').innerHTML = '服务暂不可用'; }
+                };
+            }
+            
+            function renderCountPage(){
+                return `<div class="internal-page"><div class="calc-container"><h2>📐 按键式图形计算器 + 汇率换算</h2>
+                <div class="calc-gui"><div class="calc-display" id="calcDisplay">0</div>
+                <div class="calc-gui-row"><button class="calc-gui-btn clear" data-action="clear">AC</button><button class="calc-gui-btn" data-action="back">⌫</button><button class="calc-gui-btn operator" data-op="/">÷</button><button class="calc-gui-btn operator" data-op="*">×</button></div>
+                <div class="calc-gui-row"><button class="calc-gui-btn" data-num="7">7</button><button class="calc-gui-btn" data-num="8">8</button><button class="calc-gui-btn" data-num="9">9</button><button class="calc-gui-btn operator" data-op="-">−</button></div>
+                <div class="calc-gui-row"><button class="calc-gui-btn" data-num="4">4</button><button class="calc-gui-btn" data-num="5">5</button><button class="calc-gui-btn" data-num="6">6</button><button class="calc-gui-btn operator" data-op="+">+</button></div>
+                <div class="calc-gui-row"><button class="calc-gui-btn" data-num="1">1</button><button class="calc-gui-btn" data-num="2">2</button><button class="calc-gui-btn" data-num="3">3</button><button class="calc-gui-btn equals" data-action="equals">=</button></div>
+                <div class="calc-gui-row"><button class="calc-gui-btn" data-num="0">0</button><button class="calc-gui-btn" data-num=".">.</button><button class="calc-gui-btn func" data-func="sqrt">√</button><button class="calc-gui-btn func" data-func="pow">x²</button></div>
+                <div class="calc-gui-row"><button class="calc-gui-btn func" data-func="sin">sin</button><button class="calc-gui-btn func" data-func="cos">cos</button><button class="calc-gui-btn func" data-func="tan">tan</button><button class="calc-gui-btn func" data-func="pi">π</button></div>
+                <div class="calc-gui-row"><button id="calcSoundBtn" class="calc-gui-btn" style="background:#22c55e;">🔊 朗读</button><button id="calcPlotBtn" class="calc-gui-btn" style="background:#8b5cf6;">📈 绘图</button></div>
+                <div id="calcResultArea" class="calc-result">结果将显示在这里</div>
+                <div id="plotPreview" class="plot-container" style="display:none;"></div></div>
+                <div class="settings-group"><h3>💱 汇率换算</h3><div style="display:flex; gap:12px; flex-wrap:wrap;"><input type="number" id="currencyAmount" value="100" style="flex:1; padding:12px; border-radius:40px;"><select id="currencyFrom"><option>CNY</option><option>USD</option><option>EUR</option><option>JPY</option><option>GBP</option></select> → <select id="currencyTo"><option>USD</option><option selected>EUR</option></select><button id="currencyCalcBtn">换算</button></div><div id="currencyResult" class="calc-result"></div></div></div>`;
+            }
+            function attachCountEvents(){
+                let currentExpr = '';
+                const display = document.getElementById('calcDisplay');
+                function update(){ display.innerText = currentExpr || '0'; }
+                function calc(){
+                    try{
+                        let expr = currentExpr.replace(/×/g,'*').replace(/÷/g,'/').replace(/\^/g,'**');
+                        expr = expr.replace(/√\(?([^)]+)\)?/g,'Math.sqrt($1)').replace(/(\d+)²/g,'Math.pow($1,2)');
+                        expr = expr.replace(/sin\(/g,'Math.sin(').replace(/cos\(/g,'Math.cos(').replace(/tan\(/g,'Math.tan(').replace(/π/g,'Math.PI');
+                        const result = eval(expr);
+                        document.getElementById('calcResultArea').innerHTML = `📐 结果: ${result}`;
+                        currentExpr = result.toString(); update();
+                    } catch(e){ document.getElementById('calcResultArea').innerHTML = `错误: ${e.message}`; }
+                }
+                function handle(v){
+                    if(v==='clear'){ currentExpr=''; document.getElementById('calcResultArea').innerHTML='结果将显示在这里'; update(); return; }
+                    if(v==='back'){ currentExpr=currentExpr.slice(0,-1); update(); return; }
+                    if(v==='equals'){ calc(); return; }
+                    if(v==='sqrt'){ currentExpr+='√('; update(); return; }
+                    if(v==='pow'){ currentExpr+='²'; update(); return; }
+                    if(v==='sin'){ currentExpr+='sin('; update(); return; }
+                    if(v==='cos'){ currentExpr+='cos('; update(); return; }
+                    if(v==='tan'){ currentExpr+='tan('; update(); return; }
+                    if(v==='pi'){ currentExpr+='π'; update(); return; }
+                    currentExpr += v; update();
+                }
+                document.querySelectorAll('.calc-gui-btn[data-num]').forEach(b=>b.onclick=()=>handle(b.dataset.num));
+                document.querySelectorAll('.calc-gui-btn[data-op]').forEach(b=>b.onclick=()=>handle(b.dataset.op));
+                document.querySelector('[data-action="clear"]').onclick=()=>handle('clear');
+                document.querySelector('[data-action="back"]').onclick=()=>handle('back');
+                document.querySelector('[data-action="equals"]').onclick=()=>handle('equals');
+                document.querySelectorAll('.calc-gui-btn[data-func]').forEach(b=>b.onclick=()=>handle(b.dataset.func));
+                document.getElementById('calcSoundBtn').onclick=()=>{ const t=document.getElementById('calcResultArea').innerText; if(t){ const u=new SpeechSynthesisUtterance(t); u.lang='zh-CN'; speechSynthesis.speak(u); } };
+                document.getElementById('calcPlotBtn').onclick=()=>{ try{ functionPlot({ target:'#plotPreview', width:500, height:300, grid:true, data:[{ fn:currentExpr, sampler:'builtIn' }] }); document.getElementById('plotPreview').style.display='block'; }catch(e){ alert('绘图失败'); } };
+                document.getElementById('currencyCalcBtn').onclick=async()=>{ const a=parseFloat(document.getElementById('currencyAmount').value), f=document.getElementById('currencyFrom').value, t=document.getElementById('currencyTo').value; try{ const r=await fetch(`https://api.exchangerate-api.com/v4/latest/${f}`); const d=await r.json(); const rate=d.rates[t]; document.getElementById('currencyResult').innerHTML=`${a} ${f} = ${(a*rate).toFixed(4)} ${t}`; }catch(e){ document.getElementById('currencyResult').innerHTML='获取失败'; } };
+            }
+            
+            function renderPagesPage(){
+                const pages = ['homepage','settings','note','chess','easyabroad','embassy','translate','count','pin','report','chat','chajian'];
+                return `<div class="internal-page"><h2>📌 内部域名导航</h2><div class="pages-grid">${pages.map(p=>`<div class="page-card" data-domain="${p}"><h3>🔗 surfer:${p}</h3></div>`).join('')}</div></div>`;
+            }
+            function attachPagesEvents(){ document.querySelectorAll('.page-card').forEach(c=>c.onclick = ()=>navigateTo(`surfer:${c.dataset.domain}`)); }
+            
+            function renderChajianPage(){
+                return `<div class="internal-page"><h2>🔌 插件中心</h2><div class="plugin-tabs"><div class="plugin-tab active" data-tab="maps">🗺️ 在线地图</div><div class="plugin-tab" data-tab="ir">📡 红外线发射</div></div>
+                <div id="plugin-maps" class="plugin-pane active"><div class="map-container"><iframe class="map-frame" src="https://www.openstreetmap.org/export/embed.html?bbox=-30,-20,70,60&layer=mapnik"></iframe></div></div>
+                <div id="plugin-ir" class="plugin-pane"><div class="plugin-card"><p>📡 红外线发射插件</p><button id="irTestBtn">测试发射</button><div id="irResult"></div></div></div></div>`;
+            }
+            function attachChajianEvents(){
+                document.querySelectorAll('.plugin-tab').forEach(tab=>{ tab.onclick=()=>{ document.querySelectorAll('.plugin-tab').forEach(t=>t.classList.remove('active')); tab.classList.add('active'); document.querySelectorAll('.plugin-pane').forEach(p=>p.classList.remove('active')); document.getElementById(`plugin-${tab.dataset.tab}`).classList.add('active'); }; });
+                document.getElementById('irTestBtn').onclick = () => { document.getElementById('irResult').innerHTML = '红外信号已发送(模拟)'; };
+            }
+            
+            function renderPinPage(){
+                loadShortcuts();
+                return `<div class="internal-page"><div class="pin-container"><div class="pin-add"><input type="text" id="pinName" placeholder="名称"><input type="text" id="pinUrl" placeholder="网址 (如 https://... 或 surfer:xxx)"><button id="addPinBtn">➕ 添加快捷方式</button></div>
+                <div id="pinList" class="pin-list"></div></div></div>`;
+            }
+            function attachPinEvents(){
+                function renderPins(){
+                    const container = document.getElementById('pinList');
+                    if(!container) return;
+                    container.innerHTML = '';
+                    shortcuts.forEach((pin, idx) => {
+                        const div = document.createElement('div'); div.className = 'pin-item';
+                        div.innerHTML = `<span class="pin-name">📌 ${escapeHtml(pin.name)}</span><span class="pin-url" style="font-size:0.7rem;">${pin.url.substring(0,40)}</span><button class="pin-delete" data-idx="${idx}">删除</button>`;
+                        div.onclick = (e) => { if(e.target.tagName !== 'BUTTON') navigateTo(pin.url); };
+                        div.querySelector('.pin-delete').onclick = (e) => { e.stopPropagation(); shortcuts.splice(idx,1); saveShortcuts(); renderPins(); };
+                        container.appendChild(div);
+                    });
+                }
+                document.getElementById('addPinBtn').onclick = () => {
+                    const name = document.getElementById('pinName').value.trim();
+                    const url = document.getElementById('pinUrl').value.trim();
+                    if(name && url){ shortcuts.push({name, url}); saveShortcuts(); renderPins(); document.getElementById('pinName').value=''; document.getElementById('pinUrl').value=''; }
+                };
+                renderPins();
+            }
+            
+            function renderReportPage(){
+                const isAdminUser = isAdmin();
+                return `<div class="internal-page"><div class="report-container"><h2>📝 反馈问题</h2>
+                ${currentUser ? `<div class="settings-group"><input type="text" id="feedbackTitle" placeholder="标题" style="width:100%; margin-bottom:8px;"><textarea id="feedbackContent" rows="3" placeholder="请详细描述您遇到的问题或建议..."></textarea><button id="submitFeedbackBtn" class="report-btn primary" style="width:100%; margin-top:8px;">📮 提交反馈</button></div>` : '<p style="color:#f59e0b;">⚠️ 请先登录后再提交反馈</p>'}
+                <div class="report-buttons"><button id="reportExternalBtn" class="report-btn secondary">🌐 在系统浏览器中打开 GitHub Issues</button></div>
+                ${isAdminUser ? `<div class="settings-group" style="margin-top:20px;"><h3>📋 用户反馈管理 (管理员)</h3><div id="adminFeedbackList" class="feedback-list"></div></div>` : ''}
+                <p style="margin-top:20px; font-size:0.8rem;">反馈地址: <a href="https://github.com/lkjy-coding/Surfer2/issues" target="_blank">github.com/lkjy-coding/Surfer2/issues</a></p></div></div>`;
+            }
+            function attachReportEvents(){
+                if(currentUser){
+                    document.getElementById('submitFeedbackBtn').onclick = () => {
+                        const title = document.getElementById('feedbackTitle').value.trim();
+                        const content = document.getElementById('feedbackContent').value.trim();
+                        if(!title || !content){ alert('请填写标题和内容'); return; }
+                        feedbacks.unshift({ id: Date.now(), username: currentUser.username, title, content, status: 'pending', adminResponse: null, createdAt: new Date().toISOString() });
+                        saveFeedbacks();
+                        alert('反馈已提交');
+                        document.getElementById('feedbackTitle').value = '';
+                        document.getElementById('feedbackContent').value = '';
+                        if(isAdmin()) renderAdminFeedbackList();
+                    };
+                }
+                document.getElementById('reportExternalBtn').onclick = () => window.open('https://github.com/lkjy-coding/Surfer2/issues', '_blank');
+                if(isAdmin()) renderAdminFeedbackList();
+            }
+            
+            function renderAdminFeedbackList(){
+                const container = document.getElementById('adminFeedbackList');
+                if(!container) return;
+                container.innerHTML = '';
+                feedbacks.forEach(fb => {
+                    const div = document.createElement('div'); div.className = 'feedback-item';
+                    let statusText = fb.status === 'pending' ? '待处理' : (fb.status === 'responded' ? '已回复' : '已解决');
+                    div.innerHTML = `<div><strong>${escapeHtml(fb.title)}</strong><span class="feedback-status ${fb.status}">${statusText}</span></div>
+                    <div style="font-size:0.7rem; color:#87b9ff;">来自: ${fb.username} | ${new Date(fb.createdAt).toLocaleString()}</div>
+                    <div style="margin-top:8px;">${escapeHtml(fb.content)}</div>
+                    ${fb.adminResponse ? `<div style="margin-top:8px; background:#0f172a; padding:8px; border-radius:12px; color:#e2e8f0;"><strong>🔹 管理员回复:</strong> ${escapeHtml(fb.adminResponse)}</div>` : ''}
+                    <div style="margin-top:8px;"><select id="status_${fb.id}"><option value="pending" ${fb.status==='pending'?'selected':''}>待处理</option><option value="responded" ${fb.status==='responded'?'selected':''}>已回复</option><option value="resolved" ${fb.status==='resolved'?'selected':''}>已解决</option></select>
+                    <input type="text" id="response_${fb.id}" placeholder="回复内容" value="${fb.adminResponse || ''}" style="width:200px;"><button onclick="window.adminRespond(${fb.id})">回复</button></div>`;
+                    container.appendChild(div);
+                });
+                window.adminRespond = (id) => {
+                    const status = document.getElementById(`status_${id}`).value;
+                    const response = document.getElementById(`response_${id}`).value;
+                    const fb = feedbacks.find(f => f.id === id);
+                    if(fb){ fb.status = status; if(response) fb.adminResponse = response; saveFeedbacks(); renderAdminFeedbackList(); }
+                };
+            }
+            
+            function renderChatPage(){
+                if(!currentUser){
+                    return `<div class="internal-page"><div class="chat-container"><h2>💬 在线聊天室</h2><div class="chat-disabled">请先登录后使用聊天室</div></div></div>`;
+                }
+                const canChat = canUserChat();
+                const isAdminUser = isAdmin();
+                let timeWarning = '';
+                if(!isChatTimeAllowed() && !isAdminUser) timeWarning = '<div style="background:#f59e0b; padding:8px; border-radius:12px; margin-bottom:12px;">⏰ 当前时间不在聊天室开放时段 (23:30-7:30)，仅管理员可用</div>';
+                return `<div class="internal-page"><div class="chat-container"><h2>💬 在线聊天室</h2>
+                    ${timeWarning}
+                    ${isAdminUser ? `<div class="settings-group"><strong>🔧 管理员控制台</strong><div><button id="adminToggleChat" class="game-btn">${chatEnabled ? '关闭聊天室' : '开启聊天室'}</button></div><div><input type="text" id="adminBlockInput" placeholder="要禁言的用户名"><button id="adminBlockBtn">禁言</button><button id="adminUnblockBtn">解除禁言</button></div><div><strong>已禁言用户:</strong> ${chatBlockedUsers.join(', ') || '无'}</div></div>` : ''}
+                    <div id="chatMessagesList" class="chat-messages"></div>
+                    ${canChat ? `<div class="chat-input-area"><input type="text" id="chatInput" class="chat-input" placeholder="输入消息..."><button id="chatSendBtn" class="chat-send">发送</button></div>` : '<div class="chat-disabled">⛔ 您当前无法发送消息</div>'}
+                    </div></div>`;
+            }
+            
+            function attachChatEvents(){
+                const messagesContainer = document.getElementById('chatMessagesList');
+                const chatInput = document.getElementById('chatInput');
+                const sendBtn = document.getElementById('chatSendBtn');
+                
+                function renderMessages(){
+                    if(!messagesContainer) return;
+                    messagesContainer.innerHTML = '';
+                    const displayMessages = [...chatMessages].slice(0, 100);
+                    for(let msg of displayMessages){
+                        const div = document.createElement('div');
+                        div.className = `chat-message ${msg.isAdmin ? 'admin-message' : ''}`;
+                        const avatarUrl = getAvatar(msg.username);
+                        div.innerHTML = `
+                            <div style="display:flex; gap:8px; align-items:center;">
+                                <img src="${avatarUrl}" style="width:32px; height:32px; border-radius:50%;">
+                                <div><span class="sender">${msg.username}${msg.isAdmin ? ' ⭐' : ''}</span>
+                                <span class="time">${new Date(msg.time).toLocaleString()}</span></div>
+                                ${isAdmin() ? `<button class="admin-delete-msg" data-id="${msg.id}" style="margin-left:auto; background:#ef4444; border:none; padding:2px 8px; border-radius:20px; color:white;">删除</button>` : ''}
+                            </div>
+                            <div style="margin-top:4px;">${escapeHtml(msg.content)}</div>
+                        `;
+                        messagesContainer.appendChild(div);
+                    }
+                    if(isAdmin()){
+                        document.querySelectorAll('.admin-delete-msg').forEach(btn => {
+                            btn.onclick = () => { chatMessages = chatMessages.filter(m => m.id !== parseInt(btn.dataset.id)); saveChatMessages(); renderMessages(); };
+                        });
+                    }
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }
+                
+                if(sendBtn && chatInput){
+                    sendBtn.onclick = () => {
+                        const content = chatInput.value.trim();
+                        if(content && addChatMessage(content)){
+                            chatInput.value = '';
+                            renderMessages();
+                        } else { alert('无法发送消息'); }
+                    };
+                    chatInput.onkeypress = (e) => { if(e.key === 'Enter') sendBtn.click(); };
+                }
+                const toggleBtn = document.getElementById('adminToggleChat');
+                if(toggleBtn) toggleBtn.onclick = () => { chatEnabled = !chatEnabled; saveChatSettings(); renderChatPage(); attachChatEvents(); };
+                const blockBtn = document.getElementById('adminBlockBtn');
+                if(blockBtn){
+                    const blockInput = document.getElementById('adminBlockInput');
+                    blockBtn.onclick = () => { if(blockInput.value.trim()){ if(!chatBlockedUsers.includes(blockInput.value.trim())) chatBlockedUsers.push(blockInput.value.trim()); saveChatSettings(); renderChatPage(); attachChatEvents(); } };
+                }
+                const unblockBtn = document.getElementById('adminUnblockBtn');
+                if(unblockBtn){
+                    unblockBtn.onclick = () => { const username = prompt('输入要解除禁言的用户名'); if(username){ chatBlockedUsers = chatBlockedUsers.filter(u => u !== username); saveChatSettings(); renderChatPage(); attachChatEvents(); } };
+                }
+                renderMessages();
+                const interval = setInterval(() => { if(internalContainer.innerHTML.includes('chat')) renderMessages(); else clearInterval(interval); }, 2000);
+            }
+            
+            function initHomepageEvents(){
+                const searchBtn = document.getElementById('homeSearchBtn');
+                const searchInput = document.getElementById('homeSearchInput');
+                const engineSelect = document.getElementById('homeEngineSelect');
+                const pureCheckbox = document.getElementById('pureSearchCheckbox');
+                if(searchBtn){
+                    searchBtn.onclick = () => {
+                        let query = searchInput.value.trim();
+                        if(!query) return;
+                        if(pureCheckbox && pureCheckbox.checked) query += ' -surfer';
+                        const encoded = encodeURIComponent(query);
+                        let engine = engineSelect.value;
+                        const savedEngine = localStorage.getItem('surfer2_defaultEngine');
+                        if(savedEngine && engineSelect.querySelector(`option[value="${savedEngine}"]`)) engine = savedEngine;
+                        let url = '';
+                        if(engine === 'google') url = `https://www.google.com/search?q=${encoded}`;
+                        else if(engine === 'bing') url = `https://www.bing.com/search?q=${encoded}`;
+                        else if(engine === 'baidu') url = `https://www.baidu.com/s?wd=${encoded}`;
+                        else if(engine === 'duckduckgo') url = `https://duckduckgo.com/?q=${encoded}`;
+                        else if(engine === 'github') url = `https://github.com/search?q=${encoded}`;
+                        navigateTo(url);
+                    };
+                }
+            }
+            
+            function escapeHtml(str){ return str.replace(/[&<>]/g, function(m){ return m==='&'?'&amp;': m==='<'?'&lt;':'&gt;'; }); }
+            
+            function loadCustomStyles(){
+                const bgImage = localStorage.getItem('surfer2_bgImage');
+                const fontFamily = localStorage.getItem('surfer2_fontFamily') || 'system-ui';
+                const containerBg = localStorage.getItem('surfer2_containerBg') || '#0e1427';
+                const borderColor = localStorage.getItem('surfer2_borderColor') || '#2d3e5f';
+                const acrylic = localStorage.getItem('surfer2_acrylic') === 'true';
+                const lightMode = localStorage.getItem('surfer2_lightMode') === 'true';
+                document.body.style.fontFamily = fontFamily;
+                surferContainer.style.background = containerBg;
+                surferContainer.style.borderColor = borderColor;
+                if(lightMode) document.body.classList.add('light-mode'); else document.body.classList.remove('light-mode');
+                if(acrylic) document.body.classList.add('acrylic-active'); else document.body.classList.remove('acrylic-active');
+                if(bgImage) { bgLayer.style.backgroundImage = `url(${bgImage})`; bgLayer.style.backgroundSize = 'cover'; bgLayer.style.backgroundPosition = 'center'; }
+                else bgLayer.style.backgroundImage = '';
+            }
+            function saveCustomStyles(bgImageUrl, font, containerBg, borderCol, acrylic, lightMode){
+                if(bgImageUrl !== undefined) localStorage.setItem('surfer2_bgImage', bgImageUrl);
+                if(font !== undefined) localStorage.setItem('surfer2_fontFamily', font);
+                if(containerBg !== undefined) localStorage.setItem('surfer2_containerBg', containerBg);
+                if(borderCol !== undefined) localStorage.setItem('surfer2_borderColor', borderCol);
+                if(acrylic !== undefined) localStorage.setItem('surfer2_acrylic', acrylic);
+                if(lightMode !== undefined) localStorage.setItem('surfer2_lightMode', lightMode);
+                loadCustomStyles();
+            }
+            
+            function navigateTo(url){
+                let target = url.trim();
+                if(target.startsWith('surfer:')){
+                    const page = target.slice(7).split('?')[0];
+                    const validPages = ['homepage','settings','note','chess','easyabroad','embassy','translate','count','pages','chajian','pin','report','chat'];
+                    if(validPages.includes(page)){
+                        renderInternalPage(page);
+                        if(page === 'homepage') setTimeout(()=>initHomepageEvents(), 50);
+                        historyStack = historyStack.slice(0, historyIndex+1);
+                        historyStack.push(target);
+                        historyIndex++;
+                        urlInput.value = target;
+                        return;
+                    }
+                }
+                if(target === 'about:blank'){ frame.style.display='block'; internalContainer.style.display='none'; frame.src='about:blank'; historyStack=historyStack.slice(0,historyIndex+1); historyStack.push(target); historyIndex++; urlInput.value=target; statusSpan.innerText='空白页'; return; }
+                if(!target.startsWith('http')) target='https://'+target;
+                frame.style.display='block'; internalContainer.style.display='none'; frame.src=target;
+                frame.onload = () => { setTimeout(() => hijackLinksInIframe(), 500); };
+                historyStack = historyStack.slice(0,historyIndex+1); historyStack.push(target); historyIndex++; urlInput.value=target;
+            }
+            
+            function goBack(){ if(historyIndex>0){ historyIndex--; navigateTo(historyStack[historyIndex]); } }
+            function goForward(){ if(historyIndex<historyStack.length-1){ historyIndex++; navigateTo(historyStack[historyIndex]); } }
+            function reloadCurrent(){ navigateTo(urlInput.value); }
+            goBtn.onclick = () => navigateTo(urlInput.value);
+            backBtn.onclick = goBack; forwardBtn.onclick = goForward; reloadBtn.onclick = reloadCurrent;
+            urlInput.onkeypress = (e) => { if(e.key === 'Enter') navigateTo(urlInput.value); };
+            bossBtn.onclick = () => navigateTo('surfer:settings');
+            pinBtn.onclick = () => { if(!currentUser){ alert('请先登录后再使用快捷方式功能'); loginWithGitHub(); } else navigateTo('surfer:pin'); };
+            userBtn.onclick = () => toggleUserMenu();
+            document.addEventListener('click', (e) => { if(!userMenu.contains(e.target) && e.target !== userBtn) closeUserMenu(); });
+            document.addEventListener('keydown', (e) => {
+                if(isInputFocused()) return;
+                if((e.key === 'b' || e.key === 'B') && enableBKey) { e.preventDefault(); navigateTo('surfer:settings'); }
+                if((e.key === 'p' || e.key === 'P') && enablePKey) { e.preventDefault(); if(!currentUser){ alert('请先登录后再使用快捷方式功能'); loginWithGitHub(); } else navigateTo('surfer:pin'); }
+            });
+            function isInputFocused(){ const active = document.activeElement; return active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA'); }
+            
+            let hidden=false; hideBtn.onclick = ()=>{ const c=document.querySelector('.surfer-container'); if(!hidden){ c.style.opacity='0'; c.style.visibility='hidden'; hidden=true; statusSpan.innerText='窗口已隐藏'; const restore=document.createElement('button'); restore.innerText='显示'; restore.style.cssText='position:fixed;bottom:20px;right:20px;z-index:10000;background:#3b82f6;border:none;padding:8px 16px;border-radius:40px;color:white;cursor:pointer'; restore.onclick=()=>{ c.style.opacity='1'; c.style.visibility='visible'; hidden=false; restore.remove(); statusSpan.innerText='窗口已恢复'; }; document.body.appendChild(restore); } };
+            
+            document.getElementById('menuChangeAvatar').onclick = () => changeAvatar();
+            document.getElementById('menuBindGitHub').onclick = () => bindGitHub();
+            document.getElementById('menuSwitchAccount').onclick = () => switchAccount();
+            document.getElementById('menuLogout').onclick = () => logout();
+            
+            loadCustomStyles();
+            updateUserButton();
+            applyKeyboardSetting();
+            navigateTo('surfer:homepage');
+        })();
+    </script>
+</body>
+  </html>
