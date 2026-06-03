@@ -1294,3 +1294,163 @@ Now cards are clearly readable in both themes.
 - The AI in chess is still relatively simple; it does not use machine learning or deep search algorithms.
 - Feedback system does not have real‑time notifications – users must manually refresh the page to see admin responses.
 - The `surfer:pin` shortcuts from pre‑5.00.00 versions are not accessible after upgrading (users need to log in and re‑add them).
+
+## 5.10.00
+
+### 🚀 New Features
+
+#### 1. User Operation Menu
+- Clicking the username button on the toolbar now opens a dropdown menu.
+- Menu contains: username, account status, change avatar, bind GitHub, switch account, logout.
+
+#### 2. Account Type Differentiation
+
+| Account Type | Condition | Restrictions |
+|--------------|-----------|--------------|
+| **Guest** | Not logged in | No restrictions (same as before) |
+| **Temporary** | Logged in but GitHub not bound | ❌ Cannot use chat room<br>❌ Cannot change avatar |
+| **Bound** | Logged in + GitHub bound | ✅ Full access to all features |
+
+#### 3. Online Chat Room (`surfer:chat`)
+- Only **bound accounts** can send messages (temporary/guest accounts cannot).
+- **Time restriction:** Daily from 23:30 to 7:30, only administrators can use the chat room.
+- Admin controls:
+  - Delete any message
+  - Mute specific users
+  - Close / reopen the chat room
+- Chat history is stored locally in `localStorage`.
+- Displays sender avatar, timestamp, and admin badge.
+
+#### 4. Avatar System
+- Bound accounts can upload custom avatars.
+- Guest/temporary accounts cannot change avatars.
+- Default avatar: auto‑generated (first letter + gradient background).
+- Admin can modify any user‘s avatar (reserved interface).
+
+#### 5. Chat Room Admin Controls
+- **Delete messages:** Any message can be removed by admin.
+- **Mute users:** Blocked users cannot send messages until unmuted.
+- **Open/close chat room:** Admin can temporarily disable the entire chat room.
+
+---
+
+### 🛠️ Technical Improvements
+
+- Account type detection runs in real time.
+- Chat time‑limit logic uses server‑independent client‑side time checking.
+- Avatar storage uses Base64 (saved in `localStorage`).
+- Mute system stores blocked usernames in `localStorage`.
+
+---
+
+### 🧠 How to Use
+
+| Feature | Action |
+|---------|--------|
+| Open user menu | Click the username button on the toolbar |
+| Bind GitHub | Log in → open user menu → click “绑定 GitHub” → enter GitHub username |
+| Change avatar | Log in with bound account → user menu → “修改头像” → upload image |
+| Use chat room | Log in with bound account → go to `surfer:chat` |
+| Admin delete message | Hover over any message → click “删除” (admin only) |
+| Admin mute user | Go to `surfer:chat` → admin console → enter username → click “禁言” |
+
+---
+
+### 📦 Upgrade Notes
+
+- Existing accounts are automatically migrated – GitHub binding status persists.
+- Chat messages from previous versions remain accessible.
+- Temporary accounts can become bound accounts at any time by binding GitHub.
+
+---
+
+### 🐞 Known Limitations
+
+- Chat room time check uses the client’s local time – can be bypassed by changing system time (acceptable for a client‑side tool).
+- Avatar images are stored as Base64 in `localStorage` – large images may exceed storage limits (~5MB).
+- Chat messages are not end‑to‑end encrypted – stored in plain text locally.
+
+---
+
+## 5.20.00
+
+### 🚀 New Features
+
+#### 1. Shortcut Keys Toggle (B / P Keys)
+- Added a new section in `surfer:settings` to enable/disable B key (jump to settings) and P key (jump to shortcuts).
+- **Keys are NOT triggered when typing in input fields or search boxes** (focus detection is implemented).
+
+#### 2. Accessibility Features
+- **High Contrast Mode:** Black/white high contrast theme for better readability.
+- **On‑Screen Keyboard:** Automatically appears when an input field is focused. Can be toggled in settings.
+
+#### 3. Default Search Engine Setting
+- Users can select a default search engine in `surfer:settings`.
+- Available options: Google, Bing, Baidu, DuckDuckGo, GitHub.
+- The homepage search box automatically selects the saved default engine on launch.
+
+#### 4. In‑Page Navigation
+- All links now open inside Surfer2’s iframe instead of the system browser.
+
+---
+
+### 🐞 Bug Fixes
+
+#### 5. Fixed GitHub Binding Error for Temporary Accounts
+- **Problem:** When a temporary account tried to bind GitHub, the system incorrectly reported “account already bound“ even when it was not.
+- **Root cause:** The binding check incorrectly included the current account itself.
+- **Fix:** Exclude the current account from the conflict check; only verify against other existing accounts.
+
+#### 6. Suspended EasyAbroad Service
+- **Reason:** Critical technical issue (light mode background problems could not be fully resolved).
+- **Result:** Accessing `surfer:easyabroad` now shows a “service suspended” message.
+
+#### 7. Removed In‑App GitHub Issues Embed
+- **Problem:** GitHub refused to embed the Issues page due to `X-Frame-Options: deny`.
+- **Fix:** Removed the in‑app option entirely. Only the “open in system browser” option remains.
+
+#### 8. Fixed Admin Reply Text Visibility
+- **Problem:** Admin replies used dark background with black text – unreadable.
+- **Fix:** Admin reply area now uses forced light text color (`color: #e2e8f0`).
+
+#### 9. Fixed Chess Tie (Draw) Detection
+- **Problem:** In `surfer:chess`, a draw game was sometimes incorrectly declared as a win for one side.
+- **Root cause:** The `checkWinner` function did not properly handle the `‘tie’` state.
+- **Fix:** Added `‘tie’` detection – when the board is full and no winner exists, the game correctly displays “平局“ (Draw).
+
+---
+
+### 🛠️ Technical Improvements
+
+- Keyboard event listeners now check `document.activeElement` to prevent shortcuts from firing inside input fields.
+- High contrast mode uses a dedicated CSS class (`body.high-contrast`) that overrides all theme colors.
+- On‑screen keyboard is implemented as a fixed‑position panel; can be closed manually or via settings.
+- Default search engine is stored in `localStorage` and applied on every homepage load.
+
+---
+
+### 🧠 How to Use
+
+| Feature | Action |
+|---------|--------|
+| Enable/disable B/P keys | Go to `surfer:settings` → shortcut keys section → toggle checkboxes |
+| Enable high contrast mode | Go to `surfer:settings` → accessibility section → check “高对比度模式” |
+| Enable on‑screen keyboard | Go to `surfer:settings` → accessibility section → check “屏幕键盘” |
+| Change default search engine | Go to `surfer:settings` → select preferred engine from dropdown |
+| Bypass GitHub Issues embed | Click the “在系统浏览器中打开” button in `surfer:report` |
+
+---
+
+### 📦 Upgrade Notes
+
+- Shortcut key settings are **migrated automatically** – previous behavior (both keys enabled) is preserved.
+- EasyAbroad is **temporarily unavailable** – no data loss, but the page will not load.
+- Chess draw detection is **backward compatible** – existing saved game states are not affected (no saved games exist).
+
+---
+
+### 🐞 Known Limitations
+
+- High contrast mode overrides custom background images and acrylic effects – this is intentional.
+- On‑screen keyboard does not support mobile touch input perfectly (designed for desktop accessibility).
+- The “open in system browser” option for GitHub Issues still requires manual login; Surfer2 cannot automate GitHub authentication.
