@@ -4,6 +4,14 @@ Surfer2 is an upgraded version of Surfer, but it can really go online, search on
 
 ## Important tips
 
+Also,don't forget to see the **Warning** under these words!
+
+## About the version of 5.40.00...
+
+Yes,as you see,I kept posting at least 4 versions one day for 3 days.But when I'm writing the codes of v5.40.00,it has many terrible problems...
+
+So,umm,if you want to see the test versions of v5.40.00 and later versions,I'll create a repository to post these test versions.So just waiting for it:)
+
 # Warning
 
 Currently known in version 3.00.00, in `surfer:settings`: When switching **between dark/light colors** in settings', the switch is too direct and **may be visually unfriendly**, **especially when switching to light mode**. In 3.10.00, this issue was fixed. **Currently, it is strongly recommended that you immediately stop using version 3.00.00.**
