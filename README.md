@@ -1466,3 +1466,125 @@ Now cards are clearly readable in both themes.
 - High contrast mode overrides custom background images and acrylic effects – this is intentional.
 - On‑screen keyboard does not support mobile touch input perfectly (designed for desktop accessibility).
 - The “open in system browser” option for GitHub Issues still requires manual login; Surfer2 cannot automate GitHub authentication.
+
+## 5.40.00
+
+### 🐞 Bug Fixes
+
+#### 1. Fixed Background Wallpaper Path Being Unexpectedly Cleared
+- **Problem:** After applying a background image, the path in the settings input field would sometimes be cleared, and subsequent saves could erase the wallpaper.
+- **Root cause:** The `saveAllSettings` function would overwrite the stored background URL with an empty string if the input field was blank.
+- **Fix:** Added a conditional check in `saveAllSettings` to only update the stored background URL if the input field is not empty. Now, empty values will not overwrite existing wallpaper data.
+
+#### 2. Fixed “Left Half” Layout Issue in Some Embedded Editors
+- **Problem:** When running Surfer2 inside certain HTML editors (e.g., in “Run” mode), the main window would collapse to the left side, while “Preview” mode worked correctly.
+- **Root cause:** The `100vh` height calculation behaved differently in sandboxed iframe environments.
+- **Fix:** Added a `resize` event listener that forces the `.surfer-container` to recalculate its height. A manual resize event is also triggered 100ms after page load to ensure correct rendering.
+
+#### 3. Fixed Paintboard Canvas Causing Page Scrolling While Drawing
+- **Problem:** On touch devices or laptops with touchpads, drawing on the canvas would sometimes also scroll the page.
+- **Root cause:** Touch/move events on the canvas were bubbling up to the parent container.
+- **Fix:** Added `e.preventDefault()` to the canvas touch event handlers. Also set `touch-action: none` on the canvas element to prevent the browser from interpreting drawing strokes as scroll gestures.
+
+#### 4. Fixed Settings Page Slow Startup (≥3 seconds)
+- **Problem:** Navigating to `surfer:settings` took over 3 seconds to render.
+- **Root cause:** The settings page was re-generating the entire blocked list HTML using `join('\n')` on a 30+ item array, and some nearby synchronous operations (like `marked.parse` and `katex` initialization) were causing unnecessary delays.
+- **Fix:** Optimized the blocked list rendering and deferred non-critical library initialization. Startup time is now reduced to under 1 second.
+
+#### 5. Fixed Hidden Buttons in Huawei Smart Window / On-screen Keyboard Mode
+- **Problem:** In Huawei’s “Smart Window” (small window) mode, when the on-screen keyboard appeared, the background image selection button and default search engine settings would be pushed out of the visible area.
+- **Root cause:** The `.settings-group` buttons relied on `margin-top` without proper scroll handling, and the container did not have `overflow: auto` set for small viewports.
+- **Fix:** Changed the settings page layout to use flexbox and added `overflow-y: auto` to ensure all buttons remain accessible. Also increased the minimum touch target size for better usability in small windows.
+
+#### 6. Fixed Chajian (Plugin Center) Both Tabs Displaying Simultaneously
+- **Problem:** In `surfer:chajian`, both the “在线地图” and “红外线发射” panels would appear at the same time.
+- **Root cause:** The CSS rules controlling the display of `.plugin-pane` were missing.
+- **Fix:** Added CSS rules: `.plugin-pane { display: none; }` and `.plugin-pane.active { display: block; }`. The tab switching JavaScript already correctly toggles the `active` class.
+
+#### 7. Fixed Report Buttons Having Only One Color
+- **Problem:** The primary and secondary buttons on the `surfer:report` page looked identical.
+- **Root cause:** The CSS for `.report-btn` did not differentiate between `primary` and `secondary` styles.
+- **Fix:** Added distinct background colors:
+    - `.report-btn.primary { background: #3b82f6; color: white; }`
+    - `.report-btn.secondary { background: #64748b; color: white; }`
+
+---
+
+### 🎨 Theme & Styling Fixes
+
+#### 8. Light Mode Styling – Full Coverage
+- **Problem:** Many components (paintboard toolbar, chess board, translate textarea, note editor, pin items, calculator display) remained in dark mode even when light mode was enabled.
+- **Root cause:** The `body.light-mode` CSS rules did not override styles for these newer components.
+- **Fix:** Added comprehensive light mode overrides for:
+    - `.paint-toolbar`, `.paint-btn`, `.paint-canvas-area`
+    - `.game-board`, `.game-cell`
+    - `.translate-textarea`, `.note-textarea`, `.note-preview`
+    - `.pin-item`, `.pin-add`
+    - `.calc-display`
+    - `.plugin-tab`
+
+#### 9. High Contrast Mode – Full Coverage
+- **Problem:** High contrast mode only changed the body background and text color, leaving internal components with their original dark backgrounds.
+- **Root cause:** CSS rules for `body.high-contrast` did not target container elements.
+- **Fix:** Added aggressive overrides for high contrast mode, forcing all major containers (`.surfer-container`, `.toolbar`, `.internal-page`, `.settings-group`, `.calc-gui`, `.paint-toolbar`, `.game-cell`, `.translate-box`, `.note-textarea`, `.pin-item`, `.page-card`, `.board-tab`, `.plugin-tab`) to use black backgrounds and white borders, ensuring true high contrast.
+
+---
+
+### ✨ New Features
+
+#### 10. On-screen Keyboard Restored
+- **Problem:** The on-screen keyboard feature was missing entirely in this version due to a base code rollback.
+- **Root cause:** Integration of the paintboard and other features used an older code base that did not include the keyboard.
+- **Fix:** Re-added the on-screen keyboard with a toggle in `surfer:settings`. The keyboard automatically appears when an input field is focused (if enabled) and includes number, letter, backspace, and enter keys.
+
+#### 11. User Menu State Synchronization
+- **Problem:** The user menu (avatar, account status, login/logout) sometimes did not reflect the current login state after navigating between internal pages.
+- **Root cause:** `updateUserMenu()` was not called after every page render.
+- **Fix:** Added a call to `updateUserMenu()` at the end of `renderInternalPage()`, ensuring the user menu state is always in sync.
+
+#### 12. Cloud Sync for Wallpaper Settings (JSONBin.io)
+- **Problem:** Wallpaper settings were stored locally and could not be shared across multiple devices even when using the same account.
+- **Root cause:** The previous “cloud sync” feature was removed during refactoring.
+- **Fix:** Re-integrated JSONBin.io as a cloud storage backend. Logged-in users can now manually sync their wallpaper to the cloud and pull it down on other devices.
+
+#### 13. Blacklist Import/Export
+- **Problem:** The blacklist was stored locally and could not be easily backed up or transferred.
+- **Fix:** Added “Export Blacklist” and “Import Blacklist” buttons in `surfer:settings`. Users can now save their blacklist as a JSON file and restore it later.
+
+---
+
+### 🧠 How to Test the Fixes
+
+| Fix | Verification |
+|-----|--------------|
+| Background path not cleared | Set a background → save → reload settings → input field should still show the path |
+| Left-half layout | Open Surfer2 in an HTML editor’s “Run” mode → window should be centered |
+| Paintboard scrolling | Draw on the canvas → the page should not scroll |
+| Settings startup speed | Click `surfer:settings` → page should appear in under 1 second |
+| Hidden buttons (Huawei) | Open settings in a small window + keyboard → all buttons should be reachable by scrolling |
+| Chajian tabs | Open `surfer:chajian` → only the active tab’s content should be visible |
+| Report buttons | Open `surfer:report` → primary and secondary buttons should have different colors |
+| Light mode | Switch to light mode → all pages (paintboard, chess, translate, note, pin, count, chajian) should have light backgrounds |
+| High contrast mode | Enable high contrast → all components should be black/white |
+| On-screen keyboard | Enable in settings → focus on any input field → keyboard should appear |
+| User menu | Log in → navigate between pages → user menu should always show the correct logged-in state |
+| Cloud wallpaper sync | Log in on device A → sync wallpaper → log in on device B → pull sync → wallpaper appears on device B |
+| Blacklist import/export | Export blacklist → import on another device → blacklist should be restored |
+
+---
+
+### 📦 Upgrade Notes
+
+- All previous settings (theme, acrylic, font, background) are **fully compatible**.
+- On-screen keyboard is **disabled by default** – enable it manually in `surfer:settings`.
+- Cloud sync for wallpaper requires a **JSONBin.io API key** (free tier). The key is already embedded; users can replace it with their own in the code if needed.
+- The blacklist import/export feature does **not** require an internet connection.
+
+---
+
+### 🐞 Known Limitations
+
+- **High contrast mode** overrides custom background images and acrylic effects – this is intentional to maintain accessibility.
+- **On-screen keyboard** works best on desktop and may have layout issues on very small mobile screens.
+- **Cloud sync** for wallpaper is manual (one-click sync) and not automatic.
+- **Paintboard** undo/redo history is limited to 50 steps to prevent excessive memory usage.
