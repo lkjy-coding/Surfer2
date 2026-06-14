@@ -8,6 +8,8 @@ Also,don't forget to see the **Warning** under these words!
 
 ## About the version of 5.40.00...
 
+**Finally,it RELEASED!!!**
+
 Yes,as you see,I kept posting at least 4 versions one day for 3 days.But when I'm writing the codes of v5.40.00,it has many terrible problems...
 
 So,umm,if you want to see the test versions of v5.40.00 and later versions,~~I'll create a repository to post these test versions.So just waiting for it:)~~ The repository **has created**,please visit [here](https://github.com/lkjy-coding/Surfer2ButTestVersions)!
