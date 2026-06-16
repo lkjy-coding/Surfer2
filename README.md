@@ -8,6 +8,8 @@ Surfer2 is an upgraded version of Surfer, but it can really go online, search on
 
 # ⚠️⚠️About the online report system of Surfer2 in `surfer:report`...
 
+>This system **is not supported for any longer**!
+
 This system has found **quite a lot of problems**,so I removed this system in v6.00.00.**No longer suggested to report problems and BUGs by this system!!!The Issues in it won't be received or answered!!!Please report them by GitHub Issues!!!**
 
 ## About the version of 5.40.00...
