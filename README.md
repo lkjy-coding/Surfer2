@@ -2,11 +2,11 @@
 
 Surfer2 is an upgraded version of Surfer, but it can really go online, search online, and even support watching videos online. Compared to Surfer, Surfer2 has a wider range of territories. So, make the most of Surfer2!
 
-## Important tips
+⚠️## Important tips
 
-Also,don't forget to see the **Warning** under these words!
+⚠️⚠️Also,don't forget to see the **Warning** under these words!
 
-# About the online report system of Surfer2 in `surfer:report`...
+# ⚠️⚠️About the online report system of Surfer2 in `surfer:report`...
 
 This system has found **quite a lot of problems**,so I removed this system in v6.00.00.**No longer suggested to report problems and BUGs by this system!!!The Issues in it won't be received or answerd!!!Please report them by GitHub Issues!!!**
 
@@ -18,13 +18,13 @@ Yes,as you see,I kept posting at least 4 versions one day for 3 days.But when I'
 
 So,umm,if you want to see the test versions of v5.40.00 and later versions,~~I'll create a repository to post these test versions.So just waiting for it:)~~ The repository **has created**,please visit [here](https://github.com/lkjy-coding/Surfer2ButTestVersions)!
 
-**The Issues of test versions won't be answered or solved,but the Issues of formal versions would be.**
+**⚠️The Issues of test versions won't be answered or solved,but the Issues of formal versions would be.**
 
-# Warning
+# ⚠️⚠️Warning
 
 Currently known in version 3.00.00, in `surfer:settings`: When switching **between dark/light colors** in settings', the switch is too direct and **may be visually unfriendly**, **especially when switching to light mode**. In 3.10.00, this issue was fixed. **Currently, it is strongly recommended that you immediately stop using version 3.00.00.**
 
-## The tips
+## ⚠️The tips
 
 Now I am trying to make the connection by Surfer2 safe,but I'm still not sure about it.So **I don't suggest you to enter something important on it**.
 
