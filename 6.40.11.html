@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Surfer2 · 更懂浏览更懂你</title>
+    <style>
+        /* ===== 全局重置 & 基础 ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; }
+        body {
+            font-family: system-ui, 'Segoe UI', monospace;
+            background: #0a0f1e;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            transition: background-color 0.2s;
+            margin: 0;
+        }
+        /* 高对比度 */
+        body.high-contrast { background: #000 !important; }
+        body.high-contrast .surfer-container,
+        body.high-contrast .toolbar,
+        body.high-contrast .internal-page,
+        body.high-contrast .settings-group,
+        body.high-contrast .calc-gui,
+        body.high-contrast .calc-display,
+        body.high-contrast .game-cell,
+        body.high-contrast .game-board,
+        body.high-contrast .translate-box,
+        body.high-contrast .note-textarea,
+        body.high-contrast .note-preview,
+        body.high-contrast .pin-add,
+        body.high-contrast .pin-item,
+        body.high-contrast .page-card,
+        body.high-contrast .board-tab,
+        body.high-contrast .plugin-tab,
+        body.high-contrast .map-container,
+        body.high-contrast .transfer-message,
+        body.high-contrast .tab-bar,
+        body.high-contrast .tab-btn,
+        body.high-contrast .session-card,
+        body.high-contrast .settings-sidebar,
+        body.high-contrast .settings-content {
+            background: #000 !important;
+            border-color: #fff !important;
+            color: #fff !important;
+        }
+        body.high-contrast button,
+        body.high-contrast .calc-gui-btn,
+        body.high-contrast .go-btn,
+        body.high-contrast .report-btn { background: #333 !important; color: #fff !important; border: 1px solid #fff !important; }
+        body.high-contrast a { color: #ff0 !important; }
+
+        /* 浅色模式 */
+        body.light-mode { background: #e2e8f0; }
+        body.light-mode .surfer-container,
+        body.light-mode .internal-page,
+        body.light-mode .translate-box,
+        body.light-mode .pin-add,
+        body.light-mode .pin-item,
+        body.light-mode .page-card,
+        body.light-mode .plugin-tab,
+        body.light-mode .transfer-message,
+        body.light-mode .tab-bar,
+        body.light-mode .session-card,
+        body.light-mode .settings-sidebar,
+        body.light-mode .settings-content {
+            background: #fff;
+            border-color: #cbd5e1;
+        }
+        body.light-mode .toolbar,
+        body.light-mode .nav-buttons,
+        body.light-mode .url-bar { background: #f1f5f9; }
+        body.light-mode .nav-btn,
+        body.light-mode .calc-gui-btn { background: #cbd5e1; color: #1e293b; }
+        body.light-mode .game-board { background: #cbd5e1; }
+        body.light-mode .game-cell { background: #fff; border: 1px solid #cbd5e1; color: #1e293b; }
+        body.light-mode .note-textarea,
+        body.light-mode .note-preview,
+        body.light-mode .translate-textarea,
+        body.light-mode .calc-display { background: #fff; border-color: #cbd5e1; color: #1e293b; }
+        body.light-mode .plugin-tab.active { background: #3b82f6; color: #fff; }
+
+        /* 背景层 */
+        .bg-layer { position: fixed; top:0;left:0;width:100%;height:100%;z-index:-2;background-size:cover;background-position:center; }
+        .acrylic-layer { position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none;transition:opacity .35s;opacity:0;background:rgba(14,20,39,0.6);backdrop-filter:blur(20px) saturate(180%); }
+        body.acrylic-active .acrylic-layer { opacity:1; }
+
+        /* 主容器 */
+        .surfer-container {
+            width:100%; max-width:1400px; height:calc(100vh - 32px);
+            background:#0e1427; border-radius:32px; box-shadow:0 25px 45px rgba(0,0,0,0.5);
+            display:flex; flex-direction:column; overflow:hidden;
+            border:1px solid #2d3e5f; position:relative; z-index:1; margin:0 auto;
+        }
+        body.light-mode .surfer-container { background:#fff; border-color:#cbd5e1; }
+        body.acrylic-active .surfer-container { background:rgba(14,20,39,0.65); backdrop-filter:blur(10px); border-color:rgba(255,255,255,0.25); }
+
+        /* ===== 标签栏 ===== */
+        .tab-bar {
+            display:flex; background:#111927cc; backdrop-filter:blur(8px);
+            padding:4px 12px; border-bottom:1px solid #2a3a55; gap:4px;
+            flex-wrap:nowrap; overflow-x:auto; flex-shrink:0; align-items:center;
+        }
+        body.light-mode .tab-bar { background:#f1f5f9; border-bottom-color:#e2e8f0; }
+        .tab-btn {
+            background:#1e293b; border:none; padding:4px 12px; border-radius:16px;
+            color:#87b9ff; cursor:pointer; font-size:0.75rem; white-space:nowrap;
+            display:inline-flex; align-items:center; gap:4px;
+        }
+        body.light-mode .tab-btn { background:#e2e8f0; color:#1e293b; }
+        .tab-btn.active { background:#3b82f6; color:#fff; }
+        .tab-btn .tab-close { margin-left:4px; font-size:0.6rem; opacity:0.6; cursor:pointer; }
+        .tab-btn .tab-close:hover { opacity:1; }
+        .tab-add-btn { background:transparent; border:1px solid #3b82f6; color:#3b82f6; border-radius:16px; padding:2px 12px; cursor:pointer; font-size:0.8rem; }
+
+        /* ===== 工具栏 ===== */
+        .toolbar {
+            background:#111927cc; backdrop-filter:blur(8px);
+            padding:8px 16px; border-bottom:1px solid #2a3a55;
+            display:flex; gap:8px; flex-wrap:wrap; align-items:center; flex-shrink:0;
+        }
+        body.light-mode .toolbar { background:#f1f5f9; border-bottom-color:#e2e8f0; }
+        .nav-buttons { display:flex; gap:6px; background:#0b101e99; padding:4px 10px; border-radius:48px; }
+        body.light-mode .nav-buttons { background:#e2e8f0; }
+        .nav-btn { background:#1e2a3e; border:none; color:#b4d0ff; font-size:1.2rem; width:32px; height:32px; border-radius:40px; cursor:pointer; }
+        body.light-mode .nav-btn { background:#cbd5e1; color:#1e293b; }
+        .url-bar { flex:1; display:flex; gap:6px; background:#0b101e99; padding:4px 12px; border-radius:60px; align-items:center; min-width:150px; }
+        body.light-mode .url-bar { background:#e2e8f0; }
+        .url-input { flex:1; background:#010a1a; border:1px solid #2c5270; padding:8px 14px; border-radius:48px; color:#c0e0ff; font-size:0.85rem; outline:none; min-width:100px; transition:color 0.2s; }
+        body.light-mode .url-input { background:#fff; border-color:#cbd5e1; color:#1e293b; }
+        .url-input.homepage-focused { color:#4a627a; font-style:italic; }
+        .go-btn { background:#1f6392; border:none; padding:5px 14px; border-radius:40px; color:#fff; cursor:pointer; font-size:0.75rem; }
+        .status { font-size:0.65rem; background:#030a17aa; padding:3px 10px; border-radius:20px; color:#87b9ff; }
+        body.light-mode .status { background:#e2e8f0; color:#475569; }
+
+        /* ===== 三杠菜单 ===== */
+        .hamburger-menu {
+            display:flex; align-items:center; gap:6px; background:#1e2a3e; padding:4px 12px; border-radius:40px; cursor:pointer;
+        }
+        body.light-mode .hamburger-menu { background:#e2e8f0; }
+        .hamburger-menu span { color:#b4d0ff; font-size:1.2rem; }
+        body.light-mode .hamburger-menu span { color:#1e293b; }
+
+        .hamburger-dropdown {
+            position:absolute; top:60px; right:20px; background:#1e293b; border-radius:20px; padding:12px;
+            min-width:200px; z-index:200; display:none; border:1px solid #475569;
+        }
+        .hamburger-dropdown.show { display:block; }
+        body.light-mode .hamburger-dropdown { background:#fff; border-color:#cbd5e1; }
+        .hamburger-item {
+            padding:8px 12px; cursor:pointer; border-radius:12px; color:#e2e8f0;
+        }
+        body.light-mode .hamburger-item { color:#1e293b; }
+        .hamburger-item:hover { background:#2d3e5f; }
+        body.light-mode .hamburger-item:hover { background:#e2e8f0; }
+
+        /* ===== 用户菜单 ===== */
+        .user-menu {
+            position: absolute; top: 60px; right: 20px; background: #1e293b; border-radius: 20px;
+            padding: 12px; min-width: 200px; z-index: 200; display: none; border: 1px solid #475569;
+        }
+        .user-menu.show { display: block; }
+        .user-menu-item { padding: 8px 12px; cursor: pointer; border-radius: 12px; color: #e2e8f0; }
+        .user-menu-item:hover { background: #2d3e5f; }
+        body.light-mode .user-menu { background: #fff; border-color: #cbd5e1; }
+        body.light-mode .user-menu-item { color: #1e293b; }
+
+        /* ===== 内部页面 & 设置侧边栏 ===== */
+        .internal-page { width:100%; min-height:100%; background:#0f172a; color:#e2e8f0; padding:20px; overflow-y:auto; }
+        body.light-mode .internal-page { background:#f8fafc; color:#1e293b; }
+
+        .settings-layout {
+            display:flex; gap:20px; height:100%; min-height:500px;
+        }
+        .settings-sidebar {
+            width:220px; flex-shrink:0; background:#1e293b; border-radius:16px; padding:12px 0;
+            border:1px solid #2d3e5f;
+        }
+        body.light-mode .settings-sidebar { background:#fff; border-color:#e2e8f0; }
+        .settings-sidebar-item {
+            padding:10px 20px; cursor:pointer; border-radius:8px; margin:2px 8px;
+            color:#87b9ff;
+        }
+        body.light-mode .settings-sidebar-item { color:#475569; }
+        .settings-sidebar-item.active { background:#3b82f6; color:#fff; }
+        .settings-sidebar-item:hover { background:#2d3e5f; }
+        body.light-mode .settings-sidebar-item:hover { background:#e2e8f0; }
+
+        .settings-content {
+            flex:1; background:#1e293b; border-radius:16px; padding:20px;
+            border:1px solid #2d3e5f; overflow-y:auto;
+        }
+        body.light-mode .settings-content { background:#fff; border-color:#e2e8f0; }
+        .settings-group { margin-bottom:20px; padding:12px; background:#0f172a; border-radius:16px; }
+        body.light-mode .settings-group { background:#f1f5f9; border:1px solid #e2e8f0; }
+        .settings-group label { display:block; margin:6px 0; }
+
+        /* ===== 其他组件 ===== */
+        .wave-area { flex:1; position:relative; overflow:auto; min-height:0; }
+        iframe { width:100%; height:100%; border:none; background:#fff; display:block; }
+
+        .blocked-overlay { position:fixed; top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.92);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:16px;color:#ff6b6b;text-align:center;padding:20px; }
+        .blocked-overlay .blocked-url { color:#87b9ff; font-size:0.85rem; word-break:break-all; max-width:600px; }
+        .blocked-overlay .blocked-reason { color:#fbbf24; font-size:0.85rem; max-width:500px; }
+        .blocked-overlay button { background:#3b82f6; border:none; padding:8px 20px; border-radius:40px; color:#fff; cursor:pointer; font-size:0.85rem; }
+        .blocked-overlay .blocked-trust-btn { background:#22c55e; }
+        .blocked-overlay .blocked-permanent-btn { background:#8b5cf6; }
+        .blocked-overlay .blocked-back-btn { background:#64748b; }
+        .blocked-overlay .blocked-search-box { margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+        .blocked-overlay .blocked-search-box input { padding:8px 16px; border-radius:40px; border:1px solid #475569; background:#0f172a; color:#e2e8f0; width:260px; }
+
+        .onscreen-keyboard { position:fixed; bottom:0;left:0;right:0;background:#1e293b;padding:8px;display:flex;flex-wrap:wrap;justify-content:center;gap:4px;z-index:10001;border-top:1px solid #475569;transform:translateY(100%);transition:transform .2s; }
+        .onscreen-keyboard.show { transform:translateY(0); }
+        .key-btn { background:#2d3748;border:none;padding:10px 14px;border-radius:8px;color:#fff;cursor:pointer;font-size:0.9rem;min-width:40px; }
+
+        .homepage-container { display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%;padding:40px 20px; }
+        .homepage-title { font-size:3rem;font-weight:bold;background:linear-gradient(135deg,#3b82f6,#8b5cf6);background-clip:text;-webkit-background-clip:text;color:transparent; }
+        .search-box { display:flex;gap:12px;justify-content:center;margin:20px 0;flex-wrap:wrap; }
+        .search-input { width:400px;max-width:70vw;padding:12px 20px;border-radius:60px;border:1px solid #475569;background:#0f172a;color:#e2e8f0; }
+        body.light-mode .search-input { background:#fff;border-color:#cbd5e1;color:#1e293b; }
+        .pure-search { display:flex;align-items:center;gap:8px;margin-top:10px;color:#87b9ff;font-size:0.85rem; }
+        body.light-mode .pure-search { color:#4a627a; }
+
+        .pages-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;margin-top:20px; }
+        .page-card { background:#1e293b;border-radius:20px;padding:20px;text-align:center;cursor:pointer;transition:.2s;color:#e2e8f0; }
+        body.light-mode .page-card { background:#fff;border:1px solid #e2e8f0;color:#1e293b; }
+        .page-card:hover { transform:translateY(-3px);background:#2d3e5f; }
+
+        .pin-container { display:flex;flex-direction:column;gap:20px; }
+        .pin-add { display:flex;gap:12px;flex-wrap:wrap;align-items:center;background:#1e293b;padding:16px;border-radius:24px; }
+        body.light-mode .pin-add { background:#fff;border:1px solid #e2e8f0; }
+        .pin-add input { flex:1;padding:10px 16px;border-radius:40px;background:#0f172a;border:1px solid #475569;color:inherit; }
+        .pin-list { display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px; }
+        .pin-item { background:#1e293b;border-radius:20px;padding:16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer; }
+        body.light-mode .pin-item { background:#fff;border:1px solid #e2e8f0; }
+        .pin-item .pin-delete { background:#ef4444;border:none;padding:4px 12px;border-radius:20px;color:#fff;cursor:pointer; }
+
+        .game-board { display:grid;gap:2px;justify-content:center;margin:20px auto;background:#2d3748;padding:10px;border-radius:16px;grid-template-columns:repeat(3,80px); }
+        .game-cell { background:#1e293b;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:bold;cursor:pointer;aspect-ratio:1/1;min-width:30px; }
+
+        .translate-container { max-width:900px;margin:0 auto; }
+        .translate-box { background:#1e293b;border-radius:24px;padding:20px; }
+        body.light-mode .translate-box { background:#fff;border:1px solid #e2e8f0; }
+        .translate-textarea { width:100%;height:150px;padding:12px;border-radius:16px;background:#0f172a;border:1px solid #475569;resize:vertical; }
+
+        .calc-gui { background:#1e293b;border-radius:24px;padding:20px;margin-top:16px; }
+        body.light-mode .calc-gui { background:#fff;border:1px solid #e2e8f0; }
+        .calc-display { background:#0f172a;border-radius:20px;padding:20px;margin-bottom:20px;font-family:monospace;font-size:1.8rem;text-align:right;min-height:80px; }
+        .calc-gui-row { display:flex;gap:10px;margin-bottom:10px; }
+        .calc-gui-btn { flex:1;padding:16px 8px;font-size:1.2rem;font-weight:bold;border:none;border-radius:20px;cursor:pointer;background:#2d3748;color:#e2e8f0; }
+        .calc-gui-btn.operator { background:#3b82f6;color:#fff; }
+        .calc-gui-btn.equals { background:#22c55e;color:#fff; }
+        .calc-gui-btn.clear { background:#ef4444;color:#fff; }
+        .calc-gui-btn.func { background:#8b5cf6;color:#fff; }
+
+        .note-editor { display:flex;flex-direction:column;gap:16px; }
+        .note-split { display:flex;gap:16px;min-height:500px;flex-wrap:wrap; }
+        .note-input-area, .note-preview-area { flex:1; }
+        .note-textarea { width:100%;height:400px;background:#0f172a;border:1px solid #475569;border-radius:16px;padding:16px;color:#f1f5f9;font-family:monospace;resize:vertical; }
+        .note-preview { background:#0f172a;border:1px solid #475569;border-radius:16px;padding:16px;min-height:400px;overflow-y:auto; }
+
+        .report-container { max-width:600px;margin:0 auto;text-align:center; }
+        .report-buttons { display:flex;gap:20px;justify-content:center;margin-top:30px;flex-wrap:wrap; }
+        .report-btn { padding:14px 28px;border-radius:60px;font-size:1.1rem;font-weight:bold;cursor:pointer;border:none; }
+        .report-btn.primary { background:#3b82f6;color:#fff; }
+
+        .plugin-tabs { display:flex;gap:8px;border-bottom:1px solid #475569;margin-bottom:20px;flex-wrap:wrap; }
+        .plugin-tab { padding:10px 24px;cursor:pointer;border-radius:20px 20px 0 0;background:#1e293b;color:#e2e8f0; }
+        .plugin-tab.active { background:#3b82f6;color:#fff; }
+        body.light-mode .plugin-tab { background:#e2e8f0;color:#1e293b; }
+        .plugin-pane { display:none; }
+        .plugin-pane.active { display:block; }
+        .map-container { width:100%;height:500px;border-radius:24px;overflow:hidden; }
+        .map-frame { width:100%;height:100%;border:none; }
+
+        .transfer-message { background:#1e293b;border-radius:16px;padding:12px;margin-bottom:12px; }
+        body.light-mode .transfer-message { background:#f1f5f9; }
+        .transfer-message .sender { font-weight:bold;color:#3b82f6; }
+        .transfer-message .time { font-size:0.7rem;color:#87b9ff;margin-left:8px; }
+
+        .session-card { background:#1e293b;border-radius:24px;padding:24px;margin-bottom:20px;text-align:center;cursor:pointer;transition:.2s;border:1px solid #2d3e5f; }
+        body.light-mode .session-card { border-color:#cbd5e1; }
+        .session-card:hover { transform:translateY(-4px);background:#2d3e5f; }
+        .session-card .session-icon { font-size:2.5rem;margin-bottom:8px; }
+        .session-card .session-title { font-size:1.2rem;font-weight:bold; }
+        .session-card .session-desc { font-size:0.8rem;color:#87b9ff;margin-top:4px; }
+
+        .session-join-form { display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:center;margin-top:16px; }
+        .session-join-form select, .session-join-form input { padding:8px 16px;border-radius:40px;border:1px solid #475569;background:#0f172a;color:#e2e8f0; }
+        body.light-mode .session-join-form select,
+        body.light-mode .session-join-form input { background:#fff; border-color:#cbd5e1; color:#1e293b; }
+
+        .board-card { background:#1e293b; border-radius:20px; padding:24px; margin:16px 0; border-left:4px solid #3b82f6; }
+        body.light-mode .board-card { background:#fff; border-color:#cbd5e1; }
+        .board-card h2 { color:#3b82f6; margin-bottom:12px; }
+        .board-card.warning { border-left-color:#ef4444; }
+        .board-card.info { border-left-color:#8b5cf6; }
+
+        .clickable-link { cursor:pointer; color:#3b82f6; text-decoration:underline; }
+
+        /* 修复 transfer 输入框在浅色模式下的颜色 */
+        body.light-mode #transferMessageInput,
+        body.light-mode .session-join-form input,
+        body.light-mode .session-join-form select {
+            background: #fff !important;
+            color: #1e293b !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        @media(max-width:700px){
+            .settings-layout { flex-direction:column; }
+            .settings-sidebar { width:100%; flex-direction:row; overflow-x:auto; display:flex; padding:8px; }
+            .settings-sidebar-item { white-space:nowrap; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-layer" id="bgLayer"></div>
+    <div class="acrylic-layer" id="acrylicLayer"></div>
+    <div class="surfer-container" id="surferContainer">
+        <!-- 标签栏 -->
+        <div class="tab-bar" id="tabBar">
+            <button class="tab-add-btn" id="addTabBtn">+</button>
+        </div>
+        <!-- 工具栏 -->
+        <div class="toolbar">
+            <div class="nav-buttons">
+                <button class="nav-btn" id="backBtn">◀</button>
+                <button class="nav-btn" id="forwardBtn">▶</button>
+                <button class="nav-btn" id="reloadBtn">⟳</button>
+            </div>
+            <div class="url-bar">
+                <input type="text" id="urlInput" class="url-input" placeholder="surfer:homepage" value="surfer:homepage">
+                <button id="goBtn" class="go-btn">冲浪</button>
+            </div>
+            <div class="status" id="statusMsg">Surfer2 6.40.11</div>
+            <!-- 三杠菜单 -->
+            <div class="hamburger-menu" id="hamburgerMenu">
+                <span>☰</span>
+            </div>
+            <!-- 下拉菜单 -->
+            <div class="hamburger-dropdown" id="hamburgerDropdown">
+                <div class="hamburger-item" id="menuSettings">⚙️ 设置(B)</div>
+                <div class="hamburger-item" id="menuPin">📌 Pin(P)</div>
+                <div class="hamburger-item" id="menuUser">👤 用户(U)</div>
+                <div class="hamburger-item" id="menuHide">🙈 隐藏窗口</div>
+                <div style="border-top:1px solid #475569;margin:6px 0;"></div>
+                <div class="hamburger-item" id="menuUserStatus" style="font-size:0.8rem;color:#87b9ff;"></div>
+                <div class="hamburger-item" id="menuLogout2">🚪 登出</div>
+            </div>
+        </div>
+        <div class="wave-area" id="waveArea">
+            <iframe id="surfFrame" src="about:blank" style="display:none;"></iframe>
+            <div id="internalContainer" style="width:100%;height:100%;overflow:auto;"></div>
+        </div>
+    </div>
+    <!-- 用户菜单 -->
+    <div id="userMenu" class="user-menu">
+        <div id="userMenuName" style="text-align:center;font-weight:bold;"></div>
+        <div id="userMenuStatus" style="text-align:center;font-size:0.7rem;margin:4px 0;"></div>
+        <div class="user-menu-item" id="menuChangeAvatar">修改头像</div>
+        <div class="user-menu-item" id="menuBindGitHub">绑定 GitHub</div>
+        <div class="user-menu-item" id="menuSwitchAccount">切换账号</div>
+        <div class="user-menu-item" id="menuLogout">登出</div>
+    </div>
+    <!-- 屏幕键盘 -->
+    <div id="onscreenKeyboard" class="onscreen-keyboard">
+        <button class="key-btn" data-key="1">1</button><button class="key-btn" data-key="2">2</button><button class="key-btn" data-key="3">3</button>
+        <button class="key-btn" data-key="4">4</button><button class="key-btn" data-key="5">5</button><button class="key-btn" data-key="6">6</button>
+        <button class="key-btn" data-key="7">7</button><button class="key-btn" data-key="8">8</button><button class="key-btn" data-key="9">9</button>
+        <button class="key-btn" data-key="0">0</button>
+        <button class="key-btn" data-key="q">q</button><button class="key-btn" data-key="w">w</button><button class="key-btn" data-key="e">e</button>
+        <button class="key-btn" data-key="r">r</button><button class="key-btn" data-key="t">t</button><button class="key-btn" data-key="y">y</button>
+        <button class="key-btn" data-key="u">u</button><button class="key-btn" data-key="i">i</button><button class="key-btn" data-key="o">o</button>
+        <button class="key-btn" data-key="p">p</button><button class="key-btn" data-key="a">a</button><button class="key-btn" data-key="s">s</button>
+        <button class="key-btn" data-key="d">d</button><button class="key-btn" data-key="f">f</button><button class="key-btn" data-key="g">g</button>
+        <button class="key-btn" data-key="h">h</button><button class="key-btn" data-key="j">j</button><button class="key-btn" data-key="k">k</button>
+        <button class="key-btn" data-key="l">l</button><button class="key-btn" data-key="z">z</button><button class="key-btn" data-key="x">x</button>
+        <button class="key-btn" data-key="c">c</button><button class="key-btn" data-key="v">v</button><button class="key-btn" data-key="b">b</button>
+        <button class="key-btn" data-key="n">n</button><button class="key-btn" data-key="m">m</button><button class="key-btn" data-key=".">.</button>
+        <button class="key-btn" data-key=",">,</button><button class="key-btn" data-key="/">/</button>
+        <button class="key-btn" data-key="Backspace">⌫</button><button class="key-btn" data-key="Enter">↵</button>
+        <button id="closeKeyboardBtn" class="key-btn">关闭</button>
+    </div>
+    <script>
+    (function(){
+        // ===== DOM 引用 =====
+        const frame = document.getElementById('surfFrame');
+        const internal = document.getElementById('internalContainer');
+        const urlInput = document.getElementById('urlInput');
+        const goBtn = document.getElementById('goBtn');
+        const backBtn = document.getElementById('backBtn');
+        const forwardBtn = document.getElementById('forwardBtn');
+        const reloadBtn = document.getElementById('reloadBtn');
+        const statusSpan = document.getElementById('statusMsg');
+        const tabBar = document.getElementById('tabBar');
+        const addTabBtn = document.getElementById('addTabBtn');
+        const hamburger = document.getElementById('hamburgerMenu');
+        const dropdown = document.getElementById('hamburgerDropdown');
+        const menuSettings = document.getElementById('menuSettings');
+        const menuPin = document.getElementById('menuPin');
+        const menuUser = document.getElementById('menuUser');
+        const menuHide = document.getElementById('menuHide');
+        const menuLogout2 = document.getElementById('menuLogout2');
+        const menuUserStatus = document.getElementById('menuUserStatus');
+        const userMenu = document.getElementById('userMenu');
+
+        // ===== 状态 =====
+        let enableBKey = localStorage.getItem('surfer2_enableBKey') !== 'false';
+        let enablePKey = localStorage.getItem('surfer2_enablePKey') !== 'false';
+        let enableUKey = true;
+        let enableOnscreenKeyboard = localStorage.getItem('surfer2_onscreenKeyboard') === 'true';
+        let defenseMode = localStorage.getItem('surfer2_defense_mode') || 'none';
+        let permanentTrust = JSON.parse(localStorage.getItem('surfer2_permanent_trust') || '[]');
+        let tabs = [];
+        let activeTabIndex = 0;
+        let tabIdCounter = 0;
+        let currentUser = JSON.parse(localStorage.getItem('surfer2_user') || 'null');
+        let users = JSON.parse(localStorage.getItem('surfer2_users') || '[]');
+        let transferMessages = [];
+        let currentSessionType = null;
+        let currentSessionId = null;
+        let blockedList = JSON.parse(localStorage.getItem('surfer2_blockedList') || '[]');
+        let isWindowHidden = false;
+
+        const defenseDescriptions = {
+            'none': '无防御：不进行任何访问拦截（默认）',
+            'low': '低防御：仅阻止 .com.cn、.cc、ww3. 等后缀的访问',
+            'medium': '中等防御：在低防御基础上，额外阻止 .html 和 .htm 后缀的访问',
+            'high': '强防御：在中等防御基础上，额外阻止 ftp 和 blog. 开头的链接',
+            'extra': 'E强防御：仅允许 https、surfer:*、.gov/.mil/.edu 后缀，以及指定的豁免路径'
+        };
+
+        // ===== 辅助函数 =====
+        function escapeHtml(s){ return s.replace(/[&<>]/g, m=> m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
+        function isInputFocused(){ const a=document.activeElement; return a && (a.tagName==='INPUT'||a.tagName==='TEXTAREA'); }
+        function saveUsers(){ localStorage.setItem('surfer2_users', JSON.stringify(users)); }
+        function saveCurrentUser(){ localStorage.setItem('surfer2_user', JSON.stringify(currentUser)); }
+        function isAdmin(){ return currentUser && currentUser.username === 'lkjy-coding'; }
+
+        // ===== 标签管理 =====
+        function loadTabs(){
+            const saved = localStorage.getItem('surfer2_tabs');
+            if(saved){ try{ const p=JSON.parse(saved); if(p&&p.length){ tabs=p; const ai=localStorage.getItem('surfer2_active_tab'); if(ai!==null){ let idx=parseInt(ai); if(idx>=0&&idx<tabs.length) activeTabIndex=idx; } return; } }catch(e){} }
+            tabs=[{ id:tabIdCounter++, title:'主页', url:'surfer:homepage', history:['surfer:homepage'], historyIndex:0 }];
+            activeTabIndex=0; saveTabs();
+        }
+        function saveTabs(){ localStorage.setItem('surfer2_tabs', JSON.stringify(tabs)); localStorage.setItem('surfer2_active_tab', activeTabIndex); }
+        function renderTabs(){
+            const addBtn = tabBar.querySelector('.tab-add-btn');
+            tabBar.innerHTML='';
+            for(let i=0;i<tabs.length;i++){
+                const tab=tabs[i];
+                const btn=document.createElement('button');
+                btn.className='tab-btn'+(i===activeTabIndex?' active':'');
+                btn.dataset.index=i;
+                btn.innerHTML='<span>'+(tab.title||'新标签页')+'</span><span class="tab-close" data-index="'+i+'">✕</span>';
+                btn.onclick=function(e){ if(e.target.classList.contains('tab-close'))return; switchTab(i); };
+                const cs=btn.querySelector('.tab-close');
+                if(cs) cs.onclick=function(e){ e.stopPropagation(); closeTab(i); };
+                tabBar.appendChild(btn);
+            }
+            const na=document.createElement('button');
+            na.className='tab-add-btn'; na.innerText='+'; na.onclick=addTab;
+            tabBar.appendChild(na);
+        }
+        function switchTab(index){
+            if(index<0||index>=tabs.length)return;
+            activeTabIndex=index;
+            const tab=tabs[index];
+            if(tab){ urlInput.value=tab.url||'about:blank'; navigateTo(tab.url||'about:blank', true); if(tab.title) document.title='Surfer2 · '+tab.title; }
+            renderTabs(); saveTabs();
+        }
+        function addTab(){
+            const nt={ id:tabIdCounter++, title:'新标签页', url:'surfer:homepage', history:['surfer:homepage'], historyIndex:0 };
+            tabs.push(nt); activeTabIndex=tabs.length-1; renderTabs();
+            const tab=tabs[activeTabIndex]; if(tab){ urlInput.value='surfer:homepage'; navigateTo('surfer:homepage',true); }
+            saveTabs();
+        }
+        function closeTab(index){
+            if(tabs.length<=1){ tabs[0]={ id:tabIdCounter++, title:'主页', url:'surfer:homepage', history:['surfer:homepage'], historyIndex:0 }; activeTabIndex=0; renderTabs(); switchTab(0); saveTabs(); return; }
+            tabs.splice(index,1); if(activeTabIndex>=tabs.length) activeTabIndex=tabs.length-1; if(index<=activeTabIndex&&activeTabIndex>0) activeTabIndex--;
+            renderTabs(); switchTab(activeTabIndex); saveTabs();
+        }
+        function updateTabTitle(url){
+            const tab=tabs[activeTabIndex]; if(!tab)return;
+            let title=url;
+            if(url.startsWith('surfer:')){ title=url.replace('surfer:',''); if(title==='homepage') title='主页'; if(title.startsWith('transfer/')) title='会话'; }
+            else { try{ const p=new URL(url); title=p.hostname; }catch(e){} }
+            tab.title=title; tab.url=url;
+            if(tab.history[tab.historyIndex]!==url){ tab.history=tab.history.slice(0,tab.historyIndex+1); tab.history.push(url); tab.historyIndex=tab.history.length-1; }
+            saveTabs(); renderTabs(); document.title='Surfer2 · '+title;
+        }
+
+        // ===== 防御检查 =====
+        function normalizeUrl(u){ let t=u.trim(); if(!t)return''; if(t.startsWith('surfer:'))return t; if(t==='about:blank')return t; if(!t.startsWith('http://')&&!t.startsWith('https://')){ if(t.includes('.')&&!t.includes(' ')) t='https://'+t; else t='https://www.google.com/search?q='+encodeURIComponent(t); } return t; }
+        function isPermanentTrusted(u){ if(!u)return false; for(let p of permanentTrust){ if(u.indexOf(p)!==-1)return true;} return false; }
+        function isExemptUrl(u){ if(!u)return false; const ep=['lkjy-coding.github.io','Surfer2','Surfer2ButTestVersions','JCom','Surfer']; for(let p of ep){ if(u.indexOf(p)!==-1)return true;} return false; }
+        function checkDefense(url){
+            if(defenseMode==='none') return {blocked:false, reason:''};
+            if(isPermanentTrusted(url)) return {blocked:false, reason:''};
+            if(!url) return {blocked:false, reason:''};
+            const lu=url.toLowerCase();
+            if(defenseMode==='extra'){
+                if(url.startsWith('surfer:')) return {blocked:false};
+                if(lu.startsWith('https://')) return {blocked:false};
+                if(lu.match(/\.(gov|mil|edu)(\/|$)/)) return {blocked:false};
+                if(isExemptUrl(url)) return {blocked:false};
+                if(lu.indexOf('.html')!==-1||lu.indexOf('.htm')!==-1) return {blocked:true, reason:'E强防御禁止 .html/.htm'};
+                return {blocked:true, reason:'E强防御仅允许 HTTPS、内部、.gov/.mil/.edu'};
+            }
+            if(defenseMode==='high'){
+                if(lu.startsWith('https://')) return {blocked:false};
+                if(url.startsWith('surfer:')) return {blocked:false};
+                if(lu.match(/\.(gov|mil|edu)(\/|$)/)) return {blocked:false};
+                if(lu.startsWith('ftp://')||lu.indexOf('ftp.')!==-1) return {blocked:true, reason:'禁止FTP'};
+                if(lu.indexOf('blog.')!==-1) return {blocked:true, reason:'禁止blog.'};
+                if(lu.indexOf('.html')!==-1||lu.indexOf('.htm')!==-1) return {blocked:true, reason:'禁止.html/.htm'};
+                if(lu.indexOf('.com.cn')!==-1||lu.indexOf('.cc')!==-1||lu.indexOf('ww3.')!==-1) return {blocked:true, reason:'禁止.com.cn/.cc/ww3.'};
+                return {blocked:false};
+            }
+            if(defenseMode==='medium'){
+                if(lu.startsWith('https://')) return {blocked:false};
+                if(url.startsWith('surfer:')) return {blocked:false};
+                if(lu.match(/\.(gov|mil|edu)(\/|$)/)) return {blocked:false};
+                if(isExemptUrl(url)) return {blocked:false};
+                if(lu.indexOf('.html')!==-1||lu.indexOf('.htm')!==-1) return {blocked:true, reason:'禁止.html/.htm'};
+                if(lu.indexOf('.com.cn')!==-1||lu.indexOf('.cc')!==-1||lu.indexOf('ww3.')!==-1) return {blocked:true, reason:'禁止.com.cn/.cc/ww3.'};
+                return {blocked:false};
+            }
+            if(defenseMode==='low'){
+                if(lu.startsWith('https://')) return {blocked:false};
+                if(url.startsWith('surfer:')) return {blocked:false};
+                if(lu.match(/\.(gov|mil|edu)(\/|$)/)) return {blocked:false};
+                if(lu.indexOf('.com.cn')!==-1||lu.indexOf('.cc')!==-1||lu.indexOf('ww3.')!==-1) return {blocked:true, reason:'禁止.com.cn/.cc/ww3.'};
+                return {blocked:false};
+            }
+            return {blocked:false};
+        }
+
+        function showBlockedOverlay(url, reason){
+            const existing=document.querySelector('.blocked-overlay'); if(existing)existing.remove();
+            const ov=document.createElement('div'); ov.className='blocked-overlay';
+            ov.innerHTML=`
+                <span>🛡️ 已阻止访问</span>
+                <span class="blocked-url">${escapeHtml(url)}</span>
+                <span class="blocked-reason">📋 ${escapeHtml(reason)}</span>
+                <div class="blocked-buttons">
+                    <button class="blocked-trust-btn" id="blockedTrustOnce">✅ 一次性信任</button>
+                    <button class="blocked-permanent-btn" id="blockedTrustPermanent">🔒 永久信任</button>
+                    <button class="blocked-back-btn" id="blockedGoBack">◀ 返回</button>
+                </div>
+                <div class="blocked-search-box">
+                    <input type="text" id="blockedSearchInput" placeholder="搜索...">
+                    <button id="blockedSearchBtn">搜索</button>
+                </div>
+            `;
+            document.body.appendChild(ov);
+            document.getElementById('blockedTrustOnce').onclick=function(){ ov.remove(); loadUrlDirect(url); statusSpan.innerText='⏳ 一次性信任'; };
+            document.getElementById('blockedTrustPermanent').onclick=function(){
+                try{ const h=new URL(url).hostname; if(h&&!permanentTrust.includes(h)){ permanentTrust.push(h); localStorage.setItem('surfer2_permanent_trust',JSON.stringify(permanentTrust)); } }catch(e){ if(!permanentTrust.includes(url)){ permanentTrust.push(url); localStorage.setItem('surfer2_permanent_trust',JSON.stringify(permanentTrust)); } }
+                ov.remove(); loadUrlDirect(url); statusSpan.innerText='🔒 永久信任';
+            };
+            document.getElementById('blockedGoBack').onclick=function(){ ov.remove(); const tab=tabs[activeTabIndex]; if(tab&&tab.historyIndex>0){ tab.historyIndex--; const pu=tab.history[tab.historyIndex]; urlInput.value=pu; navigateTo(pu,true); } else navigateTo('surfer:homepage',true); };
+            document.getElementById('blockedSearchBtn').onclick=function(){ const q=document.getElementById('blockedSearchInput').value; if(q){ ov.remove(); const su='https://www.google.com/search?q='+encodeURIComponent(q); urlInput.value=su; navigateTo(su,true); } };
+        }
+
+        // ===== 登录/用户 =====
+        function login(){
+            const name=prompt("输入用户名:");
+            if(!name)return;
+            let existing=users.find(u=>u.username===name);
+            if(existing) currentUser=existing;
+            else { currentUser={username:name, githubBound:false, avatar:null}; users.push(currentUser); saveUsers(); }
+            saveCurrentUser(); updateUserMenu(); statusSpan.innerText='欢迎 '+name; closeDropdown();
+            if(internal.innerHTML.includes('pin')) renderPinPage();
+            if(internal.innerHTML.includes('transfer')) renderTransferPage();
+        }
+        function logout(){
+            if(!currentUser)return;
+            currentUser=null; saveCurrentUser(); updateUserMenu(); closeDropdown(); statusSpan.innerText='已登出';
+            if(internal.innerHTML.includes('pin')) renderPinPage();
+            if(internal.innerHTML.includes('transfer')) renderTransferPage();
+            navigateTo('surfer:homepage');
+        }
+        function updateUserMenu(){
+            if(currentUser){
+                const uname=currentUser.username.substring(0,12)+(isAdmin()?' ⭐':'');
+                document.getElementById('userMenuName').innerHTML=currentUser.username+(isAdmin()?' (管理员)':'');
+                document.getElementById('userMenuStatus').innerHTML=currentUser.githubBound?'已绑定 GitHub':'未绑定 GitHub';
+                menuUserStatus.innerText='👤 '+uname;
+            } else {
+                document.getElementById('userMenuName').innerHTML='未登录';
+                document.getElementById('userMenuStatus').innerHTML='游客账号';
+                menuUserStatus.innerText='未登录';
+            }
+        }
+        function toggleUserMenu(){ if(currentUser) userMenu.classList.toggle('show'); else login(); }
+        function closeUserMenu(){ userMenu.classList.remove('show'); }
+        function toggleDropdown(){ dropdown.classList.toggle('show'); }
+        function closeDropdown(){ dropdown.classList.remove('show'); }
+        function switchAccount(){
+            if(users.length===0){ alert('无其他账号'); return; }
+            const list=users.map((u,i)=>(i+1)+'.'+u.username).join('\n');
+            const ch=prompt('选择账号:\n'+list+'\n输入序号或用户名:');
+            if(!ch)return;
+            let target=null;
+            if(!isNaN(parseInt(ch))) target=users[parseInt(ch)-1];
+            else target=users.find(u=>u.username===ch);
+            if(target){ currentUser=target; saveCurrentUser(); updateUserMenu(); statusSpan.innerText='切换到 '+target.username; closeDropdown(); }
+        }
+        function bindGitHub(){
+            if(!currentUser){alert('请先登录');return;}
+            if(currentUser.githubBound){alert('已绑定');return;}
+            const name=prompt('GitHub用户名:');
+            if(name){ currentUser.githubBound=true; currentUser.githubName=name; const idx=users.findIndex(u=>u.username===currentUser.username); if(idx!==-1)users[idx]=currentUser; saveUsers(); saveCurrentUser(); updateUserMenu(); alert('绑定成功'); }
+        }
+        function changeAvatar(){
+            if(!currentUser){alert('请先登录');return;}
+            const inp=document.createElement('input'); inp.type='file'; inp.accept='image/*';
+            inp.onchange=function(e){ const f=e.target.files[0]; if(f){ const r=new FileReader(); r.onload=function(ev){ currentUser.avatar=ev.target.result; const idx=users.findIndex(u=>u.username===currentUser.username); if(idx!==-1)users[idx]=currentUser; saveUsers(); saveCurrentUser(); updateUserMenu(); alert('头像已更新'); }; r.readAsDataURL(f); } };
+            inp.click();
+        }
+
+        document.getElementById('menuLogout').onclick = logout;
+        document.getElementById('menuBindGitHub').onclick = bindGitHub;
+        document.getElementById('menuSwitchAccount').onclick = switchAccount;
+        document.getElementById('menuChangeAvatar').onclick = changeAvatar;
+        document.addEventListener('click', function(e){ if(!userMenu.contains(e.target)&&e.target!==hamburger&&!dropdown.contains(e.target)) closeUserMenu(); });
+
+        // ===== 导航核心 =====
+        function loadUrlDirect(url){ frame.style.display='block'; internal.style.display='none'; frame.src=url; const tab=tabs[activeTabIndex]; if(tab){ tab.url=url; if(tab.history[tab.historyIndex]!==url){ tab.history=tab.history.slice(0,tab.historyIndex+1); tab.history.push(url); tab.historyIndex=tab.history.length-1; } updateTabTitle(url); } }
+
+        function parseTransferUrl(url){
+            if(!url) return null;
+            const publicMatch = url.match(/^surfer:transfer\/public\/(.+)$/);
+            const privateMatch = url.match(/^surfer:transfer\/private\/(.+)$/);
+            if(publicMatch) return { type: 'public', id: publicMatch[1] };
+            if(privateMatch) return { type: 'private', id: privateMatch[1] };
+            if(url === 'surfer:transfer') return { type: 'index', id: null };
+            return null;
+        }
+
+        // 修复：确保 transfer 会话创建后能正确跳转
+        function navigateToTransferSession(type, id) {
+            const url = 'surfer:transfer/' + type + '/' + id;
+            currentSessionType = type;
+            currentSessionId = id;
+            // 更新地址栏
+            urlInput.value = url;
+            // 更新当前标签页信息
+            const tab = tabs[activeTabIndex];
+            if(tab) {
+                tab.url = url;
+                tab.title = '会话: ' + id;
+                if(tab.history[tab.historyIndex] !== url) {
+                    tab.history = tab.history.slice(0, tab.historyIndex + 1);
+                    tab.history.push(url);
+                    tab.historyIndex = tab.history.length - 1;
+                }
+                saveTabs();
+                renderTabs();
+                document.title = 'Surfer2 · 会话: ' + id;
+            }
+            // 渲染 transfer 页面
+            renderInternalPage('transfer');
+            statusSpan.innerText = '会话: ' + id;
+        }
+
+        function navigateTo(url, fromTabSwitch=false){
+            let target=url.trim(); if(!target)return;
+            
+            // 先检查是否是 transfer 域名
+            const transferInfo = parseTransferUrl(target);
+            if(transferInfo){
+                if(transferInfo.type === 'index'){
+                    renderInternalPage('transfer');
+                    const tab=tabs[activeTabIndex];
+                    if(tab){ tab.url=target; if(tab.history[tab.historyIndex]!==target){ tab.history=tab.history.slice(0,tab.historyIndex+1); tab.history.push(target); tab.historyIndex=tab.history.length-1; } updateTabTitle(target); }
+                    urlInput.value=target;
+                    return;
+                } else {
+                    // 修复：进入会话时正确设置状态并跳转
+                    currentSessionType = transferInfo.type;
+                    currentSessionId = transferInfo.id;
+                    renderInternalPage('transfer');
+                    const tab=tabs[activeTabIndex];
+                    if(tab){ tab.url=target; if(tab.history[tab.historyIndex]!==target){ tab.history=tab.history.slice(0,tab.historyIndex+1); tab.history.push(target); tab.historyIndex=tab.history.length-1; } updateTabTitle(target); }
+                    urlInput.value=target;
+                    statusSpan.innerText='会话: '+transferInfo.id;
+                    return;
+                }
+            }
+            
+            const normalized=normalizeUrl(target);
+            const dr=checkDefense(normalized);
+            if(dr.blocked && !fromTabSwitch){ showBlockedOverlay(normalized, dr.reason); return; }
+            target=normalized;
+            if(target.startsWith('surfer:')){
+                const page=target.slice(7).split('?')[0];
+                const valid=['homepage','settings','note','chess','easyabroad','paintboard','pages','pin','report','translate','count','chajian','transfer','board'];
+                if(valid.includes(page)){ renderInternalPage(page); const tab=tabs[activeTabIndex]; if(tab){ tab.url=target; if(tab.history[tab.historyIndex]!==target){ tab.history=tab.history.slice(0,tab.historyIndex+1); tab.history.push(target); tab.historyIndex=tab.history.length-1; } updateTabTitle(target); } urlInput.value=target; return; }
+            }
+            if(target==='about:blank'){ frame.style.display='block'; internal.style.display='none'; frame.src='about:blank'; const tab=tabs[activeTabIndex]; if(tab){ tab.url=target; if(tab.history[tab.historyIndex]!==target){ tab.history=tab.history.slice(0,tab.historyIndex+1); tab.history.push(target); tab.historyIndex=tab.history.length-1; } updateTabTitle(target); } urlInput.value=target; statusSpan.innerText='空白页'; return; }
+            frame.style.display='block'; internal.style.display='none'; frame.src=target; const tab=tabs[activeTabIndex]; if(tab){ tab.url=target; if(tab.history[tab.historyIndex]!==target){ tab.history=tab.history.slice(0,tab.historyIndex+1); tab.history.push(target); tab.historyIndex=tab.history.length-1; } updateTabTitle(target); } urlInput.value=target;
+        }
+
+        // ===== 内部页面渲染 =====
+        function renderInternalPage(pageId){
+            frame.style.display='none'; internal.style.display='block'; internal.innerHTML='';
+            if(pageId==='homepage'){ internal.innerHTML=renderHomepage(); setTimeout(()=>{ attachHomepageEvents(); },50); }
+            else if(pageId==='settings'){ internal.innerHTML=renderSettingsPage(); attachSettingsEvents(); }
+            else if(pageId==='pages'){ internal.innerHTML=renderPagesPage(); attachPagesEvents(); }
+            else if(pageId==='note'){ internal.innerHTML=renderNotePage(); attachNoteEvents(); }
+            else if(pageId==='pin'){ internal.innerHTML=renderPinPage(); attachPinEvents(); }
+            else if(pageId==='chess'){ internal.innerHTML=renderChessPage(); attachChessEvents(); }
+            else if(pageId==='translate'){ internal.innerHTML=renderTranslatePage(); attachTranslateEvents(); }
+            else if(pageId==='count'){ internal.innerHTML=renderCountPage(); attachCountEvents(); }
+            else if(pageId==='report'){ internal.innerHTML=renderReportPage(); attachReportEvents(); }
+            else if(pageId==='chajian'){ internal.innerHTML=renderChajianPage(); attachChajianEvents(); }
+            else if(pageId==='easyabroad'){ internal.innerHTML='<div class="internal-page" style="padding:0;height:100%;"><iframe src="https://lkjy-coding.github.io/EasyAbroad.html" style="width:100%;height:100%;border:none;"></iframe></div>'; }
+            else if(pageId==='paintboard'){ internal.innerHTML='<div class="internal-page" style="padding:0;height:100%;"><iframe src="https://lkjy-coding.github.io/PaintboardSurfer2.html" style="width:100%;height:100%;border:none;"></iframe></div>'; }
+            else if(pageId==='transfer'){ internal.innerHTML=renderTransferPage(); attachTransferEvents(); }
+            else if(pageId==='board'){ internal.innerHTML=renderBoardPage(); }
+            else { internal.innerHTML='<div class="internal-page"><h2>未知域名</h2></div>'; }
+            statusSpan.innerText=pageId; urlInput.value='surfer:'+pageId; updateUserMenu();
+        }
+
+        // ===== 首页 =====
+        function renderHomepage(){
+            const se=localStorage.getItem('surfer2_defaultEngine')||'google';
+            return `<div class="internal-page"><div class="homepage-container">
+                <div class="homepage-title">Surfer2</div>
+                <p>快速搜索 · 内置导航 · 安全冲浪</p>
+                <div class="search-box">
+                    <input type="text" id="homeSearchInput" class="search-input" placeholder="输入搜索内容...">
+                    <select id="homeEngineSelect" class="engine-select">
+                        <option value="google" ${se==='google'?'selected':''}>Google</option>
+                        <option value="bing" ${se==='bing'?'selected':''}>Bing</option>
+                        <option value="baidu" ${se==='baidu'?'selected':''}>百度</option>
+                        <option value="github" ${se==='github'?'selected':''}>GitHub</option>
+                    </select>
+                    <div class="pure-search"><input type="checkbox" id="pureSearchCheckbox"><label>纯净搜索</label></div>
+                    <button id="homeSearchBtn" class="go-btn" style="margin-top:8px;">搜索</button>
+                </div>
+                <div class="github-link"><a href="https://github.com/lkjy-coding/Surfer2" target="_blank">GitHub 仓库</a></div>
+            </div></div>`;
+        }
+        function attachHomepageEvents(){
+            const btn=document.getElementById('homeSearchBtn');
+            const inp=document.getElementById('homeSearchInput');
+            const eng=document.getElementById('homeEngineSelect');
+            const pure=document.getElementById('pureSearchCheckbox');
+            if(btn) btn.onclick=function(){
+                if(inp.value){
+                    let q=inp.value; if(pure&&pure.checked) q+=' -surfer';
+                    let e=eng.value; let u='';
+                    if(e==='google') u='https://www.google.com/search?q='+encodeURIComponent(q);
+                    else if(e==='bing') u='https://www.bing.com/search?q='+encodeURIComponent(q);
+                    else if(e==='baidu') u='https://www.baidu.com/s?wd='+encodeURIComponent(q);
+                    else u='https://github.com/search?q='+encodeURIComponent(q);
+                    navigateTo(u);
+                }
+            };
+            const urlInputEl = document.getElementById('urlInput');
+            if(urlInputEl){
+                const homepageValue = 'surfer:homepage';
+                urlInputEl.addEventListener('focus', function(){
+                    if(this.value === homepageValue){ this.value = ''; this.classList.add('homepage-focused'); }
+                });
+                urlInputEl.addEventListener('blur', function(){
+                    if(this.value.trim() === '' || this.value === homepageValue){ this.value = homepageValue; this.classList.remove('homepage-focused'); }
+                });
+            }
+        }
+
+        // ===== 设置页面 =====
+        function renderSettingsPage(){
+            const lightMode=localStorage.getItem('surfer2_lightMode')==='true';
+            const acrylic=localStorage.getItem('surfer2_acrylic')==='true';
+            const hc=localStorage.getItem('surfer2_highContrast')==='true';
+            const bKey=localStorage.getItem('surfer2_enableBKey')!=='false';
+            const pKey=localStorage.getItem('surfer2_enablePKey')!=='false';
+            const keyboard=localStorage.getItem('surfer2_onscreenKeyboard')==='true';
+            const defense=localStorage.getItem('surfer2_defense_mode')||'none';
+            const bg=localStorage.getItem('surfer2_bgImage')||'';
+            const se=localStorage.getItem('surfer2_defaultEngine')||'google';
+            return `<div class="internal-page"><h2>Surfer2 设置</h2><div class="settings-layout">
+                <div class="settings-sidebar">
+                    <div class="settings-sidebar-item active" data-section="appearance">🎨 外观</div>
+                    <div class="settings-sidebar-item" data-section="shortcuts">⌨️ 快捷键</div>
+                    <div class="settings-sidebar-item" data-section="defense">🛡️ 防御</div>
+                    <div class="settings-sidebar-item" data-section="search">🔍 搜索</div>
+                    <div class="settings-sidebar-item" data-section="background">🖼️ 背景</div>
+                    <div class="settings-sidebar-item" data-section="trust">🔒 信任</div>
+                    <div class="settings-sidebar-item" data-section="about">ℹ️ 关于</div>
+                </div>
+                <div class="settings-content" id="settingsContent">
+                    <div class="settings-group" id="sec-appearance">
+                        <strong>🎨 外观</strong>
+                        <label><input type="checkbox" id="lightModeToggle" ${lightMode?'checked':''}> 浅色模式</label>
+                        <label><input type="checkbox" id="acrylicToggle" ${acrylic?'checked':''}> 亚克力磨砂</label>
+                        <label><input type="checkbox" id="highContrastToggle" ${hc?'checked':''}> 高对比度</label>
+                        <button id="applyAppearanceBtn" class="go-btn" style="margin-top:8px;">应用外观</button>
+                    </div>
+                    <div class="settings-group" id="sec-shortcuts" style="display:none;">
+                        <strong>⌨️ 快捷键</strong>
+                        <label><input type="checkbox" id="enableBKeyToggle" ${bKey?'checked':''}> 启用 B 键 (设置)</label>
+                        <label><input type="checkbox" id="enablePKeyToggle" ${pKey?'checked':''}> 启用 P 键 (Pin)</label>
+                        <label><input type="checkbox" id="enableUKeyToggle" checked> 启用 U 键 (用户)</label>
+                        <label><input type="checkbox" id="onscreenKeyboardToggle" ${keyboard?'checked':''}> 屏幕键盘</label>
+                    </div>
+                    <div class="settings-group" id="sec-defense" style="display:none;">
+                        <strong>🛡️ 网页浏览防御模式</strong>
+                        <div style="font-size:0.8rem; margin-bottom:8px;">
+                            <div><strong>无防御</strong>：不进行任何访问拦截（默认）</div>
+                            <div><strong>低防御</strong>：阻止 .com.cn、.cc、ww3. 等后缀</div>
+                            <div><strong>中等防御</strong>：在低防御基础上，阻止 .html 和 .htm</div>
+                            <div><strong>强防御</strong>：在中等防御基础上，阻止 ftp 和 blog.</div>
+                            <div><strong>E强防御 (Extra)</strong>：仅允许 HTTPS、surfer:*、.gov/.mil/.edu，以及指定的豁免路径</div>
+                        </div>
+                        <select id="defenseModeSelect">
+                            <option value="none" ${defense==='none'?'selected':''}>无防御</option>
+                            <option value="low" ${defense==='low'?'selected':''}>低防御</option>
+                            <option value="medium" ${defense==='medium'?'selected':''}>中等防御</option>
+                            <option value="high" ${defense==='high'?'selected':''}>强防御</option>
+                            <option value="extra" ${defense==='extra'?'selected':''}>E强防御 (Extra)</option>
+                        </select>
+                        <div style="font-size:0.7rem; color:#87b9ff; margin-top:4px;">当前模式：${defenseDescriptions[defense] || '无防御'}</div>
+                        <button id="saveDefenseBtn" class="go-btn" style="margin-top:8px;">保存防御</button>
+                    </div>
+                    <div class="settings-group" id="sec-search" style="display:none;">
+                        <strong>🔍 默认搜索引擎</strong>
+                        <select id="defaultEngineSelect">
+                            <option value="google" ${se==='google'?'selected':''}>Google</option>
+                            <option value="bing" ${se==='bing'?'selected':''}>Bing</option>
+                            <option value="baidu" ${se==='baidu'?'selected':''}>百度</option>
+                            <option value="github" ${se==='github'?'selected':''}>GitHub</option>
+                        </select>
+                        <button id="saveSearchBtn" class="go-btn" style="margin-top:8px;">保存</button>
+                    </div>
+                    <div class="settings-group" id="sec-background" style="display:none;">
+                        <strong>🖼️ 背景图片</strong>
+                        <input type="text" id="bgImageUrl" value="${bg}" style="width:100%;padding:8px;margin:8px 0;">
+                        <input type="file" id="bgImageUpload" accept="image/*">
+                        <button id="applyBgBtn" class="go-btn" style="margin-top:8px;">应用背景</button>
+                    </div>
+                    <div class="settings-group" id="sec-trust" style="display:none;">
+                        <strong>🔒 永久信任列表</strong>
+                        <div id="trustListDisplay" style="font-size:0.8rem;margin:8px 0;"></div>
+                        <button id="clearTrustBtn" class="go-btn" style="background:#ef4444;">清空信任列表</button>
+                    </div>
+                    <div class="settings-group" id="sec-about" style="display:none;">
+                        <strong>ℹ️ 版本信息</strong>
+                        <div>Surfer2 6.40.11</div>
+                        <div><span class="clickable-link" id="domainsLink">内部域名全功能</span></div>
+                        <div><span class="clickable-link" id="boardLink">📢 公告板</span></div>
+                    </div>
+                    <button id="saveAllSettingsBtn" class="go-btn" style="margin-top:16px;">保存所有设置</button>
+                </div>
+            </div></div>`;
+        }
+        function attachSettingsEvents(){
+            const items=document.querySelectorAll('.settings-sidebar-item');
+            const groups={ appearance:'sec-appearance', shortcuts:'sec-shortcuts', defense:'sec-defense', search:'sec-search', background:'sec-background', trust:'sec-trust', about:'sec-about' };
+            items.forEach(el=>{
+                el.onclick=function(){
+                    items.forEach(i=>i.classList.remove('active')); this.classList.add('active');
+                    const sec=this.dataset.section;
+                    for(let k in groups){ const g=document.getElementById(groups[k]); if(g) g.style.display=(k===sec)?'block':'none'; }
+                };
+            });
+            const bgUpload=document.getElementById('bgImageUpload'); if(bgUpload) bgUpload.onchange=function(e){ const f=e.target.files[0]; if(f){ const r=new FileReader(); r.onload=function(ev){ document.getElementById('bgImageUrl').value=ev.target.result; }; r.readAsDataURL(f); } };
+            document.getElementById('applyBgBtn').onclick=function(){ const v=document.getElementById('bgImageUrl').value; if(v){ localStorage.setItem('surfer2_bgImage',v); loadCustomStyles(); statusSpan.innerText='背景已应用'; } };
+            document.getElementById('applyAppearanceBtn').onclick=function(){ applyAppearanceOnly(); };
+            document.getElementById('saveDefenseBtn').onclick=function(){ const d=document.getElementById('defenseModeSelect').value; defenseMode=d; localStorage.setItem('surfer2_defense_mode',d); statusSpan.innerText='防御已保存'; };
+            document.getElementById('saveSearchBtn').onclick=function(){ const se=document.getElementById('defaultEngineSelect').value; localStorage.setItem('surfer2_defaultEngine',se); statusSpan.innerText='搜索引擎已保存'; };
+            document.getElementById('saveAllSettingsBtn').onclick=function(){ saveAllSettings(); };
+            document.getElementById('clearTrustBtn').onclick=function(){ if(confirm('清空永久信任？')){ permanentTrust=[]; localStorage.setItem('surfer2_permanent_trust',JSON.stringify(permanentTrust)); document.getElementById('trustListDisplay').innerHTML='暂无'; statusSpan.innerText='已清空'; } };
+            const trustDisplay=document.getElementById('trustListDisplay'); if(trustDisplay) trustDisplay.innerHTML=permanentTrust.length?('🔒 '+permanentTrust.join(', ')):'暂无';
+            document.getElementById('domainsLink').onclick=function(){ navigateTo('surfer:pages'); };
+            document.getElementById('boardLink').onclick=function(){ navigateTo('surfer:board'); };
+            document.getElementById('onscreenKeyboardToggle').onchange=function(){ enableOnscreenKeyboard=this.checked; localStorage.setItem('surfer2_onscreenKeyboard',this.checked); if(this.checked) keyboard.classList.add('show'); else keyboard.classList.remove('show'); };
+        }
+
+        function applyAppearanceOnly(){
+            const lm=document.getElementById('lightModeToggle').checked;
+            const ac=document.getElementById('acrylicToggle').checked;
+            const hc=document.getElementById('highContrastToggle').checked;
+            if(lm) document.body.classList.add('light-mode'); else document.body.classList.remove('light-mode');
+            if(ac) document.body.classList.add('acrylic-active'); else document.body.classList.remove('acrylic-active');
+            if(hc) document.body.classList.add('high-contrast'); else document.body.classList.remove('high-contrast');
+            localStorage.setItem('surfer2_lightMode',lm); localStorage.setItem('surfer2_acrylic',ac); localStorage.setItem('surfer2_highContrast',hc);
+            statusSpan.innerText='外观已应用';
+        }
+        function saveAllSettings(){
+            const lm=document.getElementById('lightModeToggle').checked;
+            const ac=document.getElementById('acrylicToggle').checked;
+            const hc=document.getElementById('highContrastToggle').checked;
+            const bKey=document.getElementById('enableBKeyToggle').checked;
+            const pKey=document.getElementById('enablePKeyToggle').checked;
+            const se=document.getElementById('defaultEngineSelect').value;
+            const defense=document.getElementById('defenseModeSelect').value;
+            const bg=document.getElementById('bgImageUrl').value;
+            localStorage.setItem('surfer2_lightMode',lm); localStorage.setItem('surfer2_acrylic',ac); localStorage.setItem('surfer2_highContrast',hc);
+            localStorage.setItem('surfer2_enableBKey',bKey); localStorage.setItem('surfer2_enablePKey',pKey);
+            localStorage.setItem('surfer2_defaultEngine',se); localStorage.setItem('surfer2_defense_mode',defense);
+            if(bg) localStorage.setItem('surfer2_bgImage',bg);
+            defenseMode=defense; enableBKey=bKey; enablePKey=pKey;
+            loadCustomStyles(); statusSpan.innerText='所有设置已保存';
+        }
+
+        // ===== 公告板 =====
+        function renderBoardPage(){
+            return `
+                <div class="internal-page">
+                    <h2>📢 Surfer2 官方公告</h2>
+                    <div class="board-card">
+                        <h2>📋 反馈与支持</h2>
+                        <p>反馈问题请前往 <a href="https://github.com/lkjy-coding/Surfer2/issues" target="_blank">https://github.com/lkjy-coding/Surfer2/issues</a> 。</p>
+                        <p><a href="https://github.com/lkjy-coding/Surfer2/issues/new/choose" target="_blank">点击</a> 即可一键反馈问题。</p>
+                    </div>
+                    <div class="board-card warning">
+                        <h2>⚠️ 安全提醒</h2>
+                        <p><strong>请不要在任何一个版本的 surfer:transfer 中发布你的私人信息和敏感信息！</strong></p>
+                    </div>
+                    <div class="board-card info">
+                        <h2>🔍 关于 E强防御</h2>
+                        <p>E强防御模式中的 E 是指 <strong>Extra</strong>，意即 <strong>"额外的"</strong>，无其他含义。</p>
+                    </div>
+                    <div class="board-card" style="border-left-color:#ef4444;">
+                        <h2>⚠️ 特别提醒</h2>
+                        <p><strong>6.40.00 中代码过分简单，功能过分简化，因此不推荐使用！</strong></p>
+                        <p>请使用 6.40.11 或更高版本。</p>
+                    </div>
+                    <div style="margin-top:20px;font-size:0.8rem;color:#87b9ff;">Surfer2 6.40.11 · 公告板</div>
+                </div>
+            `;
+        }
+
+        // ===== 其他页面 =====
+        function renderPagesPage(){
+            const pages=['homepage','settings','note','chess','easyabroad','paintboard','pin','report','translate','count','chajian','transfer','board'];
+            let html='<div class="internal-page"><h2>内部域名导航</h2><div class="pages-grid">';
+            for(let p of pages) html+=`<div class="page-card" data-domain="${p}"><h3>surfer:${p}</h3></div>`;
+            html+='</div></div>'; return html;
+        }
+        function attachPagesEvents(){ document.querySelectorAll('.page-card').forEach(el=>{ el.onclick=function(){ navigateTo('surfer:'+this.dataset.domain); }; }); }
+
+        function renderNotePage(){
+            const saved=localStorage.getItem('surfer2_note')||'';
+            return `<div class="internal-page"><h2>surfer:note</h2><div class="note-editor">
+                <div class="note-toolbar"><button id="noteSaveBtn" class="go-btn">保存</button></div>
+                <div class="note-split">
+                    <div class="note-input-area"><textarea id="noteContent" class="note-textarea" placeholder="# 标题">${escapeHtml(saved)}</textarea></div>
+                    <div class="note-preview-area"><div id="notePreview" class="note-preview"></div></div>
+                </div>
+            </div></div>`;
+        }
+        function attachNoteEvents(){
+            const ta=document.getElementById('noteContent'); const pv=document.getElementById('notePreview');
+            function render(){
+                let html = ta.value;
+                try{ if(window.marked) html = marked.parse(ta.value); }catch(e){}
+                try{ html = html.replace(/\$\$([\s\S]+?)\$\$/g, function(_, latex){ try{ return window.katex?katex.renderToString(latex,{displayMode:true}):latex; }catch(e){ return latex; } }); }catch(e){}
+                pv.innerHTML = html;
+            }
+            ta.addEventListener('input',render);
+            document.getElementById('noteSaveBtn').onclick=function(){ localStorage.setItem('surfer2_note',ta.value); statusSpan.innerText='笔记已保存'; };
+            render();
+        }
+
+        function renderPinPage(){
+            if(!currentUser) return '<div class="internal-page"><h2>需要登录</h2><p>快捷方式功能需要登录后使用</p><button onclick="window.loginFromPin()" class="go-btn">立即登录</button></div>';
+            let shortcuts=JSON.parse(localStorage.getItem('surfer2_shortcuts_'+currentUser.username)||'[]');
+            let list=''; for(let i=0;i<shortcuts.length;i++) list+=`<div class="pin-item" data-idx="${i}"><span class="pin-name">${shortcuts[i].name}</span><button class="pin-delete">删除</button></div>`;
+            window.loginFromPin=login;
+            return `<div class="internal-page"><div class="pin-container">
+                <div class="pin-add"><input type="text" id="pinName" placeholder="名称"><input type="text" id="pinUrl" placeholder="网址"><button id="addPinBtn" class="go-btn">添加</button></div>
+                <div id="pinList" class="pin-list">${list}</div>
+            </div></div>`;
+        }
+        function attachPinEvents(){
+            if(!currentUser)return;
+            let shortcuts=JSON.parse(localStorage.getItem('surfer2_shortcuts_'+currentUser.username)||'[]');
+            function renderPins(){
+                const c=document.getElementById('pinList'); if(!c)return;
+                let html=''; for(let i=0;i<shortcuts.length;i++) html+=`<div class="pin-item" data-idx="${i}"><span class="pin-name">${shortcuts[i].name}</span><button class="pin-delete">删除</button></div>`;
+                c.innerHTML=html;
+                document.querySelectorAll('.pin-item').forEach(el=>{
+                    const idx=parseInt(el.dataset.idx);
+                    el.onclick=function(e){ if(e.target.tagName!=='BUTTON') navigateTo(shortcuts[idx].url); };
+                    const del=el.querySelector('.pin-delete'); if(del) del.onclick=function(e){ e.stopPropagation(); shortcuts.splice(idx,1); localStorage.setItem('surfer2_shortcuts_'+currentUser.username,JSON.stringify(shortcuts)); renderPins(); };
+                });
+            }
+            document.getElementById('addPinBtn').onclick=function(){
+                const name=document.getElementById('pinName').value.trim(); const url=document.getElementById('pinUrl').value.trim();
+                if(name&&url){ shortcuts.push({name,url}); localStorage.setItem('surfer2_shortcuts_'+currentUser.username,JSON.stringify(shortcuts)); renderPins(); document.getElementById('pinName').value=''; document.getElementById('pinUrl').value=''; }
+            };
+            renderPins();
+        }
+
+        // ===== Chess =====
+        let chessBoard=['','','','','','','','','']; let chessActive=true, chessTurn='X', chessWinner=null;
+        function renderChessPage(){
+            return `<div class="internal-page"><h2>井字棋</h2><div id="chessBoard" class="game-board"></div><button id="resetChessBtn" class="go-btn">新对局</button><span id="chessStatus"></span></div>`;
+        }
+        function attachChessEvents(){
+            const container=document.getElementById('chessBoard'); const st=document.getElementById('chessStatus');
+            function checkWinner(b){ const lines=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]; for(let l of lines){ const [a,b,c]=l; if(b[a]&&b[a]===b[b]&&b[a]===b[c])return b[a]; } if(b.every(c=>c!==''))return 'tie'; return null; }
+            function updateBoard(){
+                container.innerHTML='';
+                for(let i=0;i<9;i++){ const cell=document.createElement('div'); cell.className='game-cell'; cell.innerText=chessBoard[i]; if(chessActive&&chessBoard[i]===''&&chessTurn==='X'&&!chessWinner){ cell.onclick=(function(idx){ return function(){ playerMove(idx); }; })(i); } container.appendChild(cell); }
+            }
+            function endGame(w){ chessActive=false; chessWinner=w; st.innerText=w==='X'?'你赢了':w==='O'?'AI赢了':'平局'; updateBoard(); }
+            function aiMove(){ if(!chessActive||chessTurn!=='O'||chessWinner)return; const empty=[]; for(let i=0;i<9;i++)if(chessBoard[i]==='')empty.push(i); if(!empty.length)return; const move=empty[Math.floor(Math.random()*empty.length)]; chessBoard[move]='O'; const w=checkWinner(chessBoard); if(w){endGame(w);return;} chessTurn='X'; updateBoard(); }
+            function playerMove(i){ if(!chessActive||chessTurn!=='X'||chessBoard[i]!==''||chessWinner)return; chessBoard[i]='X'; const w=checkWinner(chessBoard); if(w){endGame(w);return;} chessTurn='O'; updateBoard(); setTimeout(aiMove,100); }
+            document.getElementById('resetChessBtn').onclick=function(){ chessBoard=['','','','','','','','','']; chessActive=true; chessTurn='X'; chessWinner=null; st.innerText='你的回合'; updateBoard(); };
+            updateBoard(); st.innerText='你的回合';
+        }
+
+        // ===== Translate =====
+        function detectLanguage(text){
+            if(/[\u4e00-\u9fa5]/.test(text)) return 'zh';
+            if(/[a-zA-Z]/.test(text) && text.length > 0) return 'en';
+            if(/[ぁ-んァ-ン]/.test(text)) return 'ja';
+            return 'en';
+        }
+        function renderTranslatePage(){
+            return `<div class="internal-page"><div class="translate-container"><h2>翻译</h2>
+                <div class="translate-box">
+                    <select id="transSrc"><option value="auto">自动</option><option value="zh">中文</option><option value="en">英语</option><option value="ja">日语</option></select> →
+                    <select id="transTgt"><option value="zh">中文</option><option value="en" selected>英语</option><option value="ja">日语</option></select>
+                    <textarea id="transSrcText" class="translate-textarea"></textarea>
+                    <button id="transBtn" class="go-btn">翻译</button>
+                    <div id="transResult" class="translate-result"></div>
+                </div>
+            </div></div>`;
+        }
+        function attachTranslateEvents(){
+            document.getElementById('transBtn').onclick=async function(){
+                let text=document.getElementById('transSrcText').value;
+                let src=document.getElementById('transSrc').value;
+                const tgt=document.getElementById('transTgt').value;
+                if(!text)return;
+                if(src==='auto') src=detectLanguage(text);
+                const url='https://api.mymemory.translated.net/get?q='+encodeURIComponent(text)+'&langpair='+src+'|'+tgt;
+                const res=await fetch(url); const data=await res.json();
+                document.getElementById('transResult').innerHTML=data.responseData?.translatedText||'翻译失败';
+            };
+        }
+
+        // ===== Count =====
+        function renderCountPage(){
+            return `<div class="internal-page"><div class="calc-container">
+                <div class="calc-gui">
+                    <div class="calc-display" id="calcDisplay">0</div>
+                    <div class="calc-gui-row"><button class="calc-gui-btn clear" data-action="clear">AC</button><button class="calc-gui-btn" data-action="back">⌫</button><button class="calc-gui-btn operator" data-op="/">÷</button><button class="calc-gui-btn operator" data-op="*">×</button></div>
+                    <div class="calc-gui-row"><button class="calc-gui-btn" data-num="7">7</button><button class="calc-gui-btn" data-num="8">8</button><button class="calc-gui-btn" data-num="9">9</button><button class="calc-gui-btn operator" data-op="-">−</button></div>
+                    <div class="calc-gui-row"><button class="calc-gui-btn" data-num="4">4</button><button class="calc-gui-btn" data-num="5">5</button><button class="calc-gui-btn" data-num="6">6</button><button class="calc-gui-btn operator" data-op="+">+</button></div>
+                    <div class="calc-gui-row"><button class="calc-gui-btn" data-num="1">1</button><button class="calc-gui-btn" data-num="2">2</button><button class="calc-gui-btn" data-num="3">3</button><button class="calc-gui-btn equals" data-action="equals">=</button></div>
+                    <div class="calc-gui-row"><button class="calc-gui-btn" data-num="0">0</button><button class="calc-gui-btn" data-num=".">.</button><button class="calc-gui-btn func" data-func="sqrt">√</button><button class="calc-gui-btn func" data-func="pow">x²</button></div>
+                    <div id="calcResultArea"></div>
+                </div>
+                <div class="settings-group" style="margin-top:16px;"><h3>汇率换算</h3>
+                    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                        <input type="number" id="currencyAmount" value="100" style="flex:1;padding:12px;border-radius:40px;">
+                        <select id="currencyFrom"><option value="CNY">人民币/CNY</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="JPY">JPY</option><option value="GBP">GBP</option></select>
+                        <span>→</span>
+                        <select id="currencyTo"><option value="USD">USD</option><option value="EUR" selected>EUR</option><option value="CNY">人民币/CNY</option><option value="JPY">JPY</option></select>
+                        <button id="currencyCalcBtn" class="go-btn">换算</button>
+                    </div>
+                    <div id="currencyResult"></div>
+                </div>
+            </div></div>`;
+        }
+        function attachCountEvents(){
+            let expr=''; const display=document.getElementById('calcDisplay');
+            function update(){ display.innerText=expr||'0'; }
+            function calc(){
+                try{ let e=expr.replace(/×/g,'*').replace(/÷/g,'/').replace(/\^/g,'**'); e=e.replace(/√\(?([^)]+)\)?/g,'Math.sqrt($1)').replace(/(\d+)²/g,'Math.pow($1,2)'); const res=eval(e); document.getElementById('calcResultArea').innerHTML='结果: '+res; expr=res.toString(); update(); }catch(e){ document.getElementById('calcResultArea').innerHTML='错误: '+e.message; }
+            }
+            function handle(v){ if(v==='clear'){expr='';document.getElementById('calcResultArea').innerHTML='';update();} else if(v==='back'){expr=expr.slice(0,-1);update();} else if(v==='equals'){calc();} else if(v==='sqrt'){expr+='√(';update();} else if(v==='pow'){expr+='²';update();} else {expr+=v;update();} }
+            document.querySelectorAll('.calc-gui-btn[data-num]').forEach(b=>b.onclick=()=>handle(b.dataset.num));
+            document.querySelectorAll('.calc-gui-btn[data-op]').forEach(b=>b.onclick=()=>handle(b.dataset.op));
+            document.querySelector('[data-action="clear"]').onclick=()=>handle('clear');
+            document.querySelector('[data-action="back"]').onclick=()=>handle('back');
+            document.querySelector('[data-action="equals"]').onclick=()=>handle('equals');
+            document.querySelectorAll('.calc-gui-btn[data-func]').forEach(b=>b.onclick=()=>handle(b.dataset.func));
+            document.getElementById('currencyCalcBtn').onclick=async function(){
+                const amount=parseFloat(document.getElementById('currencyAmount').value);
+                const from=document.getElementById('currencyFrom').value;
+                const to=document.getElementById('currencyTo').value;
+                try{ const res=await fetch('https://api.exchangerate-api.com/v4/latest/'+from); const data=await res.json(); const rate=data.rates[to]; document.getElementById('currencyResult').innerHTML=amount+' '+from+' = '+(amount*rate).toFixed(4)+' '+to; }catch(e){ document.getElementById('currencyResult').innerHTML='汇率获取失败'; }
+            };
+        }
+
+        // ===== Report =====
+        function renderReportPage(){
+            return `<div class="internal-page"><div class="report-container"><h2>反馈问题</h2>
+                <div class="report-buttons"><button id="reportExternalBtn" class="report-btn primary">在 GitHub Issues 中反馈</button></div>
+                <p style="margin-top:20px;font-size:0.8rem;">反馈地址: <a href="https://github.com/lkjy-coding/Surfer2/issues" target="_blank">github.com/lkjy-coding/Surfer2/issues</a></p>
+            </div></div>`;
+        }
+        function attachReportEvents(){ document.getElementById('reportExternalBtn').onclick=function(){ window.open('https://github.com/lkjy-coding/Surfer2/issues','_blank'); }; }
+
+        // ===== Chajian =====
+        function renderChajianPage(){
+            return `<div class="internal-page"><h2>插件中心</h2>
+                <div class="plugin-tabs"><div class="plugin-tab active" data-tab="maps">在线地图</div><div class="plugin-tab" data-tab="ir">红外线发射</div></div>
+                <div id="plugin-maps" class="plugin-pane active"><div class="map-container"><iframe class="map-frame" src="https://www.openstreetmap.org/export/embed.html?bbox=-30,-20,70,60&layer=mapnik"></iframe></div></div>
+                <div id="plugin-ir" class="plugin-pane"><div class="settings-group"><button id="irTestBtn" class="go-btn">测试红外线</button><div id="irResult"></div></div></div>
+            </div>`;
+        }
+        function attachChajianEvents(){
+            document.querySelectorAll('.plugin-tab').forEach(t=>{
+                t.onclick=function(){
+                    document.querySelectorAll('.plugin-tab').forEach(x=>x.classList.remove('active')); this.classList.add('active');
+                    document.querySelectorAll('.plugin-pane').forEach(x=>x.classList.remove('active'));
+                    document.getElementById('plugin-'+this.dataset.tab).classList.add('active');
+                };
+            });
+            document.getElementById('irTestBtn').onclick=function(){ document.getElementById('irResult').innerHTML='红外信号已发送（模拟）'; };
+        }
+
+        // ===== Transfer (完整保留并修复) =====
+        function renderTransferPage(){
+            if(!currentUser) return `<div class="internal-page"><h2>需要登录</h2><p>消息传递功能需要登录后使用</p><button onclick="window.loginFromTransfer()" class="go-btn">立即登录</button></div>`;
+            const cu=urlInput.value; const transferInfo = parseTransferUrl(cu);
+            if(transferInfo && transferInfo.type !== 'index'){
+                currentSessionType = transferInfo.type;
+                currentSessionId = transferInfo.id;
+                return renderActiveSession();
+            }
+            return `<div class="internal-page"><h2>📨 surfer:transfer</h2>
+                <p style="margin-bottom:20px;color:#87b9ff;">选择或加入一个会话</p>
+                <div class="session-card" onclick="window.startPublicSession()">
+                    <div class="session-icon">🌐</div>
+                    <div class="session-title">公共会话</div>
+                    <div class="session-desc">创建或加入一个公共会话，使用高熵域名值作为唯一标识</div>
+                </div>
+                <div class="session-card" onclick="window.startPrivateSession()">
+                    <div class="session-icon">🔒</div>
+                    <div class="session-title">私人会话</div>
+                    <div class="session-desc">创建仅自己使用的私人会话，基于用户名</div>
+                </div>
+                <div class="session-card" onclick="window.showJoinSession()">
+                    <div class="session-icon">🔗</div>
+                    <div class="session-title">加入会话</div>
+                    <div class="session-desc">输入会话ID加入已有会话</div>
+                </div>
+                <div id="joinSessionArea" style="display:none;margin-top:16px;">
+                    <div class="session-join-form">
+                        <select id="joinSessionType"><option value="public">公共会话</option><option value="private">私人会话</option></select>
+                        <input type="text" id="joinSessionIdInput" placeholder="会话ID（公共：高熵值 / 私人：用户名）">
+                        <button id="joinSessionBtn" class="go-btn">加入</button>
+                    </div>
+                </div>
+                <div style="margin-top:20px;font-size:0.7rem;color:#87b9ff;">
+                    💡 公共会话使用随机高熵域名值作为ID，长期有效<br>
+                    💡 私人会话使用您的用户名作为ID
+                </div>
+            </div>`;
+        }
+        function renderActiveSession(){
+            const displayTitle = currentSessionType==='public' ? 'surfer:transfer/public/'+currentSessionId : 'surfer:transfer/private/'+currentSessionId;
+            return `<div class="internal-page"><h2>📨 ${currentSessionType==='public'?'🌐 公共会话':'🔒 私人会话'}</h2>
+                <div style="font-size:0.8rem;color:#87b9ff;margin-bottom:12px;">${displayTitle}</div>
+                <div id="transferMessagesList" style="max-height:400px;overflow-y:auto;"></div>
+                <div style="margin-top:12px;">
+                    <textarea id="transferMessageInput" rows="3" style="width:100%;padding:8px;border-radius:12px;background:#0f172a;border:1px solid #475569;color:#e2e8f0;"></textarea>
+                    <button id="sendTransferBtn" class="go-btn" style="margin-top:8px;">📤 发送</button>
+                    <button id="refreshMessagesBtn" class="go-btn" style="margin-top:8px;">🔄 刷新</button>
+                    <button id="exitSessionBtn" class="go-btn" style="margin-top:8px;background:#ef4444;">🚪 退出会话</button>
+                </div>
+            </div>`;
+        }
+        function attachTransferEvents(){
+            const sendBtn=document.getElementById('sendTransferBtn');
+            const refreshBtn=document.getElementById('refreshMessagesBtn');
+            const exitBtn=document.getElementById('exitSessionBtn');
+            const joinBtn=document.getElementById('joinSessionBtn');
+            if(joinBtn) joinBtn.onclick=function(){
+                const type=document.getElementById('joinSessionType').value;
+                const id=document.getElementById('joinSessionIdInput').value.trim();
+                if(id){ navigateTo('surfer:transfer/'+type+'/'+id); }
+            };
+            if(sendBtn) sendBtn.onclick=function(){
+                const inp=document.getElementById('transferMessageInput');
+                if(inp.value.trim() && currentSessionType && currentSessionId){
+                    const key='surfer2_transfer_'+currentSessionType+'_'+currentSessionId;
+                    let msgs=JSON.parse(localStorage.getItem(key)||'[]');
+                    msgs.unshift({ username:currentUser.username, content:inp.value.trim(), time:new Date().toISOString() });
+                    if(msgs.length>100) msgs.pop();
+                    localStorage.setItem(key,JSON.stringify(msgs));
+                    inp.value='';
+                    loadTransferMessages();
+                    statusSpan.innerText='消息已发送';
+                }
+            };
+            if(refreshBtn) refreshBtn.onclick=function(){ loadTransferMessages(); statusSpan.innerText='已刷新'; };
+            if(exitBtn) exitBtn.onclick=function(){ if(confirm('确定退出当前会话吗？')){ currentSessionType=null; currentSessionId=null; navigateTo('surfer:transfer'); } };
+            loadTransferMessages();
+        }
+        function loadTransferMessages(){
+            const container=document.getElementById('transferMessagesList');
+            if(!container)return;
+            if(!currentSessionType||!currentSessionId){ container.innerHTML='<div style="text-align:center;padding:20px;color:#87b9ff;">未进入会话</div>'; return; }
+            const key='surfer2_transfer_'+currentSessionType+'_'+currentSessionId;
+            const msgs=JSON.parse(localStorage.getItem(key)||'[]');
+            if(!msgs.length){ container.innerHTML='<div style="text-align:center;padding:20px;color:#87b9ff;">暂无消息，发送第一条吧~</div>'; return; }
+            let html='';
+            for(let m of msgs) html+=`<div class="transfer-message"><span class="sender">${escapeHtml(m.username)}</span><span class="time">${new Date(m.time).toLocaleString()}</span><div style="margin-top:6px;">${escapeHtml(m.content)}</div></div>`;
+            container.innerHTML=html;
+        }
+
+        // 修复：startPublicSession 和 startPrivateSession 使用 navigateToTransferSession
+        window.startPublicSession=function(){
+            if(!currentUser){ login(); return; }
+            const id='pub-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,6);
+            navigateToTransferSession('public', id);
+        };
+        window.startPrivateSession=function(){
+            if(!currentUser){ login(); return; }
+            navigateToTransferSession('private', currentUser.username);
+        };
+        window.showJoinSession=function(){
+            const a=document.getElementById('joinSessionArea'); if(a) a.style.display=a.style.display==='none'?'block':'none';
+        };
+        window.loginFromTransfer=login;
+        window.loginFromPin=login;
+
+        // ===== 样式加载 =====
+        function loadCustomStyles(){
+            const bg=localStorage.getItem('surfer2_bgImage');
+            const lm=localStorage.getItem('surfer2_lightMode')==='true';
+            const ac=localStorage.getItem('surfer2_acrylic')==='true';
+            const hc=localStorage.getItem('surfer2_highContrast')==='true';
+            if(lm) document.body.classList.add('light-mode'); else document.body.classList.remove('light-mode');
+            if(ac) document.body.classList.add('acrylic-active'); else document.body.classList.remove('acrylic-active');
+            if(hc) document.body.classList.add('high-contrast'); else document.body.classList.remove('high-contrast');
+            if(bg) { document.getElementById('bgLayer').style.backgroundImage='url('+bg+')'; document.getElementById('bgLayer').style.backgroundSize='cover'; document.getElementById('bgLayer').style.backgroundPosition='center'; }
+            else document.getElementById('bgLayer').style.backgroundImage='';
+        }
+        loadCustomStyles();
+
+        // ===== 键盘 =====
+        const keyboard=document.getElementById('onscreenKeyboard');
+        function updateKeyboard(){ if(enableOnscreenKeyboard) keyboard.classList.add('show'); else keyboard.classList.remove('show'); }
+        updateKeyboard();
+        document.getElementById('closeKeyboardBtn').onclick=function(){ keyboard.classList.remove('show'); enableOnscreenKeyboard=false; localStorage.setItem('surfer2_onscreenKeyboard','false'); };
+
+        // ===== 快捷键 =====
+        document.addEventListener('keydown',function(e){
+            if(isInputFocused())return;
+            if((e.key==='b'||e.key==='B')&&enableBKey){ e.preventDefault(); navigateTo('surfer:settings'); }
+            if((e.key==='p'||e.key==='P')&&enablePKey){ e.preventDefault(); if(!currentUser){login();}else navigateTo('surfer:pin'); }
+            if((e.key==='u'||e.key==='U')&&enableUKey){ e.preventDefault(); toggleDropdown(); }
+        });
+
+        // ===== 三杠菜单 (修复点击无反应) =====
+        hamburger.onclick=function(e){ e.stopPropagation(); toggleDropdown(); };
+        document.addEventListener('click',function(e){ 
+            if(!dropdown.contains(e.target) && e.target!==hamburger && !hamburger.contains(e.target)){ 
+                closeDropdown(); 
+            }
+        });
+        menuSettings.onclick=function(){ closeDropdown(); navigateTo('surfer:settings'); };
+        menuPin.onclick=function(){ closeDropdown(); if(!currentUser){login();}else navigateTo('surfer:pin'); };
+        menuUser.onclick=function(){ closeDropdown(); toggleUserMenu(); };
+        menuHide.onclick=function(){ closeDropdown(); const c=document.querySelector('.surfer-container'); if(!isWindowHidden){ c.style.opacity='0'; c.style.visibility='hidden'; isWindowHidden=true; const rb=document.createElement('button'); rb.innerText='显示窗口'; rb.style.cssText='position:fixed;bottom:20px;right:20px;z-index:10000;background:#3b82f6;border:none;padding:8px 16px;border-radius:40px;color:#fff;cursor:pointer'; rb.onclick=function(){ c.style.opacity='1'; c.style.visibility='visible'; isWindowHidden=false; rb.remove(); }; document.body.appendChild(rb); } };
+        menuLogout2.onclick=function(){ closeDropdown(); logout(); };
+
+        // ===== 导航按钮 =====
+        function goBack(){ const tab=tabs[activeTabIndex]; if(tab&&tab.historyIndex>0){ tab.historyIndex--; const pu=tab.history[tab.historyIndex]; urlInput.value=pu; navigateTo(pu,true); } else statusSpan.innerText='没有更早历史'; }
+        function goForward(){ const tab=tabs[activeTabIndex]; if(tab&&tab.historyIndex<tab.history.length-1){ tab.historyIndex++; const nu=tab.history[tab.historyIndex]; urlInput.value=nu; navigateTo(nu,true); } else statusSpan.innerText='没有更新历史'; }
+        function reloadCurrent(){ const cu=urlInput.value; if(cu.startsWith('surfer:')){ renderInternalPage(cu.slice(7)); } else if(frame.src&&frame.src!=='about:blank'){ frame.src=frame.src; } }
+
+        backBtn.onclick=goBack; forwardBtn.onclick=goForward; reloadBtn.onclick=reloadCurrent;
+        goBtn.onclick=function(){ const u=urlInput.value; const tab=tabs[activeTabIndex]; if(tab){ tab.url=u; tab.history=tab.history.slice(0,tab.historyIndex+1); tab.history.push(u); tab.historyIndex=tab.history.length-1; saveTabs(); } navigateTo(u); };
+        urlInput.onkeypress=function(e){ if(e.key==='Enter')goBtn.click(); };
+        addTabBtn.onclick=addTab;
+
+        // ===== 初始化 =====
+        loadTabs();
+        if(tabs.length>0&&tabs[activeTabIndex]){ const it=tabs[activeTabIndex]; urlInput.value=it.url||'surfer:homepage'; switchTab(activeTabIndex); }
+        updateUserMenu();
+        setTimeout(function(){ window.dispatchEvent(new Event('resize')); },100);
+    })();
+    </script>
+</body>
+  </html>
