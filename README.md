@@ -1594,3 +1594,11 @@ Now cards are clearly readable in both themes.
 - **On-screen keyboard** works best on desktop and may have layout issues on very small mobile screens.
 - **Cloud sync** for wallpaper is manual (one-click sync) and not automatic.
 - **Paintboard** undo/redo history is limited to 50 steps to prevent excessive memory usage.
+
+---
+
+More Update details **are coming**...
+
+---
+
+This software is open-sourced under the MIT License. Please respect the original author and their rights, and attribute the original author in accordance with the MIT License when distributing copied versions.
